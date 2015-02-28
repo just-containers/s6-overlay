@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -P
+#!/usr/bin/execlineb
 
 # this file is executed (not as process 1!) as soon as s6-svscan
 # starts. It should perform all the remaining one-time initialization
@@ -6,21 +6,25 @@
 
 if -nt
 {
-  ##
-  ## cont-init.d
-  ##
+  elgetpositionals
+  ifelse { s6-test $# -ne 0 }
+    { foreground { $@ } s6-svscanctl -t /etc/s6 }
 
-  foreground { s6-echo "[cont-init.d] executing container initialization scripts..." }
-  foreground {
-    forbacktickx i {
-      find /etc/cont-init.d -maxdepth 1 -type f ! -name ".*" ! -path /etc/cont-init.d
+    ##
+    ## cont-init.d
+    ##
+
+    foreground { s6-echo "[cont-init.d] executing container initialization scripts..." }
+    foreground {
+      forbacktickx i {
+        find /etc/cont-init.d -maxdepth 1 -type f ! -name ".*" ! -path /etc/cont-init.d
+      }
+      import i
+      foreground { s6-echo "[cont-init.d] ${i}: executing..." }
+      foreground { with-contenv ${i} }
+      foreground { s6-echo "[cont-init.d] ${i}: done." }
     }
-    import i
-    foreground { s6-echo "[cont-init.d] ${i}: executing..." }
-    foreground { with-contenv ${i} }
-    foreground { s6-echo "[cont-init.d] ${i}: done." }
-  }
-  foreground { s6-echo "[cont-init.d] done." }
+    foreground { s6-echo "[cont-init.d] done." }
 }
 
 # if anything in the if -nt { } block fails, control jumps here.

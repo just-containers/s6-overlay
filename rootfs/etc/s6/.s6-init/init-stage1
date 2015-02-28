@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -P
+#!/usr/bin/execlineb
 
 ##
 ## dump environment into files and a bash script
@@ -49,7 +49,8 @@ foreground { s6-sync }
 
 background
 {
-  /etc/s6/.s6-init/init-stage2
+  elgetpositionals
+  /etc/s6/.s6-init/init-stage2 $@
 }
 unexport !
 

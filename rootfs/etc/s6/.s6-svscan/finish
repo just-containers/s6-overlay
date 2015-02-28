@@ -1,2 +1,2 @@
-#!/usr/bin/execlineb -P
+#!/usr/bin/execlineb
 /etc/s6/.s6-init/init-stage3
