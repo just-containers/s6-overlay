@@ -1,0 +1,30 @@
+#!/usr/bin/execlineb -P
+
+# this file is executed (not as process 1!) as soon as s6-svscan
+# starts. It should perform all the remaining one-time initialization
+# tasks.
+
+if -nt
+{
+  ##
+  ## cont-init.d
+  ##
+
+  foreground { s6-echo "[cont-init.d] executing container initialization scripts..." }
+  foreground {
+    forbacktickx i {
+      find /etc/cont-init.d -maxdepth 1 -type f ! -name ".*" ! -path /etc/cont-init.d
+    }
+    import i
+    foreground { s6-echo "[cont-init.d] ${i}: executing..." }
+    foreground { with-contenv ${i} }
+    foreground { s6-echo "[cont-init.d] ${i}: done." }
+  }
+  foreground { s6-echo "[cont-init.d] done." }
+}
+
+# if anything in the if -nt { } block fails, control jumps here.
+# no need to do much because there's already an operational getty running.
+
+redirfd -w 1 /dev/console
+s6-echo "\n!!!!!\ninit-stage2 failed, please log in and investigate.\n!!!!!"

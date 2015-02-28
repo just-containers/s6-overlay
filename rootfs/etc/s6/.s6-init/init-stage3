@@ -1,0 +1,54 @@
+!/usr/bin/execlineb -S0
+
+# This is the shutdown script, running as process 1.
+
+foreground {
+  forbacktickx i { find /etc/s6 -maxdepth 1 -type d ! -name ".*" ! -path /etc/s6 }
+  import i
+  foreground {
+    if { s6-test -f ${i}/finish }
+      foreground { s6-echo "[s6-finish] executing ${i}/finish ..." }
+      foreground { ${i}/finish }
+      foreground { s6-echo "[s6-finish] done." }
+  }	
+}
+
+# Make sure we have no open handle to anywhere else than /dev/console
+
+cd /
+redirfd -w 1 /dev/console
+fdmove -c 2 1
+
+# Sync before TERM'n
+
+foreground { s6-echo "[s6-finish] syncing disks." }
+foreground { s6-sync }
+
+# Even if s6-svscan properly brought all the services down
+# before exec'ing into this script, users might have launched
+# background nohup processes, so we have to kill everything.
+
+foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
+foreground { s6-nuke -th }
+foreground { s6-sleep 1 }
+foreground { s6-echo "[s6-finish] sending all processes the KILL signal." }
+foreground { s6-nuke -k }
+
+# Close stdin here cause we wanted to pipe to echo in order to
+# get timestamped lines.
+
+fdclose 0
+
+# Yes, it helps.
+
+foreground { s6-echo "[s6-finish] syncing disks." }
+foreground { s6-sync } 
+
+# Here, s6-nuke sends a SIGKILL to every process on the system.
+# It kills itself, but not before the SIGKILL has been broadcast.
+# The "foreground" process runs as process 1, so it survives,
+# and execs into the rest of the script when s6-nuke dies.
+
+# Reap the huge army of zombies we just created
+
+wait { }

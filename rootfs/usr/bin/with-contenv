@@ -1,0 +1,6 @@
+#!/usr/bin/execlineb
+
+elgetpositionals
+emptyenv
+s6-envdir /etc/container_environment
+$@

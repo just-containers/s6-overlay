@@ -1,0 +1,2 @@
+#!/bin/sh
+exec s6-notifywhenup s6-fdholder-daemon -1 -i /etc/s6/fdholderd/rules /etc/s6/fdholderd/socket

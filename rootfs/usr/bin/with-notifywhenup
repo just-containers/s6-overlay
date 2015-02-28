@@ -1,0 +1,5 @@
+#!/usr/bin/execlineb -S0
+
+s6-notifywhenup
+foreground { printf "\n" }
+$@
