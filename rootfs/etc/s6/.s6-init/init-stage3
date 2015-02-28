@@ -1,4 +1,4 @@
-!/usr/bin/execlineb -S0
+#!/usr/bin/execlineb -S0
 
 # This is the shutdown script, running as process 1.
 
@@ -10,7 +10,7 @@ foreground {
       foreground { s6-echo "[s6-finish] executing ${i}/finish ..." }
       foreground { ${i}/finish }
       foreground { s6-echo "[s6-finish] done." }
-  }	
+  }
 }
 
 # Make sure we have no open handle to anywhere else than /dev/console

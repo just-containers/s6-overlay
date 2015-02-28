@@ -32,7 +32,7 @@ foreground {
   }
   import i
   foreground { s6-echo "[fix-attrs] ${i}: applying..." }
-  foreground { fix-attrs fix --chown-bin s6-chown --chmod-bin s6-chmod ${i} }
+  foreground { fix-attrs fix ${i} }
   foreground { s6-echo "[fix-attrs] ${i}: done." }
 }
 foreground { s6-echo "[fix-attrs] done." }
