@@ -1,0 +1,87 @@
+#!/bin/bash
+
+##
+## PARAMS
+##
+
+OVERLAY_ROOTFS_PATH=${1:-/overlay-rootfs}
+RELEASE_VERSION=${2:-1.3.0}
+
+##
+## OVERLAY
+##
+
+# create overlay folder
+mkdir -p $OVERLAY_ROOTFS_PATH
+
+# fix-attrs
+curl -R -L \
+    -o $OVERLAY_ROOTFS_PATH/usr/bin/fix-attrs \
+    https://github.com/glerchundi/fix-attrs/releases/download/v0.4.0/fix-attrs-0.4.0-linux-amd64
+
+# skarnet versions manifest
+curl -R -L \
+    -o /tmp/manifest.txt \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/manifest.txt
+
+# parse manifest into s6 associative array
+declare -A versions
+while read -r line
+do
+    key=`echo "${line}" | cut -d"=" -f1`
+    value=`echo "${line}" | cut -d"=" -f2`
+    if [[ ! -z "${key}" && ! -z "${value}" ]]; then
+        versions[${key}]=${value}
+    fi
+done < /tmp/manifest.txt
+
+# execline
+curl -R -L \
+    -o /tmp/execline.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/execline-${versions[execline]}-linux-amd64-bin.tar.gz 
+tar xvfz /tmp/execline.tar.gz -C $OVERLAY_ROOTFS_PATH
+
+# s6
+curl -R -L \
+    -o /tmp/s6.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-${versions[s6]}-linux-amd64-bin.tar.gz
+tar xvfz /tmp/s6.tar.gz -C $OVERLAY_ROOTFS_PATH
+
+# s6-portable-utils
+curl -R -L \
+    -o /tmp/s6-portable-utils.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-portable-utils-${versions[s6-portable-utils]}-linux-amd64-bin.tar.gz
+
+# s6-linux-utils
+curl -R -L \
+    -o /tmp/s6-linux-utils.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-linux-utils-${versions[s6-linux-utils]}-linux-amd64-bin.tar.gz 
+tar xvfz /tmp/s6-linux-utils.tar.gz -C $OVERLAY_ROOTFS_PATH
+
+# s6-dns
+curl -R -L \
+    -o /tmp/s6-dns.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-dns-${versions[s6-dns]}-linux-amd64-bin.tar.gz
+tar xvfz /tmp/s6-dns.tar.gz -C $OVERLAY_ROOTFS_PATH
+
+# s6-networking
+curl -R -L \
+    -o /tmp/s6-networking.tar.gz \
+    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-networking-${versions[s6-networking]}-linux-amd64-bin.tar.gz
+tar xvfz /tmp/s6-networking.tar.gz -C $OVERLAY_ROOTFS_PATH
+
+##
+## FIX PERMS
+##
+
+chmod +x $OVERLAY_ROOTFS_PATH/init                        \
+         $OVERLAY_ROOTFS_PATH/etc/s6/.s6-svscan/finish    \
+         $OVERLAY_ROOTFS_PATH/etc/s6/.s6-init/init-stage* \
+         $OVERLAY_ROOTFS_PATH/usr/bin/fix-attrs
+
+##
+## DIST!
+##
+
+mkdir -p /dist
+tar -zcvf /dist/s6-overlay-$RELEASE_VERSION-linux-amd64.tar.gz -C $OVERLAY_ROOTFS_PATH ./
