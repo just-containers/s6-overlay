@@ -75,6 +75,9 @@ do
       tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaypath
   done
 
+  # install fix-attrs
+  cp /tmp/fix-attrs $overlaypath/usr/bin/fix-attrs
+
   # fix perms
   chmod +x $overlaypath/init                        \
            $overlaypath/etc/s6/.s6-svscan/finish    \
