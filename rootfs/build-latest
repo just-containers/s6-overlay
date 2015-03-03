@@ -35,40 +35,13 @@ do
     fi
 done < /tmp/manifest.txt
 
-# execline
-curl -R -L \
-    -o /tmp/execline.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/execline-${versions[execline]}-linux-amd64-bin.tar.gz 
-tar xvfz /tmp/execline.tar.gz -C $OVERLAY_ROOTFS_PATH
-
-# s6
-curl -R -L \
-    -o /tmp/s6.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-${versions[s6]}-linux-amd64-bin.tar.gz
-tar xvfz /tmp/s6.tar.gz -C $OVERLAY_ROOTFS_PATH
-
-# s6-portable-utils
-curl -R -L \
-    -o /tmp/s6-portable-utils.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-portable-utils-${versions[s6-portable-utils]}-linux-amd64-bin.tar.gz
-
-# s6-linux-utils
-curl -R -L \
-    -o /tmp/s6-linux-utils.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-linux-utils-${versions[s6-linux-utils]}-linux-amd64-bin.tar.gz 
-tar xvfz /tmp/s6-linux-utils.tar.gz -C $OVERLAY_ROOTFS_PATH
-
-# s6-dns
-curl -R -L \
-    -o /tmp/s6-dns.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-dns-${versions[s6-dns]}-linux-amd64-bin.tar.gz
-tar xvfz /tmp/s6-dns.tar.gz -C $OVERLAY_ROOTFS_PATH
-
-# s6-networking
-curl -R -L \
-    -o /tmp/s6-networking.tar.gz \
-    https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/s6-networking-${versions[s6-networking]}-linux-amd64-bin.tar.gz
-tar xvfz /tmp/s6-networking.tar.gz -C $OVERLAY_ROOTFS_PATH
+# iterate over manifest and install required binaries
+for i in "${!versions[@]}"
+do
+    url=https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/$i-${versions[$i]}-linux-amd64-bin.tar.gz 
+    curl -R -L -o /tmp/bin.tar.gz $url
+    tar xvfz /tmp/bin.tar.gz -C $OVERLAY_ROOTFS_PATH  
+done
 
 ##
 ## FIX PERMS
