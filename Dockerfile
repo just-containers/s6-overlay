@@ -11,4 +11,4 @@ RUN chmod +x /build-latest
 ENV OVERLAY_ROOTFS_PATH /overlay-rootfs
 COPY overlay-rootfs $OVERLAY_ROOTFS_PATH
 
-ENTRYPOINT [ "/build-latest" ]
+CMD [ "/build-latest" ]
