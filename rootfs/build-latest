@@ -19,7 +19,7 @@ get_packages_with_versions_from_manifest() {
   # skarnet versions manifest
   curl -R -L \
       -o /tmp/manifest.txt \
-      https://github.com/glerchundi/container-skarnet-builder/releases/download/v$RELEASE_VERSION/$manifest
+      https://github.com/just-containers/skaware-builder/releases/download/v$RELEASE_VERSION/$manifest
 
   # parse manifest into s6 associative array
   versions=()
@@ -48,7 +48,7 @@ cd /tmp
 packages=($(get_packages_with_versions_from_manifest "manifest.txt"))
 for package in "${packages[@]}"; do
   file=$package-linux-amd64-bin.tar.gz
-  curl -R -L -O https://github.com/glerchundi/container-s6-builder/releases/download/v$RELEASE_VERSION/$file
+  curl -R -L -O https://github.com/just-containers/skaware-builder/releases/download/v$RELEASE_VERSION/$file
 done
 
 # fix-attrs
@@ -65,6 +65,12 @@ do
 
   # create overlay folder
   mkdir -p $overlaypath
+
+  # copy overlay files
+  cp -a $OVERLAY_ROOTFS_PATH/. $overlaypath/
+
+  # create cont-init.d directory always
+  mkdir -p $overlaypath/etc/cont-init.d
 
   # skarnet versions manifest
   packages=($(get_packages_with_versions_from_manifest "manifest-$output.txt"))
