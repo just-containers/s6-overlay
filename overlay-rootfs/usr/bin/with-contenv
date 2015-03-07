@@ -1,6 +1,5 @@
-#!/usr/bin/execlineb
-
-elgetpositionals
-emptyenv
-s6-envdir /etc/container_environment
+#!/usr/bin/execlineb -S0
+/usr/bin/exec -c --
+/usr/bin/s6-envdir -fn -- /var/run/s6/container_environment
+/usr/bin/exec --
 $@

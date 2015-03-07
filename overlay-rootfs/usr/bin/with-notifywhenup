@@ -1,5 +1,4 @@
 #!/usr/bin/execlineb -S0
-
-s6-notifywhenup
-foreground { printf "\n" }
+foreground { s6-notifywhenup -f s6-echo }
+unexport ?
 $@

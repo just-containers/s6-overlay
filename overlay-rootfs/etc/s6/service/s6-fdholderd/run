@@ -1,0 +1,5 @@
+#!/usr/bin/execlineb -P
+s6-notifywhenup
+s6-envuidgid daemon
+exec -c --
+s6-fdholder-daemon -U -1 -i rules -- /var/run/s6/fdholderd-socket

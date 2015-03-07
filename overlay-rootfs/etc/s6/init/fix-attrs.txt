@@ -1,0 +1,4 @@
+/etc/services.d/*/run false root 0755 0755
+/etc/services.d/*/finish false root 0755 0755
+/etc/services.d/*/log/run false root 0755 0755
+/etc/services.d/*/log/finish false root 0755 0755

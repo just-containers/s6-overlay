@@ -1,0 +1,109 @@
+#!/usr/bin/execlineb -S0
+
+# This file is executed (not as process 1!) as soon as s6-svscan
+# starts, with the original stdin/out/err, but NOT the original
+# environment.
+# Purpose of this file: to perform all the one-time initialization tasks.
+
+if -nt
+{
+  if
+  {
+    redirfd -w 1 /var/run/s6/uncaught-logs-fifo
+    fdmove -c 2 1
+
+
+    ##
+    ## Ensure owners and permissions are correct
+    ##
+
+    if
+    {
+      export recfunction "\
+      foreground { s6-envuidgid \\${3} s6-chown -U -- \\${1} }
+      ifelse -- { if { s6-\\${2} } s6-test -d \\${1} }
+      {
+        foreground { s6-chmod \\${5} \\${1} }
+        forbacktickx -0 subfile { s6-ls -0 \\${1} }
+        multisubstitute
+        {
+          import -u subfile
+          import fn
+        }
+        execlineb -S5 -c \\${recfunction} \\${1}/${subfile} true \\${3} \\${4} \\${5
+      }
+      s6-chmod \\${4} \\${1}"
+
+      if { s6-test -f ${1} }
+      redirfd -r 0 ${1}
+      forstdin -d"\n" -- line
+      import -u line
+      if { s6-test -n ${line} }
+      multidefine -0 -Cd" \t" -- ${line} { globex recurse user fmode dmode }
+      elglob -0 -- files ${globex}
+      forx -p -- file { ${files} }
+      multisubstitute
+      {
+        import -u file
+        import recfunction
+      }
+      execlineb -S5 -c ${recfunction} ${file} ${recurse} ${user} ${fmode} ${dmode}
+    }
+
+
+    ##
+    ## cont-init.d: one-time init scripts
+    ##
+
+    if { s6-echo "[cont-init.d] executing container initialization scripts..." }
+    if
+    {
+      pipeline { s6-ls -0 -- /etc/cont-init.d }
+      pipeline { s6-sort -0 -- }
+      forstdin -0 -- i
+      import -u i
+      if { s6-echo -n -- "[cont-init.d] executing ${i}... " }
+      foreground { with-contenv /etc/cont-init.d/${i} }
+      import -u ? s6-echo -- " ... exited ${?}"
+    }
+    if { s6-echo -- "[cont-init.d] done." }
+
+
+    ##
+    ## services.d: long-lived processes to be supervised
+    ##
+
+    if { s6-echo "[services.d] starting services" }
+    if
+    {
+      pipeline { s6-ls -0 -- /etc/services.d }
+      forstdin -0 -- i
+      import -u i
+      if { s6-test -d /etc/services.d/${i} }
+      s6-hiercopy /etc/services.d/${i} /var/run/s6/service/${i}
+    }
+    if { s6-svscanctl -a /var/run/s6/service }
+    if { s6-echo -- "[services.d] done." }
+
+  }
+
+
+  ##
+  ## The init is complete. If the user has given a CMD, run it now, then
+  ## kill everything when it exits.
+  ##
+
+  if -t { s6-test $# -ne 0 }
+  foreground { s6-setsid -gq -- with-contenv $@ }
+  foreground { import -u ? s6-echo "${1} exited ${?}. Stopping the supervision tree." }
+  foreground { s6-svscanctl -t /var/run/s6/service }
+
+  # Race condition here, but it's ok: the sync in stage 3 takes ages,
+  # and if we get killed by the SIGTERM instead of the SIGKILL, meh, who cares.
+
+  # Wait to be nuked
+  s6-pause -hqbait
+}
+
+# if anything in the if -nt { } block fails, control jumps here.
+s6-echo -- "\n!!!!!\n init-stage2 failed.\n Logs are in /var/log/s6/uncaught-logs\n!!!!!"

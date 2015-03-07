@@ -1,0 +1,37 @@
+#!/usr/bin/execlineb -S0
+
+# This is the shutdown script, running as process 1.
+
+cd /
+
+
+# Sync before TERM'n
+
+foreground { s6-echo "[s6-finish] syncing disks." }
+foreground { s6-sync }
+
+
+# Kill everything, gently.
+
+foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
+foreground { s6-nuke -th } # foreground is process 1: it survives
+foreground
+{
+  with-contenv
+  /usr/bin/import -u -D 3000 S6_KILL_GRACETIME
+  /usr/bin/s6-sleep -m -- ${S6_KILL_GRACETIME}
+}
+
+# Last message, then close our pipes and give the logger some time.
+foreground { s6-echo "[s6-finish] sending all processes the KILL signal and exiting." }
+fdclose 1 fdclose 2
+s6-sleep -m 200
+
+# Kill everything, brutally.
+foreground { s6-nuke -k } # foreground is process 1: it survives again
+
+
+# Reap all the zombies then sync, and we're done.
+
+wait { }
+s6-sync 
