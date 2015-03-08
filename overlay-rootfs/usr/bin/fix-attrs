@@ -1,0 +1,30 @@
+#!/usr/bin/execlineb -P
+
+/usr/bin/export PATH /usr/bin:/bin
+/usr/bin/export recfunction "\
+foreground { s6-envuidgid ${3} s6-chown -U -- ${1} }
+ifelse -- { if { s6-${2} } s6-test -d ${1} }
+{
+  foreground { s6-chmod ${5} ${1} }
+  forbacktickx -0 subfile { s6-ls -0 ${1} }
+  multisubstitute
+  {
+    import -u subfile
+    import recfunction
+  }
+  execlineb -S5 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5}
+}
+s6-chmod ${4} ${1}"
+
+forstdin -d"\n" -- line
+import -u line
+if { s6-test -n ${line} }
+multidefine -0 -Cd" \t" -- ${line} { globex recurse user fmode dmode }
+elglob -0 -- files ${globex}
+forx -p -- file { ${files} }
+multisubstitute
+{
+  import -u file
+  import recfunction
+}
+execlineb -S5 -c ${recfunction} ${file} ${recurse} ${user} ${fmode} ${dmode}
