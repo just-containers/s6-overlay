@@ -6,9 +6,9 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && apt-get install -y curl
 COPY rootfs /
-RUN chmod +x /build-latest
+RUN chmod +x /build-*
 
 ENV OVERLAY_ROOTFS_PATH /overlay-rootfs
 COPY overlay-rootfs $OVERLAY_ROOTFS_PATH
 
-CMD [ "/build-latest" ]
+CMD [ "/build-wrapper" ]
