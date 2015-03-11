@@ -7,7 +7,7 @@ set -x
 ##
 
 OVERLAY_ROOTFS_PATH=${1:-/overlay-rootfs}
-RELEASE_VERSION=${2:-1.6.0}
+RELEASE_VERSION=${2:-1.7.0}
 
 outputs=(
 linux
