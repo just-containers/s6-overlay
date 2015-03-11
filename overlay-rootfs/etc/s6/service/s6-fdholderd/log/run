@@ -1,0 +1,4 @@
+#!/usr/bin/execlineb -P
+s6-setuidgid nobody
+exec -c --
+s6-log -- t /var/log/s6-fdholderd

@@ -1,0 +1,69 @@
+#!/usr/bin/execlineb -S0
+
+##
+## dump environment into an envdir
+##
+
+/usr/bin/if { /usr/bin/s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
+/usr/bin/if { /usr/bin/s6-dumpenv -- /var/run/s6/container_environment }
+
+
+##
+## run everything else with only the environment defined in
+## /etc/s6/init/env. Programs can get back the container
+## environment by using "with-contenv program".
+##
+
+/usr/bin/exec -c --
+/usr/bin/s6-envdir /etc/s6/init/env
+/usr/bin/exec --
+
+
+##
+## ensure our vital fifo exists
+##
+
+if { s6-mkfifo -m 0600 -- /var/run/s6/uncaught-logs-fifo }
+
+
+##
+## init the scandir with our base services
+##
+
+if { s6-rmrf /var/run/s6/service }
+if { s6-hiercopy /etc/s6/service /var/run/s6/service }
+
+
+##
+## fork the "init-stage2" script
+##
+
+background
+{
+  # add some environment
+  s6-envdir -- /etc/s6/init/env-stage2
+
+  # block until the supervision tree is running
+  redirfd -w 3 /var/run/s6/uncaught-logs-fifo
+  fdclose 3
+
+  # run the script
+  /etc/s6/init/init-stage2 $@
+}
+unexport !
+
+
+##
+## run the rest of stage 1 with sanitized descriptors
+##
+
+redirfd -r 0 /dev/null
+redirfd -wnb 1 /var/run/s6/uncaught-logs-fifo
+fdmove -c 2 1
+
+
+##
+## start the supervision tree
+##
+
+s6-svscan -t0 /var/run/s6/service

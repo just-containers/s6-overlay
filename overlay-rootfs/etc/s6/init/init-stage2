@@ -1,0 +1,89 @@
+#!/usr/bin/execlineb -S0
+
+# This file is executed (not as process 1!) as soon as s6-svscan
+# starts, with the original stdin/out/err, but NOT the original
+# environment.
+# Purpose of this file: to perform all the one-time initialization tasks.
+
+if -nt
+{
+  if
+  {
+    redirfd -w 1 /var/run/s6/uncaught-logs-fifo
+    fdmove -c 2 1
+
+
+    ##
+    ## fix-attrs.d: ensure owners and permissions are correct
+    ##
+
+    if { s6-echo "[fix-attrs.d] applying owners & permissions fixes..." }
+    if
+    {
+      pipeline { s6-ls -0 -- /etc/fix-attrs.d }
+      pipeline { s6-sort -0 -- }
+      forstdin -0 -- i
+      import -u i
+      if { s6-echo -n -- "[fix-attrs.d] applying ${i}... " }
+      foreground { redirfd -r 0 /etc/fix-attrs.d/${i} fix-attrs }
+      import -u ? s6-echo -- " exited ${?}"
+    }
+    if { s6-echo -- "[fix-attrs.d] done." }
+
+
+    ##
+    ## cont-init.d: one-time init scripts
+    ##
+
+    if { s6-echo "[cont-init.d] executing container initialization scripts..." }
+    if
+    {
+      pipeline { s6-ls -0 -- /etc/cont-init.d }
+      pipeline { s6-sort -0 -- }
+      forstdin -0 -- i
+      import -u i
+      if { s6-echo -n -- "[cont-init.d] executing ${i}... " }
+      foreground { with-contenv /etc/cont-init.d/${i} }
+      import -u ? s6-echo -- " ... exited ${?}"
+    }
+    if { s6-echo -- "[cont-init.d] done." }
+
+
+    ##
+    ## services.d: long-lived processes to be supervised
+    ##
+
+    if { s6-echo "[services.d] starting services" }
+    if
+    {
+      pipeline { s6-ls -0 -- /etc/services.d }
+      forstdin -0 -p -- i
+      import -u i
+      if { s6-test -d /etc/services.d/${i} }
+      s6-hiercopy /etc/services.d/${i} /var/run/s6/service/${i}
+    }
+    if { s6-svscanctl -a /var/run/s6/service }
+    if { s6-echo -- "[services.d] done." }
+
+  }
+
+
+  ##
+  ## The init is complete. If the user has given a CMD, run it now, then
+  ## kill everything when it exits.
+  ##
+
+  if -t { s6-test $# -ne 0 }
+  foreground { s6-setsid -gq -- with-contenv $@ }
+  foreground { import -u ? s6-echo "${1} exited ${?}. Stopping the supervision tree." }
+  foreground { s6-svscanctl -t /var/run/s6/service }
+
+  # Race condition here, but it's ok: the sync in stage 3 takes ages,
+  # and if we get killed by the SIGTERM instead of the SIGKILL, meh, who cares.
+
+  # Wait to be nuked
+  s6-pause -th
+}
+
+# if anything in the if -nt { } block fails, control jumps here.
+s6-echo -- "\n!!!!!\n init-stage2 failed.\n Logs are in /var/log/s6-uncaught-logs\n!!!!!"

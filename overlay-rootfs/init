@@ -1,3 +1,2 @@
-#!/usr/bin/execlineb
-elgetpositionals
-/etc/s6/.s6-init/init-stage1 $@
+#!/usr/bin/execlineb -S0
+/etc/s6/init/init-stage1 $@
