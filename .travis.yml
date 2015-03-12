@@ -1,0 +1,15 @@
+sudo: false
+script:
+- cd builder && RELEASE_VERSION="${TRAVIS_TAG:1}" ./build-latest
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: "cHrT98HKxe3HLFabDnCcohGJQJzmbjQHIjI7sggvDRS3g9FhgeA2Ncbwvl55/1TsGYE+KthGZ4zB5kjeiUBTHZCGMOsl1YzvQ+LK7OQ6Ybl8yLNfaer/RLcajznKsWRVLI52bQAAlTDVZCit0Ohfr6bk9UVW7k8SawaFeJ1qXgs="
+  file:
+    - $HOME/dist/*.tar.gz
+  file_glob: true
+  on:
+    repo: just-containers/s6-overlay-builder
+    branch: master
+    tags: true

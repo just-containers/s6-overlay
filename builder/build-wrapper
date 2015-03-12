@@ -1,0 +1,7 @@
+#!/usr/bin/env bash 
+set -e
+set -x
+
+rm -f $HOME/dist/*
+./build-latest 2>&1 | tee "$HOME/dist/build-latest-$(date +'%Y%m%d%H%M%S').log"
+exit 0

@@ -6,13 +6,15 @@ set -x
 ## PARAMS
 ##
 
-OVERLAY_ROOTFS_PATH=${1:-/overlay-rootfs}
-RELEASE_VERSION=${2:-1.7.1}
+RELEASE_VERSION=${RELEASE_VERSION:-1.7.1}
 SKAWARE_VERSION=${RELEASE_VERSION%.*}.0
+
+PWD=$(pwd)
+OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
+OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 
 outputs=( 'linux' 'portable' )
 editions=( '' 'debug' )
-
 
 get_packages_with_versions_from_manifest() {
   # manifest
@@ -37,6 +39,7 @@ get_packages_with_versions_from_manifest() {
   # delete manifest
   rm /tmp/manifest.txt
 
+  # output manifest as an array
   echo ${versions[@]}
 }
 
@@ -64,52 +67,53 @@ for output in "${outputs[@]}"; do
   for edition in "${editions[@]}"; do
     # overlay path and dist file
     if [ "${edition}" == "debug" ]; then
-      overlaysrc="$OVERLAY_ROOTFS_PATH-$output-dbg"
-      overlaydst="/dist/s6-overlay-$RELEASE_VERSION-$output-dbg-amd64.tar.gz"
+      overlaydstpath="$OVERLAY_DST_PATH-$output-dbg"
+      overlaytarpath="$HOME/dist/s6-overlay-$output-dbg-amd64.tar.gz"
       
     else
-      overlaysrc="$OVERLAY_ROOTFS_PATH-$output"
-      overlaydst="/dist/s6-overlay-$RELEASE_VERSION-$output-amd64.tar.gz"
+      overlaydstpath="$OVERLAY_DST_PATH-$output"
+      overlaytarpath="$HOME/dist/s6-overlay-$output-amd64.tar.gz"
     fi
 
     # create overlay folder
-    mkdir -p $overlaysrc
+    mkdir -p $overlaydstpath
+    mkdir -p $HOME/dist
 
     # copy overlay files
-    cp -a $OVERLAY_ROOTFS_PATH/. $overlaysrc/
+    cp -a $OVERLAY_SRC_PATH/. $overlaydstpath/
 
     # skarnet versions manifest
     packages=($(get_packages_with_versions_from_manifest "manifest-$output.txt"))
 
     # install required binaries for this concrete output
     for package in "${packages[@]}"; do
-      echo "####### /tmp/$package-linux-amd64-bin.tar.gz ########"
-      tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaysrc
+      tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaydstpath
     done
 
     # create must exist directories
-    mkdir -p $overlaysrc/etc/s6/init/env-stage2
-    mkdir -p $overlaysrc/etc/{cont-init.d,fix-attrs.d,services.d}
-    mkdir -p $overlaysrc/var/log/s6-uncaught-logs
+    mkdir -p $overlaydstpath/etc/s6/init/env-stage2
+    mkdir -p $overlaydstpath/etc/{cont-init.d,fix-attrs.d,services.d}
+    mkdir -p $overlaydstpath/var/log/s6-uncaught-logs
 
     # fix fix-attrs perms
-    chmod 0755 $overlaysrc/usr/bin/fix-attrs
+    chmod 0755 $overlaydstpath/usr/bin/fix-attrs
 
     # fix init perms
-    chmod 0755 $overlaysrc/init
-    chmod 0755 $overlaysrc/etc/s6/init/init-stage*
-    chmod 0755 $overlaysrc/etc/s6/service/.s6-svscan/{crash,finish}
-    chmod 0755 $overlaysrc/etc/s6/service/s6-fdholderd/run
-    chmod 0755 $overlaysrc/etc/s6/service/s6-svscan-log/run
+    chmod 0755 $overlaydstpath/init
+    chmod 0755 $overlaydstpath/etc/s6/init/init-stage*
+    chmod 0755 $overlaydstpath/etc/s6/service/.s6-svscan/{crash,finish}
+    chmod 0755 $overlaydstpath/etc/s6/service/s6-fdholderd/run
+    chmod 0755 $overlaydstpath/etc/s6/service/s6-svscan-log/run
 
     # copy debugging tools & fix perms
     if [ "${edition}" == "debug" ]; then
-      cp /tmp/strace $overlaysrc/usr/bin/strace
-      chmod 0755 $overlaysrc/usr/bin/strace
+      cp /tmp/strace $overlaydstpath/usr/bin/strace
+      chmod 0755 $overlaydstpath/usr/bin/strace
     fi
 
     # dist!
-    mkdir -p /dist
-    tar -zcvf $overlaydst -C $overlaysrc ./
+    tar -zcvf $overlaytarpath -C $overlaydstpath ./
   done
 done
+
+exit 0
