@@ -25,6 +25,15 @@
 
 if { s6-mkfifo -m 0600 -- /var/run/s6/uncaught-logs-fifo }
 
+##
+## ensure ownership & permissions for our vital files
+##
+
+if { s6-rmrf /var/log/s6-uncaught-logs }
+if { s6-mkdir -p /var/log/s6-uncaught-logs }
+if { s6-envuidgid nobody s6-chown -U /var/log/s6-uncaught-logs }
+if { s6-chmod 2700 /var/log/s6-uncaught-logs }
+
 
 ##
 ## init the scandir with our base services
