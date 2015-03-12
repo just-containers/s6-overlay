@@ -7,21 +7,21 @@ set -x
 ##
 
 OVERLAY_ROOTFS_PATH=${1:-/overlay-rootfs}
-RELEASE_VERSION=${2:-1.7.0}
+RELEASE_VERSION=${2:-1.7.1}
+SKAWARE_VERSION=${RELEASE_VERSION%.*}.0
 
-outputs=(
-linux
-portable
-)
+outputs=( 'linux' 'portable' )
+editions=( '' 'debug' )
+
 
 get_packages_with_versions_from_manifest() {
   # manifest
   manifest=$1
 
-  # skarnet versions manifest
+  # skaware versions manifest
   curl -R -L \
       -o /tmp/manifest.txt \
-      https://github.com/just-containers/skaware-builder/releases/download/v$RELEASE_VERSION/$manifest
+      https://github.com/just-containers/skaware-builder/releases/download/v$SKAWARE_VERSION/$manifest
 
   # parse manifest into s6 associative array
   versions=()
@@ -50,64 +50,66 @@ cd /tmp
 packages=($(get_packages_with_versions_from_manifest "manifest.txt"))
 for package in "${packages[@]}"; do
   file=$package-linux-amd64-bin.tar.gz
-  curl -R -L -O https://github.com/just-containers/skaware-builder/releases/download/v$RELEASE_VERSION/$file
+  curl -R -L -O https://github.com/just-containers/skaware-builder/releases/download/v$SKAWARE_VERSION/$file
 done
 
-# strace (if we want to debug)
-if [ -n "$DEBUG" ]; then
-  curl -R -L -o /tmp/strace http://landley.net/aboriginal/downloads/binaries/extras/strace-x86_64
-fi
+# strace
+curl -R -L -o /tmp/strace http://landley.net/aboriginal/downloads/binaries/extras/strace-x86_64
 
 ##
 ## OVERLAYS
 ##
 
-for output in "${outputs[@]}"
-do
-  # overlay path
-  overlaypath="$OVERLAY_ROOTFS_PATH-$output"
+for output in "${outputs[@]}"; do
+  for edition in "${editions[@]}"; do
+    # overlay path and dist file
+    if [ "${edition}" == "debug" ]; then
+      overlaysrc="$OVERLAY_ROOTFS_PATH-$output-dbg"
+      overlaydst="/dist/s6-overlay-$RELEASE_VERSION-$output-dbg-amd64.tar.gz"
+      
+    else
+      overlaysrc="$OVERLAY_ROOTFS_PATH-$output"
+      overlaydst="/dist/s6-overlay-$RELEASE_VERSION-$output-amd64.tar.gz"
+    fi
 
-  # create overlay folder
-  mkdir -p $overlaypath
+    # create overlay folder
+    mkdir -p $overlaysrc
 
-  # copy overlay files
-  cp -a $OVERLAY_ROOTFS_PATH/. $overlaypath/
+    # copy overlay files
+    cp -a $OVERLAY_ROOTFS_PATH/. $overlaysrc/
 
-  # skarnet versions manifest
-  packages=($(get_packages_with_versions_from_manifest "manifest-$output.txt"))
+    # skarnet versions manifest
+    packages=($(get_packages_with_versions_from_manifest "manifest-$output.txt"))
 
-  # install required binaries for this concrete output
-  for package in "${packages[@]}"
-  do
-      tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaypath
+    # install required binaries for this concrete output
+    for package in "${packages[@]}"; do
+      echo "####### /tmp/$package-linux-amd64-bin.tar.gz ########"
+      tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaysrc
+    done
+
+    # create must exist directories
+    mkdir -p $overlaysrc/etc/s6/init/env-stage2
+    mkdir -p $overlaysrc/etc/{cont-init.d,fix-attrs.d,services.d}
+    mkdir -p $overlaysrc/var/log/s6-uncaught-logs
+
+    # fix fix-attrs perms
+    chmod 0755 $overlaysrc/usr/bin/fix-attrs
+
+    # fix init perms
+    chmod 0755 $overlaysrc/init
+    chmod 0755 $overlaysrc/etc/s6/init/init-stage*
+    chmod 0755 $overlaysrc/etc/s6/service/.s6-svscan/{crash,finish}
+    chmod 0755 $overlaysrc/etc/s6/service/s6-fdholderd/run
+    chmod 0755 $overlaysrc/etc/s6/service/s6-svscan-log/run
+
+    # copy debugging tools & fix perms
+    if [ "${edition}" == "debug" ]; then
+      cp /tmp/strace $overlaysrc/usr/bin/strace
+      chmod 0755 $overlaysrc/usr/bin/strace
+    fi
+
+    # dist!
+    mkdir -p /dist
+    tar -zcvf $overlaydst -C $overlaysrc ./
   done
-
-  # create must exist directories
-  mkdir -p $overlaypath/etc/s6/init/env-stage2
-  mkdir -p $overlaypath/etc/{cont-init.d,fix-attrs.d,services.d}
-  mkdir -p $overlaypath/var/log/{s6-uncaught-logs,s6-fdholderd}
-
-  # copy strace & fix permissions
-  if [ -n "$DEBUG" ]; then
-    cp /tmp/strace $overlaypath/usr/bin/strace
-    chmod 0755 $overlaypath/usr/bin/strace
-  fi
-
-  # fix fix-attrs perms
-  chmod 0755 $overlaypath/usr/bin/fix-attrs
-
-  # fix init perms
-  chmod 0755 $overlaypath/init
-  chmod 0755 $overlaypath/etc/s6/init/init-stage*
-  chmod 0755 $overlaypath/etc/s6/service/.s6-svscan/{crash,finish}
-  chmod 0755 $overlaypath/etc/s6/service/s6-fdholderd/run
-  chmod 0755 $overlaypath/etc/s6/service/s6-svscan-log/run
-
-  # fix log folder perms
-  chmod 2700 $overlaypath/var/log/{s6-uncaught-logs,s6-fdholderd}
-  chown nobody:nogroup $overlaypath/var/log/{s6-uncaught-logs,s6-fdholderd}
-
-  # dist!
-  mkdir -p /dist
-  tar -zcvf /dist/s6-overlay-$RELEASE_VERSION-$output-amd64.tar.gz -C $overlaypath ./
 done
