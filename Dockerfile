@@ -4,11 +4,15 @@ MAINTAINER Gorka Lerchundi Osa <glertxundi@gmail.com>
 ENV LC_ALL C
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get install -y curl
-COPY rootfs /
-RUN chmod +x /build-*
+RUN apt-get update && \
+    apt-get -y install curl && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV OVERLAY_ROOTFS_PATH /overlay-rootfs
-COPY overlay-rootfs $OVERLAY_ROOTFS_PATH
+COPY builder /builder
+RUN chown -R nobody:nogroup /builder
 
-CMD [ "/build-wrapper" ]
+USER nobody
+ENV HOME /builder
+WORKDIR /builder
+
+CMD [ "./build-wrapper" ]

@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-rm -f /dist/*
-/build-latest 2>&1 | tee "/dist/build-latest-$(date +'%Y%m%d%H%M%S').log"
