@@ -5,7 +5,7 @@ deploy:
   provider: releases
   skip_cleanup: true
   api_key:
-    secure: "cHrT98HKxe3HLFabDnCcohGJQJzmbjQHIjI7sggvDRS3g9FhgeA2Ncbwvl55/1TsGYE+KthGZ4zB5kjeiUBTHZCGMOsl1YzvQ+LK7OQ6Ybl8yLNfaer/RLcajznKsWRVLI52bQAAlTDVZCit0Ohfr6bk9UVW7k8SawaFeJ1qXgs="
+    secure: "XyKkvK7dmt9oVqcNaMojgw+vLQ0Q8VBf4K3LWgZHJJbPBUTrLRTNu5JXVB0kvmTZYSdVu7HHZ2LZJxsTac7frnzbMvNim0IfToJa4juW7fF50D+h84T1/T+fl4Q/OKWBDMW+GwhX4dSUygLAznojObwcxQjsSC5ARrBzlBpOjb0="
   file:
     - $HOME/dist/*.tar.gz
   file_glob: true
