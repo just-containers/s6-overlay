@@ -1,3 +1,5 @@
+# s6 overlay [![Build Status](https://travis-ci.org/just-containers/s6-overlay-builder.svg?branch=v1.7.2)](https://travis-ci.org/just-containers/s6-overlay-builder)
+
 ```
 mkdir dist
 chmod o+rw dist
