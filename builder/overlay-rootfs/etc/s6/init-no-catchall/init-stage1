@@ -1,0 +1,48 @@
+#!/usr/bin/execlineb -S0
+
+##
+## init the scandir with our base services
+##
+
+if { s6-rmrf /var/run/s6/services }
+if { s6-hiercopy /etc/s6/services /var/run/s6/services }
+if { s6-rmrf /var/run/s6/services/s6-svscan-log }
+
+
+##
+## fork the "init-stage2" script
+##
+
+background
+{
+  # block until the supervision tree is running
+  # NOTE: start waiting as soon as possible because we can get
+  # into a race condition if "s" was already sent before we
+  # started listening to the fifodir.
+  if
+  {
+    # keep stderr open, but avoid "s" printing to the outside
+    redirfd -w 1 /dev/null
+    s6-ftrig-wait /var/run/s6/services/s6-fdholderd/event "s"
+  }
+
+  # add some environment
+  s6-envdir -- /etc/s6/init/env-stage2
+
+  # run the script
+  /etc/s6/init-no-catchall/init-stage2 $@
+}
+unexport !
+
+##
+## run the rest of stage 1 with sanitized descriptors
+##
+
+redirfd -r 0 /dev/null
+
+
+##
+## start the supervision tree
+##
+
+s6-svscan -t0 /var/run/s6/services

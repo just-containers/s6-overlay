@@ -1,0 +1,17 @@
+#!/usr/bin/execlineb -S0
+
+##
+## The init is complete. If the user has given a CMD, run it now, then
+## kill everything when it exits.
+##
+
+if -t { s6-test $# -ne 0 }
+foreground { s6-setsid -gq -- with-contenv $@ }
+foreground { import -u ? s6-echo "${1} exited ${?}. Stopping the supervision tree." }
+foreground { s6-svscanctl -t /var/run/s6/services }
+
+# Race condition here, but it's ok: the sync in stage 3 takes ages,
+# and if we get killed by the SIGTERM instead of the SIGKILL, meh, who cares.
+
+# Wait to be nuked
+s6-pause -th

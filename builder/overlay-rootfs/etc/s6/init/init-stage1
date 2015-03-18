@@ -18,61 +18,19 @@
 /usr/bin/s6-envdir /etc/s6/init/env
 /usr/bin/exec --
 
-
 ##
-## ensure our vital fifo exists
-##
-
-if { s6-mkfifo -m 0600 -- /var/run/s6/uncaught-logs-fifo }
-
-##
-## ensure ownership & permissions for our vital files
+## route based on what was provided in S6_USE_CATCHALL_LOGGER
 ##
 
-if { s6-rmrf /var/log/s6-uncaught-logs }
-if { s6-mkdir -p /var/log/s6-uncaught-logs }
-if { s6-envuidgid -D 32768:32768 nobody s6-chown -U /var/log/s6-uncaught-logs }
-if { s6-chmod 2700 /var/log/s6-uncaught-logs }
-
-
-##
-## init the scandir with our base services
-##
-
-if { s6-rmrf /var/run/s6/service }
-if { s6-hiercopy /etc/s6/service /var/run/s6/service }
-
-
-##
-## fork the "init-stage2" script
-##
-
-background
+backtick -n -D 0 S6_USE_CATCHALL_LOGGER
 {
-  # add some environment
-  s6-envdir -- /etc/s6/init/env-stage2
-
-  # block until the supervision tree is running
-  redirfd -w 3 /var/run/s6/uncaught-logs-fifo
-  fdclose 3
-
-  # run the script
-  /etc/s6/init/init-stage2 $@
+  if { s6-test -f /var/run/s6/container_environment/S6_USE_CATCHALL_LOGGER }
+  redirfd -r 0 /var/run/s6/container_environment/S6_USE_CATCHALL_LOGGER
+  s6-cat
 }
-unexport !
-
-
-##
-## run the rest of stage 1 with sanitized descriptors
-##
-
-redirfd -r 0 /dev/null
-redirfd -wnb 1 /var/run/s6/uncaught-logs-fifo
-fdmove -c 2 1
-
-
-##
-## start the supervision tree
-##
-
-s6-svscan -t0 /var/run/s6/service
+import -u S6_USE_CATCHALL_LOGGER
+ifelse { s6-test ${S6_USE_CATCHALL_LOGGER} -eq 1 }
+{
+  /etc/s6/init-catchall/init-stage1 $@
+}
+/etc/s6/init-no-catchall/init-stage1 $@
