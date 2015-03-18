@@ -10,21 +10,21 @@ if { s6-rmrf /var/run/s6/services/s6-svscan-log }
 
 
 ##
+## ensure our vital fifo exists
+##
+
+if { s6-mkfifo -m 0600 /var/run/s6/services/s6-fdholderd/supervise/control }
+
+
+##
 ## fork the "init-stage2" script
 ##
 
 background
 {
   # block until the supervision tree is running
-  # NOTE: start waiting as soon as possible because we can get
-  # into a race condition if "s" was already sent before we
-  # started listening to the fifodir.
-  if
-  {
-    # keep stderr open, but avoid "s" printing to the outside
-    redirfd -w 1 /dev/null
-    s6-ftrig-wait /var/run/s6/services/s6-fdholderd/event "s"
-  }
+  redirfd -w 3 /var/run/s6/services/s6-fdholderd/supervise/control
+  fdclose 3
 
   # add some environment
   s6-envdir -- /etc/s6/init/env-stage2
@@ -33,6 +33,7 @@ background
   /etc/s6/init-no-catchall/init-stage2 $@
 }
 unexport !
+
 
 ##
 ## run the rest of stage 1 with sanitized descriptors
