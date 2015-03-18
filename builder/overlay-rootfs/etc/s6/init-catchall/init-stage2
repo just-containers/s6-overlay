@@ -1,0 +1,24 @@
+#!/usr/bin/execlineb -S0
+
+# This file is executed (not as process 1!) as soon as s6-svscan
+# starts, with the original stdin/out/err, but NOT the original
+# environment.
+# Purpose of this file: to perform all the one-time initialization tasks.
+
+if -nt
+{
+  if
+  {
+    redirfd -w 1 /var/run/s6/uncaught-logs-fifo
+    fdmove -c 2 1
+
+    /etc/s6/init/init-stage2-fix-attrs
+    /etc/s6/init/init-stage2-cont-inits
+    /etc/s6/init/init-stage2-services
+  }
+
+  /etc/s6/init/init-stage2-cmd $@
+}
+
+# if anything in the if -nt { } block fails, control jumps here.
+s6-echo -- "\n!!!!!\n init-stage2 failed.\n Logs are in /var/log/s6-uncaught-logs\n!!!!!"

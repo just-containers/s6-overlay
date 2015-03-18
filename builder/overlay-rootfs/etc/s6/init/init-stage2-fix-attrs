@@ -1,0 +1,19 @@
+#!/usr/bin/execlineb -S0
+
+##
+## fix-attrs.d: ensure owners and permissions are correct
+##
+
+if { s6-echo "[fix-attrs.d] applying owners & permissions fixes..." }
+if
+{
+  pipeline { s6-ls -0 -- /etc/fix-attrs.d }
+  pipeline { s6-sort -0 -- }
+  forstdin -0 -- i
+  import -u i
+  if { s6-echo -n -- "[fix-attrs.d] applying ${i}... " }
+  foreground { redirfd -r 0 /etc/fix-attrs.d/${i} fix-attrs }
+  import -u ? s6-echo -- " exited ${?}"
+}
+if { s6-echo -- "[fix-attrs.d] done." }
+$@

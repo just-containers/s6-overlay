@@ -1,0 +1,18 @@
+#!/usr/bin/execlineb -S0
+
+##
+## services.d: long-lived processes to be supervised
+##
+
+if { s6-echo "[services.d] starting services" }
+if
+{
+  pipeline { s6-ls -0 -- /etc/services.d }
+  forstdin -0 -p -- i
+  import -u i
+  if { s6-test -d /etc/services.d/${i} }
+  s6-hiercopy /etc/services.d/${i} /var/run/s6/services/${i}
+}
+if { s6-svscanctl -a /var/run/s6/services }
+if { s6-echo -- "[services.d] done." }
+$@

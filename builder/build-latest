@@ -95,15 +95,22 @@ for output in "${outputs[@]}"; do
     mkdir -p $overlaydstpath/etc/{cont-init.d,fix-attrs.d,services.d}
     mkdir -p $overlaydstpath/var/log/s6-uncaught-logs
 
+    # create event directory in fdholder, its needed for no-catchall
+    # stage2 wake up
+    mkdir -p $overlaydstpath/etc/s6/services/s6-fdholderd/event
+    chmod 3730 $overlaydstpath/etc/s6/services/s6-fdholderd/event
+
     # fix fix-attrs perms
     chmod 0755 $overlaydstpath/usr/bin/fix-attrs
 
     # fix init perms
     chmod 0755 $overlaydstpath/init
-    chmod 0755 $overlaydstpath/etc/s6/init/init-stage*
-    chmod 0755 $overlaydstpath/etc/s6/service/.s6-svscan/{crash,finish}
-    chmod 0755 $overlaydstpath/etc/s6/service/s6-fdholderd/run
-    chmod 0755 $overlaydstpath/etc/s6/service/s6-svscan-log/run
+    chmod 0755 $overlaydstpath/etc/s6/init/init-*
+    chmod 0755 $overlaydstpath/etc/s6/init-catchall/init-*
+    chmod 0755 $overlaydstpath/etc/s6/init-no-catchall/init-*
+    chmod 0755 $overlaydstpath/etc/s6/services/.s6-svscan/{crash,finish}
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/run
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-svscan-log/run
 
     # copy debugging tools & fix perms
     if [ "${edition}" == "debug" ]; then
@@ -112,7 +119,11 @@ for output in "${outputs[@]}"; do
     fi
 
     # dist!
-    tar -zcvf $overlaytarpath -C $overlaydstpath ./
+    tar --owner=root --group=root \
+        -zcvf                     \
+        $overlaytarpath           \
+        -C $overlaydstpath        \
+        ./
   done
 done
 
