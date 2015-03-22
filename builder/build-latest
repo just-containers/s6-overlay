@@ -100,8 +100,11 @@ for output in "${outputs[@]}"; do
     mkdir -p $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
     chmod 0700 $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
 
-    # fix fix-attrs perms
+    # fix perms for utilities
     chmod 0755 $overlaydstpath/usr/bin/fix-attrs
+    chmod 0755 $overlaydstpath/usr/bin/import-from-envdir
+    chmod 0755 $overlaydstpath/usr/bin/with-contenv
+    chmod 0755 $overlaydstpath/usr/bin/with-notifywhenup
 
     # fix init perms
     chmod 0755 $overlaydstpath/init

@@ -5,17 +5,18 @@
 # environment.
 # Purpose of this file: to perform all the one-time initialization tasks.
 
-if -nt
+foreground
 {
-  if
-  {
-    /etc/s6/init/init-stage2-fix-attrs
-    /etc/s6/init/init-stage2-cont-inits
-    /etc/s6/init/init-stage2-services
-  }
-
+  if { /etc/s6/init/init-stage2-partial }
   /etc/s6/init/init-stage2-cmd $@
 }
-
-# if anything in the if -nt { } block fails, control jumps here.
+import -u ?
+if { s6-test ${?} -ne 0 }
+import-from-envdir -u -D 0 /var/run/s6/container_environment S6_BEHAVIOUR_IF_STAGE2_FAILS
+if { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 0 }
+ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 1 }
+{
+  # Stop supervision tree
+  s6-svscanctl -t /var/run/s6/services
+}
 s6-echo -- "\n!!!!!\n init-stage2 failed.\n!!!!!"

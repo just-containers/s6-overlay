@@ -7,7 +7,10 @@
 
 if -t { s6-test $# -ne 0 }
 foreground { s6-setsid -gq -- with-contenv $@ }
-foreground { import -u ? s6-echo "${1} exited ${?}. Stopping the supervision tree." }
+import -u ?
+if { s6-echo "${1} exited ${?}" }
+
+# Stop supervision tree
 foreground { s6-svscanctl -t /var/run/s6/services }
 
 # Race condition here, but it's ok: the sync in stage 3 takes ages,

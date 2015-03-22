@@ -18,17 +18,12 @@
 /usr/bin/s6-envdir /etc/s6/init/env
 /usr/bin/exec --
 
+
 ##
 ## route based on what was provided in S6_USE_CATCHALL_LOGGER
 ##
 
-backtick -n -D 0 S6_USE_CATCHALL_LOGGER
-{
-  if { s6-test -f /var/run/s6/container_environment/S6_USE_CATCHALL_LOGGER }
-  redirfd -r 0 /var/run/s6/container_environment/S6_USE_CATCHALL_LOGGER
-  s6-cat
-}
-import -u S6_USE_CATCHALL_LOGGER
+import-from-envdir -u -D 0 /var/run/s6/container_environment S6_USE_CATCHALL_LOGGER
 ifelse { s6-test ${S6_USE_CATCHALL_LOGGER} -eq 1 }
 {
   /etc/s6/init-catchall/init-stage1 $@

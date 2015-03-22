@@ -15,12 +15,8 @@ foreground { s6-sync }
 
 foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
 foreground { s6-nuke -th } # foreground is process 1: it survives
-foreground
-{
-  with-contenv
-  /usr/bin/import -u -D 3000 S6_KILL_GRACETIME
-  /usr/bin/s6-sleep -m -- ${S6_KILL_GRACETIME}
-}
+import-from-envdir -u -D 3000 /var/run/s6/container_environment S6_KILL_GRACETIME
+foreground { s6-sleep -m -- ${S6_KILL_GRACETIME} }
 
 # Last message, then close our pipes and give the logger some time.
 foreground { s6-echo "[s6-finish] sending all processes the KILL signal and exiting." }
