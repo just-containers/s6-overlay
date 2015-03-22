@@ -1,0 +1,29 @@
+#!/usr/bin/execlineb
+
+elgetopt "uD:"
+multisubstitute
+{
+  importas -u envdir 1
+  importas -u envvar 2
+  importas -u -D "" defval ELGETOPT_D
+  import -u -D 0 ELGETOPT_u
+}
+shift -n 2
+elgetpositionals -P0
+emptyenv -P
+backtick -n ${envvar}
+{
+  ifelse { s6-test -f ${envdir}/${envvar} }
+  {
+    redirfd -r 0 ${envdir}/${envvar}
+    s6-cat
+  }
+  s6-echo -n "${defval}"
+}
+ifelse { s6-test ${ELGETOPT_u} -eq 1 }
+{
+  import -u ${envvar}
+  $@
+}
+import ${envvar}
+$@
