@@ -1,0 +1,10 @@
+#!/usr/bin/execlineb -S0
+
+import-from-envdir -u -D 0 /var/run/s6/container_environment S6_LOGGING
+ifelse { s6-test ${S6_LOGGING} -ne 0 }
+{
+  redirfd -w 1 /var/run/s6/uncaught-logs-fifo
+  fdmove -c 2 1
+  $@
+}
+$@
