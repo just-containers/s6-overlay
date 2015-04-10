@@ -77,6 +77,12 @@ Our interpretation of "The Docker Way" is thus:
 
 and our init system is designed to do exactly that! Your images will still behave like other Docker images and fit in with
 
+## Our `s6-overlay` based images
+
+Based on this overlay, we've developed two base docker images:
+* [base](https://github.com/just-containers/base): Based on Ubuntu 14.04 LTS, it was intended to use as a general purpose base image.
+* [base-alpine](https://github.com/just-containers/base-alpine): Based on Alpine Linux 3.1, as advertised on their website: "is a security-oriented, lightweight Linux distribution based on musl libc and busybox." and even it includes a package manager.
+
 ## Usage
 
 The project is distributed as a standard .tar.gz file, which you extract at the root of your image. Afterwards, set your `ENTRYPOINT` to `/init`
@@ -131,7 +137,7 @@ docker-host $
 
 TODO
 
-### Contributing
+## Contributing
 
 TODO
 
