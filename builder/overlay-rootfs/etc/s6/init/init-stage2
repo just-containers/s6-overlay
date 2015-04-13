@@ -48,7 +48,7 @@ foreground
         forstdin -o 0 -0 -- i
         import -u i
         if { s6-echo -- "[cont-init.d] ${i}: executing... " }
-        foreground { with-contenv /etc/cont-init.d/${i} }
+        foreground { /etc/cont-init.d/${i} }
         import -u ?
         if { s6-echo -- "[cont-init.d] ${i}: exited ${?}." }
         ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
