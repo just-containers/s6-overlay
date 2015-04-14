@@ -1,3 +1,17 @@
+**Table of Contents**
+
+- [Quickstart](#quickstart)
+- [Goals](#goals)
+- [Features](#features)
+- [The Docker Way?](#the-docker-way)
+- [Our `s6-overlay` based images](#our-s6-overlay-based-images)
+- [Usage](#usage)
+  - [Using `CMD`](#using-cmd)
+  - [Writing a service script](#writing-a-service-script)
+  - [Customizing `s6` behaviour](#customizing-s6-behaviour)
+- [Performance](#performance)
+- [Contributing](#contributing)
+
 # s6 overlay [![Build Status](https://travis-ci.org/just-containers/s6-overlay-builder.svg?branch=v1.7.2)](https://travis-ci.org/just-containers/s6-overlay-builder)
 
 The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images with [s6](http://skarnet.org/software/s6/) as a process supervisor.
@@ -150,11 +164,9 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`2`**: Stop by sending a termination signal to the supervision tree.
 * `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 
-## FAQ
+## Performance
 
-* Hei, I want to see numbers!
-
-Ok! overlay takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much does it take to get supervision tree up and running, it's less than **`100ms`** (#3)!
+Hei, and what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
 
 ## Contributing
 
