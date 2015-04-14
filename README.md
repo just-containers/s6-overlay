@@ -137,6 +137,25 @@ docker-host $
 
 TODO
 
+### Customizing `s6` behaviour
+
+It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
+
+* `S6_LOGGING` (default = 0): 
+  * **`0`**: Outputs everything to stdout/stderr.
+  * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Nothing would be written to stdout/stderr.
+* `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
+  * **`0`**: Continue silently even if any script (fix-attrs or cont-init) has failed.
+  * **`1`**: Continue but warn with an annoying error message.
+  * **`2`**: Stop by sending a termination signal to the supervision tree.
+* `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
+
+## FAQ
+
+* Hei, I want to see numbers!
+
+Ok! overlay takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much does it take to get supervision tree up and running, it's less than **`100ms`** (#3)!
+
 ## Contributing
 
 TODO
