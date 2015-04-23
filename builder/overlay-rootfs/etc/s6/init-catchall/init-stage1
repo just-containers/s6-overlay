@@ -4,7 +4,9 @@
 ## ensure our vital fifo exists
 ##
 
+if { s6-rmrf /var/run/s6/uncaught-logs-fifo }
 if { s6-mkfifo -m 0600 -- /var/run/s6/uncaught-logs-fifo }
+
 
 ##
 ## ensure ownership & permissions for our vital files
