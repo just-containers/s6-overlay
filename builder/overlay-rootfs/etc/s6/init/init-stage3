@@ -5,6 +5,31 @@
 cd /
 
 
+# cont-finish.d: one-time finish scripts
+
+foreground
+{
+  import-from-envdir -u -D 5000 /var/run/s6/container_environment S6_KILL_FINISH_MAXTIME
+  if { s6-echo "[cont-finish.d] executing container finish scripts..." }
+  if
+  {
+    pipeline { s6-ls -0 -- /etc/cont-finish.d }
+    pipeline { s6-sort -0 -- }
+    forstdin -o 0 -0 -- i
+    import -u i
+    if { s6-echo -- "[cont-finish.d] ${i}: executing... " }
+    foreground
+    {
+      s6-maximumtime -k ${S6_KILL_FINISH_MAXTIME}
+      /etc/cont-finish.d/${i}
+    }
+    import -u ?
+    s6-echo -- "[cont-finish.d] ${i}: exited ${?}."
+  }
+  s6-echo -- "[cont-finish.d] done."
+}
+
+
 # Sync before TERM'n
 
 foreground { s6-echo "[s6-finish] syncing disks." }
@@ -15,15 +40,20 @@ foreground { s6-sync }
 
 foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
 foreground { s6-nuke -th } # foreground is process 1: it survives
-import-from-envdir -u -D 3000 /var/run/s6/container_environment S6_KILL_GRACETIME
-foreground { s6-sleep -m -- ${S6_KILL_GRACETIME} }
+foreground
+{
+  import-from-envdir -u -D 3000 /var/run/s6/container_environment S6_KILL_GRACETIME
+  s6-sleep -m -- ${S6_KILL_GRACETIME}
+}
 
 # Last message, then close our pipes and give the logger some time.
 foreground { s6-echo "[s6-finish] sending all processes the KILL signal and exiting." }
 fdclose 1 fdclose 2
 s6-sleep -m 200
 
+
 # Kill everything, brutally.
+
 foreground { s6-nuke -k } # foreground is process 1: it survives again
 
 

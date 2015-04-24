@@ -162,6 +162,7 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`0`**: Continue silently even if any script (fix-attrs or cont-init) has failed.
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
+* `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
 * `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 
 ## Performance
