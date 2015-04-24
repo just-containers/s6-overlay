@@ -91,7 +91,7 @@ for edition in "${editions[@]}"; do
 
   # create must exist directories
   mkdir -p $overlaydstpath/etc/s6/init/env-stage2
-  mkdir -p $overlaydstpath/etc/{cont-init.d,fix-attrs.d,services.d}
+  mkdir -p $overlaydstpath/etc/{cont-init.d,cont-finish.d,fix-attrs.d,services.d}
 
   # create "supervise" directory in fdholder, its needed for no-catchall
   # stage2 wake up
