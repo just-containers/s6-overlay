@@ -5,6 +5,9 @@
 # environment.
 # Purpose of this file: to perform all the one-time initialization tasks.
 
+# Merge environments from our custom stage into current context
+s6-envdir -I /var/run/s6/env-stage2
+
 # this env decides what to do if stage2 fails
 import-from-envdir -u -D 0 /var/run/s6/container_environment S6_BEHAVIOUR_IF_STAGE2_FAILS
 
@@ -88,6 +91,9 @@ foreground
   foreground { s6-setsid -gq -- with-contenv $@ }
   import -u ?
   if { s6-echo -- "${1} exited ${?}" }
+
+  # Make CMD exit code available in stage3
+  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_CMD_EXITED s6-echo -n -- "${?}" }
 
   # Stop supervision tree
   foreground { s6-svscanctl -t /var/run/s6/services }
