@@ -9,13 +9,31 @@
 
 
 ##
+## create env folder for each init stage, although stage1 is always copied from
+## /etc/s6/init/env, it's made available in /var/run/s6/env/stage1 just for
+## consistency.
+##
+
+/usr/bin/if
+{
+  /usr/bin/elglob -0 -- envdirs /var/run/s6/env-*
+  /usr/bin/forx -p -- envdir { ${envdirs} }
+  /usr/bin/import -u envdir
+  /usr/bin/s6-rmrf ${envdir}
+}
+/usr/bin/if { /usr/bin/s6-hiercopy /etc/s6/init/env /var/run/s6/env-stage1 }
+/usr/bin/if { /usr/bin/s6-mkdir -pm 0755 -- /var/run/s6/env-stage2 }
+/usr/bin/if { /usr/bin/s6-mkdir -pm 0755 -- /var/run/s6/env-stage3 }
+
+
+##
 ## run everything else with only the environment defined in
-## /etc/s6/init/env. Programs can get back the container
+## /var/run/s6/env/stage1. Programs can get back the container
 ## environment by using "with-contenv program".
 ##
 
 /usr/bin/exec -c --
-/usr/bin/s6-envdir /etc/s6/init/env
+/usr/bin/s6-envdir /var/run/s6/env-stage1
 /usr/bin/exec --
 
 
