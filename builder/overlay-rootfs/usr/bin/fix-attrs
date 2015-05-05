@@ -2,7 +2,14 @@
 
 /usr/bin/export PATH /usr/bin:/bin
 /usr/bin/export recfunction "\
-foreground { s6-envuidgid ${3} s6-chown -U -- ${1} }
+multidefine -Cd"," -- ${3} { account uidgid }
+backtick -n envuidgid_opts
+{
+  ifte { s6-echo -- -D${uidgid} } { s6-echo -- -i }
+  s6-test -n ${uidgid}
+}
+import -u envuidgid_opts
+foreground { s6-envuidgid ${envuidgid_opts} ${account} s6-chown -U -- ${1} }
 ifelse -- { if { s6-${2} } s6-test -d ${1} }
 {
   foreground { s6-chmod ${5} ${1} }
