@@ -125,7 +125,7 @@ ENTRYPOINT ["/init"]
 docker-host $ docker build -t s6demo .
 docker-host $ docker run -ti s6demo /bin/sh
 [fix-attrs.d] applying owners & permissions fixes...
-[fix-attrs.d] 00-runscripts: applying... 
+[fix-attrs.d] 00-runscripts: applying...
 [fix-attrs.d] 00-runscripts: exited 0.
 [fix-attrs.d] done.
 [cont-init.d] executing container initialization scripts...
@@ -155,7 +155,7 @@ TODO
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
 
-* `S6_LOGGING` (default = 0): 
+* `S6_LOGGING` (default = 0):
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Nothing would be written to stdout/stderr.
 * `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
@@ -164,6 +164,28 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`2`**: Stop by sending a termination signal to the supervision tree.
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
 * `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
+
+### Loading environment variables
+
+If you'd like to write a shell script that references environment variables, use the `with-contenv` utility like so:
+
+```sh
+#!/usr/bin/with-contenv sh
+
+printenv
+```
+
+### Writing environment variables
+
+To write any new environment variables, use the `set-contenv` utility like so:
+
+```sh
+#!/usr/bin/with-contenv sh
+
+set-contenv ENV_VAR_NAME env_var_value
+```
+
+The next time your script runs with `with-contenv`, your new environment variable will exist.
 
 ## Performance
 
@@ -180,4 +202,3 @@ docker build .                                    | \
 tail -n 1 | awk '{ print $3; }'                   | \
 xargs docker run --rm -v `pwd`/dist:/builder/dist
 ```
-
