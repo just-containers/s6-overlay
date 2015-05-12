@@ -1,0 +1,6 @@
+#!/usr/bin/execlineb -S0
+
+if { s6-test $# -eq 2 }
+
+redirfd -w 1 /var/run/s6/container_environment/${1}
+s6-echo -n -- ${2}
