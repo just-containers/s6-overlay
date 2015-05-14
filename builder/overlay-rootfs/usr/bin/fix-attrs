@@ -12,7 +12,11 @@ import -u envuidgid_opts
 foreground { s6-envuidgid ${envuidgid_opts} ${account} s6-chown -U -- ${1} }
 ifelse -- { if { s6-${2} } s6-test -d ${1} }
 {
-  foreground { s6-chmod ${5} ${1} }
+  foreground
+  {
+    if -t { s6-test ! ${5} = "-" }
+    s6-chmod ${5} ${1}
+  }
   forbacktickx -0 subfile { s6-ls -0 ${1} }
   multisubstitute
   {
@@ -21,6 +25,7 @@ ifelse -- { if { s6-${2} } s6-test -d ${1} }
   }
   execlineb -S5 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5}
 }
+if -t { s6-test ! ${4} = "-" }
 s6-chmod ${4} ${1}"
 
 forstdin -d"\n" -- line
