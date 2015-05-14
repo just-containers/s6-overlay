@@ -101,6 +101,8 @@ for edition in "${editions[@]}"; do
   # fix perms for utilities
   chmod 0755 $overlaydstpath/usr/bin/fix-attrs
   chmod 0755 $overlaydstpath/usr/bin/import-from-envdir
+  chmod 0755 $overlaydstpath/usr/bin/logutil-newfifo
+  chmod 0755 $overlaydstpath/usr/bin/logutil-service
   chmod 0755 $overlaydstpath/usr/bin/with-contenv
   chmod 0755 $overlaydstpath/usr/bin/with-notifywhenup
   chmod 0755 $overlaydstpath/usr/bin/with-retries
