@@ -1,0 +1,16 @@
+#!/usr/bin/execlineb -S0
+
+# test if arguments were given
+if { s6-test $# -ge 2 }
+
+
+# this env decides what to log and how.
+import-from-envdir -u -D "t" /var/run/s6/container_environment S6_LOGGING_SCRIPT
+
+
+# redirect fifo to s6-log
+redirfd -rnb 0 ${1}
+s6-envuidgid -D 32768:32768 nobody
+s6-applyuidgid -U
+exec -c
+s6-log -bp -- ${S6_LOGGING_SCRIPT} ${2}

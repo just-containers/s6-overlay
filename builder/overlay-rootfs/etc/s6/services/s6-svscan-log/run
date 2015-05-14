@@ -1,6 +1,2 @@
 #!/usr/bin/execlineb -P
-redirfd -rnb 0 /var/run/s6/uncaught-logs-fifo
-s6-envuidgid -D 32768:32768 nobody
-s6-applyuidgid -U
-exec -c
-s6-log -bp -- t /var/log/s6-uncaught-logs
+logutil-service /var/run/s6/uncaught-logs-fifo /var/log/s6-uncaught-logs

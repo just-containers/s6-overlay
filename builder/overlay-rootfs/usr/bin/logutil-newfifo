@@ -1,0 +1,20 @@
+#!/usr/bin/execlineb -S0
+
+# test if arguments were given
+if { s6-test $# -ge 1 }
+
+
+# wait for fdholderd
+if { s6-svwait -t 5000 -U /var/run/s6/services/s6-fdholderd }
+
+
+# initialize fifo and put it inside fdholderd
+if { s6-rmrf ${1} }
+if { s6-mkfifo -m 0600 -- ${1} }
+if
+{
+  backtick -n name { s6-uniquename fifo }
+  import -u name
+  redirfd -rnb 0 ${1}
+  s6-fdholder-store /var/run/s6/fdholderd-socket fifo:${name}
+}
