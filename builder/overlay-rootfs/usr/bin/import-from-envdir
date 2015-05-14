@@ -6,7 +6,7 @@ multisubstitute
   importas -u envdir 1
   importas -u envvar 2
   importas -u -D "" defval ELGETOPT_D
-  import -u -D 0 ELGETOPT_u
+  importas -u -D 0 unexport ELGETOPT_u
 }
 shift -n 2
 elgetpositionals -P0
@@ -20,7 +20,7 @@ backtick -n ${envvar}
   }
   s6-echo -n "${defval}"
 }
-ifelse { s6-test ${ELGETOPT_u} -eq 1 }
+ifelse { s6-test ${unexport} -eq 1 }
 {
   import -u ${envvar}
   $@
