@@ -41,7 +41,8 @@
 ## route based on what was provided in S6_LOGGING
 ##
 
-import-from-envdir -u -D 0 /var/run/s6/container_environment S6_LOGGING
+backtick -D 0 -n S6_LOGGING { printcontenv S6_LOGGING }
+import -u S6_LOGGING
 ifelse { s6-test ${S6_LOGGING} -ne 0 }
 {
   /etc/s6/init-catchall/init-stage1 $@

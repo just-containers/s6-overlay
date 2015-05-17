@@ -1,0 +1,18 @@
+#!/usr/bin/execlineb -S0
+
+# test if arguments were given
+if { s6-test ${#} -ge 1 }
+
+
+# print if container environment exists
+if { s6-test -f /var/run/s6/container_environment/${1} }
+if 
+{
+  backtick value
+  {
+    redirfd -r 0 /var/run/s6/container_environment/${1}
+    s6-cat
+  }
+  import -u value
+  s6-echo -- ${value}
+}
