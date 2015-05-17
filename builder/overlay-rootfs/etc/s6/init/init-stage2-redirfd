@@ -1,6 +1,7 @@
 #!/usr/bin/execlineb -S0
 
-import-from-envdir -u -D 0 /var/run/s6/container_environment S6_LOGGING
+backtick -D 0 -n S6_LOGGING { printcontenv S6_LOGGING }
+import -u S6_LOGGING
 ifelse { s6-test ${S6_LOGGING} -ne 0 }
 {
   redirfd -w 1 /var/run/s6/uncaught-logs-fifo

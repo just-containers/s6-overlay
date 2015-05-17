@@ -10,7 +10,8 @@ s6-envdir -I /var/run/s6/env-stage3
 
 foreground
 {
-  import-from-envdir -u -D 5000 /var/run/s6/container_environment S6_KILL_FINISH_MAXTIME
+  backtick -D 5000 -n S6_KILL_FINISH_MAXTIME { printcontenv S6_KILL_FINISH_MAXTIME }
+  import -u S6_KILL_FINISH_MAXTIME
   if { s6-echo "[cont-finish.d] executing container finish scripts..." }
   if
   {
@@ -43,7 +44,9 @@ foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
 foreground { s6-nuke -th } # foreground is process 1: it survives
 foreground
 {
-  import-from-envdir -u -D 3000 /var/run/s6/container_environment S6_KILL_GRACETIME
+
+  backtick -D 3000 -n S6_KILL_GRACETIME { printcontenv S6_KILL_GRACETIME }
+  import -u S6_KILL_GRACETIME
   s6-sleep -m -- ${S6_KILL_GRACETIME}
 }
 

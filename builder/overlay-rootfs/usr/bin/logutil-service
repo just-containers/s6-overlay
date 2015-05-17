@@ -1,11 +1,12 @@
 #!/usr/bin/execlineb -S0
 
 # test if arguments were given
-if { s6-test $# -ge 2 }
+if { s6-test ${#} -ge 2 }
 
 
 # this env decides what to log and how.
-import-from-envdir -u -D "n20 s1000000 T" /var/run/s6/container_environment S6_LOGGING_SCRIPT
+backtick -D "n20 s1000000 T" -n S6_LOGGING_SCRIPT { printcontenv S6_LOGGING_SCRIPT }
+import -u -sCd" \t" S6_LOGGING_SCRIPT
 
 
 # redirect fifo to s6-log

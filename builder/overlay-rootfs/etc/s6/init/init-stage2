@@ -9,7 +9,8 @@
 s6-envdir -I /var/run/s6/env-stage2
 
 # this env decides what to do if stage2 fails
-import-from-envdir -u -D 0 /var/run/s6/container_environment S6_BEHAVIOUR_IF_STAGE2_FAILS
+backtick -D 0 -n S6_BEHAVIOUR_IF_STAGE2_FAILS { printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS }
+import -u S6_BEHAVIOUR_IF_STAGE2_FAILS
 
 foreground
 {
