@@ -1,17 +1,20 @@
-#!/usr/bin/execlineb -S0
+#!/usr/bin/execlineb
 
 # test if arguments were given
-if { s6-test ${#} -ge 2 }
+elgetopt "f:"
+multisubstitute
+{
+  importas -u -D "" fifo ELGETOPT_f
+}
+elgetpositionals -P0
+emptyenv -P
+if { s6-test ${#} -ge 1 }
 
 
-# this env decides what to log and how.
-backtick -D "n20 s1000000 T" -n S6_LOGGING_SCRIPT { printcontenv S6_LOGGING_SCRIPT }
-import -u -sCd" \t" S6_LOGGING_SCRIPT
-
-
-# redirect fifo to s6-log
-redirfd -rnb 0 ${1}
-s6-envuidgid -D 32768:32768 nobody
-s6-applyuidgid -U
-exec -c
-s6-log -bp -- ${S6_LOGGING_SCRIPT} ${2}
+# switch between std{out,err} or fifo
+ifelse { s6-test -n ${fifo} }
+{
+  redirfd -rnb 0 ${fifo}
+  logutil-service-main ${1}
+}
+logutil-service-main ${1}
