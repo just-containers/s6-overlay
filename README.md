@@ -5,16 +5,20 @@
 - [Features](#features)
 - [The Docker Way?](#the-docker-way)
 - [Our `s6-overlay` based images](#our-s6-overlay-based-images)
+- [Init stages](#init-stages)
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
+  - [Fixing ownership & permissions](#fixing-ownership-&-permissions)
+  - [Executing initialization And/Or finalization tasks](#executing-initialization-andor-finalization-tasks)
   - [Writing a service script](#writing-a-service-script)
+  - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Performance](#performance)
 - [Contributing](#contributing)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
 
-The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images with [s6](http://skarnet.org/software/s6/) as a process supervisor.
+The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
 
 ## Quickstart
 
@@ -22,8 +26,8 @@ Build the following Dockerfile and try this guy out:
 
 ```
 FROM ubuntu
-ADD https://github.com/just-containers/s6-overlay-builder/releases/download/v1.9.1.0/s6-overlay-portable-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-portable-amd64.tar.gz -C /
+ADD https://github.com/just-containers/s6-overlay/releases/download/v1.11.0.1/s6-overlay-amd64.tar.gz /tmp/
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
 RUN apt-get update && \
     apt-get install -y nginx && \
     echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -67,12 +71,15 @@ The project has the following goals:
 
 ## Features
 
+* A simple init process which allows to the end-user execute tasks like initialization (`cont-init.d`), finalization (`cont-finish.d`) as well as fixing ownership permissions (`fix-attrs.d`).
 * The s6-overlay provides proper `PID 1` functionality
   * You'll never have zombie processes hanging around in your container, they will be properly cleaned up.
 * Multiple processes in a single container
 * Able to operate in "The Docker Way"
 * Usable with all base images - Ubuntu, CentOS, Fedora, and even Busybox.
 * Distributed as a single .tar.gz file, to keep your image's number of layers small.
+* A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our live much, much easier.
+* Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](http://skarnet.org/software/s6/s6-log.html) under the hood.
 
 ## The Docker Way?
 
@@ -93,9 +100,20 @@ and our init system is designed to do exactly that! Your images will still behav
 
 ## Our `s6-overlay` based images
 
-Based on this overlay, we've developed two base docker images:
-* [base](https://github.com/just-containers/base): Based on Ubuntu 14.04 LTS, it was intended to use as a general purpose base image.
+We've developed two docker images which can be used as base images:
+* [base](https://github.com/just-containers/base): Based on Ubuntu 14.04 LTS, it was intended to use as a general purpose image.
 * [base-alpine](https://github.com/just-containers/base-alpine): Based on Alpine Linux 3.1, as advertised on their website: "is a security-oriented, lightweight Linux distribution based on musl libc and busybox." and even it includes a package manager.
+
+## Init stages
+
+Our overlay init is a properly customized one to run appropriately in containerized environments. This section briefly explains how our stages work but if you want to know how a complete init stages work, please read this incredible well-explained article: [How to run s6-svscan as process 1](http://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
+
+1. **stage 1**: Its purpose is to prepare the image to enter into the second stage. Among other things, it is responsible for preparing the container environment variables, block the startup of the second stage until `s6` was effectively started, ...
+2. **stage 2**: This is where most of the end-user provided files are mean to be executed:
+  1. Fix ownership and permissions using `/etc/fix-attrs.d`.
+  2. Execute initialization scripts contained in `/etc/cont-init.d`.
+  3. Copy user services (`/etc/services.d`) to the folder where s6 is running its supervision and signal it so that it can properly start supervising them. 
+3. **stage 3**: It's the shutdown stage. Its purpose is to clean everything up, stop services and execute finalization scripts contained in `/etc/cont-finish.d`. This is the concrete time when init sends a kill signal to all container processes, first gracefully using TERM and then (after `S6_KILL_GRACETIME`) forcibly using KILL. And, of course, reaps all zombies :-).
 
 ## Usage
 
@@ -116,8 +134,8 @@ For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay-builder/releases/download/v1.9.1.0/s6-overlay-portable-amd64.tar.gz /tmp/
-RUN gunzip -c /tmp/s6-overlay-portable-amd64.tar.gz | tar -xf - -C /
+ADD https://github.com/just-containers/s6-overlay/releases/download/v1.11.0.1/s6-overlay-amd64.tar.gz /tmp/
+RUN gunzip -c /tmp/s6-overlay-amd64.tar.gz | tar -xf - -C /
 ENTRYPOINT ["/init"]
 ```
 
@@ -147,9 +165,97 @@ PID   USER     COMMAND
 docker-host $
 ```
 
+### Fixing ownership & permissions
+
+Sometimes it's interesting to fix ownership & permissions before proceeding because, for example, you have mounted/mapped a host folder inside your container. Our overlay provides a way to tackle this issue using `fix-attrs.d` files. This is the pattern format followed by fix-attrs files:
+
+```
+path recurse account fmode dmode
+```
+* `path`: File or dir path.
+* `recurse`: If a folder was found, recurse through all containing files & folders in it.
+* `account`: Target account. It's possible to default to custom `uid:gid` if the account wasn't found. (using it like this `nobody,32768:32768`).
+* `fmode`: Target file mode. For example, 0644.
+* `dmode`: Target dir/folder mode. For example, 0755.
+
+Here you have some working examples:
+
+`/etc/fix-attrs.d/01-mysql-data-dir`:
+```
+/var/lib/mysql true mysql 0600 0700
+```
+`/etc/fix-attrs.d/02-mysql-log-dirs`:
+```
+/var/log/mysql-error-logs true nobody,32768:32768 0644 2700
+/var/log/mysql-general-logs true nobody,32768:32768 0644 2700
+/var/log/mysql-slow-query-logs true nobody,32768:32768 0644 2700
+```
+
+### Executing initialization And/Or finalization tasks
+
+After fixing attributes (through `/etc/fix-attrs.d/`) and just before starting user provided services up (through `/etc/services.d`) our overlay will execute all the scripts found in `/etc/cont-init.d`, for example:
+
+[`/etc/cont-init.d/02-confd-onetime`](https://github.com/just-containers/nginx-loadbalancer/blob/master/rootfs/etc/cont-init.d/02-confd-onetime):
+```
+#!/usr/bin/execlineb -P
+
+with-contenv
+s6-envuidgid nginx
+multisubstitute
+{
+  import -u -D0 UID
+  import -u -D0 GID
+  import -u CONFD_PREFIX
+  define CONFD_CHECK_CMD "/usr/sbin/nginx -t -c {{ .src }}"
+}
+confd --onetime --prefix="${CONFD_PREFIX}" --tmpl-uid="${UID}" --tmpl-gid="${GID}" --tmpl-src="/etc/nginx/nginx.conf.tmpl" --tmpl-dest="/etc/nginx/nginx.conf" --tmpl-check-cmd="${CONFD_CHECK_CMD}" etcd
+```
+
 ### Writing a service script
 
-TODO
+Creating a supervised service cannot be easier, just create a service directory with the name of your service into `/etc/services.d` and put a `run` file into it, this is the file in which you'll put your long-lived process execution. You're done! If you want to know more about s6 supervision of servicedirs take a look to [`servicedir`](http://skarnet.org/software/s6/servicedir.html) documentation. A simple example would look like this:
+
+`/etc/services.d/myapp/run`:
+```
+#!/usr/bin/execlineb -P
+nginx -g "daemon off;"
+```
+
+### Logging
+
+Our overlay provides a way to handle logging easily, as it's based in `s6`, it already provides logging mechanisms out-of-the-box via [`s6-log`](http://skarnet.org/software/s6/s6-log.html)!. We also provide a helper utility called `logutil-service` to make logging a matter of calling one binary. This helper does the following things:
+- read how s6-log should proceed reading the logging script contained in `S6_LOGGING_SCRIPT`
+- drop privileges in favor of nobody (defaulting to 32768:32768 if it doesn't exist)
+- clean all the environments variables
+- initiate logging by executing s6-log, :-)
+
+This example will send all the log lines present in stdin (following the rules described in `S6_LOGGING_SCRIPT`) to `/var/log/myapp`: 
+
+`/etc/services.d/myapp/log/run`:
+```
+#!/bin/sh
+exec logutil-service /var/log/myapp
+```
+
+If, for instance, you want to use a fifo instead of stdin as an input, write your log services as follows:
+
+`/etc/services.d/myapp/log/run`:
+```
+#!/bin/sh
+exec logutil-service -f /var/run/myfifo /var/log/myapp
+```
+
+### Container environment
+
+If you want your custom script to have container environments available just make use of `with-contenv` helper, which will push all of those into your execution environment, for example:
+
+`/etc/cont-init.d/01-contenv-example`:
+```
+#!/usr/bin/with-contenv sh
+echo $MYENV
+```
+
+This script will output whatever MYENV enviroment variable contains.
 
 ### Customizing `s6` behaviour
 
@@ -159,11 +265,12 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Nothing would be written to stdout/stderr.
 * `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
-  * **`0`**: Continue silently even if any script (fix-attrs or cont-init) has failed.
+  * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
 * `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
+* `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
 
 ## Performance
 
