@@ -10,7 +10,7 @@
 
 ##
 ## create env folder for each init stage, although stage1 is always copied from
-## /etc/s6/init/env, it's made available in /var/run/s6/env/stage1 just for
+## /etc/s6/init/env, it's made available in /var/run/s6/env-stage1 just for
 ## consistency.
 ##
 
@@ -28,7 +28,7 @@
 
 ##
 ## run everything else with only the environment defined in
-## /var/run/s6/env/stage1. Programs can get back the container
+## /var/run/s6/env-stage1. Programs can get back the container
 ## environment by using "with-contenv program".
 ##
 
