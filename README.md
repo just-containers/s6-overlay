@@ -66,7 +66,7 @@ Accept-Ranges: bytes
 ## Goals
 The project has the following goals:
 
-* Make it easy to image authors to take advantage of s6
+* Make it easy for image authors to take advantage of s6
 * Still operate like other Docker images
 
 ## Features
@@ -78,7 +78,7 @@ The project has the following goals:
 * Able to operate in "The Docker Way"
 * Usable with all base images - Ubuntu, CentOS, Fedora, and even Busybox.
 * Distributed as a single .tar.gz file, to keep your image's number of layers small.
-* A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our live much, much easier.
+* A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our lives much, much easier.
 * Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](http://skarnet.org/software/s6/s6-log.html) under the hood.
 
 ## The Docker Way?
@@ -96,24 +96,24 @@ Our interpretation of "The Docker Way" is thus:
 * Containers should do one thing
 * Containers should stop when that thing stops
 
-and our init system is designed to do exactly that! Your images will still behave like other Docker images and fit in with
+and our init system is designed to do exactly that! Your images will still behave like other Docker images and fit in with the existing ecosystem of images.
 
 ## Our `s6-overlay` based images
 
 We've developed two docker images which can be used as base images:
 * [base](https://github.com/just-containers/base): Based on Ubuntu 14.04 LTS, it was intended to use as a general purpose image.
-* [base-alpine](https://github.com/just-containers/base-alpine): Based on Alpine Linux 3.1, as advertised on their website: "is a security-oriented, lightweight Linux distribution based on musl libc and busybox." and even it includes a package manager.
+* [base-alpine](https://github.com/just-containers/base-alpine): Based on Alpine Linux 3.1, as advertised on their website: "a security-oriented, lightweight Linux distribution based on musl libc and busybox" - the base image is under 10MB but still includes a package manager!
 
 ## Init stages
 
-Our overlay init is a properly customized one to run appropriately in containerized environments. This section briefly explains how our stages work but if you want to know how a complete init stages work, please read this incredible well-explained article: [How to run s6-svscan as process 1](http://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
+Our overlay init is a properly customized one to run appropriately in containerized environments. This section briefly explains how our stages work but if you want to know how a complete init system should work, please read this article: [How to run s6-svscan as process 1](http://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
 
-1. **stage 1**: Its purpose is to prepare the image to enter into the second stage. Among other things, it is responsible for preparing the container environment variables, block the startup of the second stage until `s6` was effectively started, ...
+1. **stage 1**: Its purpose is to prepare the image to enter into the second stage. Among other things, it is responsible for preparing the container environment variables, block the startup of the second stage until `s6` is effectively started, ...
 2. **stage 2**: This is where most of the end-user provided files are mean to be executed:
   1. Fix ownership and permissions using `/etc/fix-attrs.d`.
   2. Execute initialization scripts contained in `/etc/cont-init.d`.
   3. Copy user services (`/etc/services.d`) to the folder where s6 is running its supervision and signal it so that it can properly start supervising them. 
-3. **stage 3**: It's the shutdown stage. Its purpose is to clean everything up, stop services and execute finalization scripts contained in `/etc/cont-finish.d`. This is the concrete time when init sends a kill signal to all container processes, first gracefully using TERM and then (after `S6_KILL_GRACETIME`) forcibly using KILL. And, of course, reaps all zombies :-).
+3. **stage 3**: This is the shutdown stage. Its purpose is to clean everything up, stop services and execute finalization scripts contained in `/etc/cont-finish.d`. This is when our init system stops all container processes, first gracefully using `SIGTERM` and then (after `S6_KILL_GRACETIME`) forcibly using `SIGKILL`. And, of course, it reaps all zombies :-).
 
 ## Usage
 
@@ -128,7 +128,7 @@ From there, you have a couple of options:
 
 ### Using `CMD`
 
-Using `CMD` is a really convenient way to run take advantage of the s6-overlay. Your `CMD` can be given at build-time in the Dockerfile, or at runtime on the command line, either way is fine - it will be run under the s6 supervisor, and when it fails or exits, the container will exit. You can even run interactive programs under the s6 supervisor!
+Using `CMD` is a really convenient way to take advantage of the s6-overlay. Your `CMD` can be given at build-time in the Dockerfile, or at runtime on the command line, either way is fine - it will be run under the s6 supervisor, and when it fails or exits, the container will exit. You can even run interactive programs under the s6 supervisor!
 
 For example:
 
@@ -167,16 +167,16 @@ docker-host $
 
 ### Fixing ownership & permissions
 
-Sometimes it's interesting to fix ownership & permissions before proceeding because, for example, you have mounted/mapped a host folder inside your container. Our overlay provides a way to tackle this issue using `fix-attrs.d` files. This is the pattern format followed by fix-attrs files:
+Sometimes it's interesting to fix ownership & permissions before proceeding because, for example, you have mounted/mapped a host folder inside your container. Our overlay provides a way to tackle this issue using files in `/etc/fix-attrs.d`. This is the pattern format followed by fix-attrs files:
 
 ```
 path recurse account fmode dmode
 ```
 * `path`: File or dir path.
-* `recurse`: If a folder was found, recurse through all containing files & folders in it.
-* `account`: Target account. It's possible to default to custom `uid:gid` if the account wasn't found. (using it like this `nobody,32768:32768`).
-* `fmode`: Target file mode. For example, 0644.
-* `dmode`: Target dir/folder mode. For example, 0755.
+* `recurse`: (Set to `true` or `false`) If a folder is found, recurse through all containing files & folders in it.
+* `account`: Target account. It's possible to default to fallback `uid:gid` if the account isn't found. For example, `nobody,32768:32768` would try to use the `nobody` account first, then fallback to `uid 32768` instead.
+* `fmode`: Target file mode. For example, `0644`.
+* `dmode`: Target dir/folder mode. For example, `0755`.
 
 Here you have some working examples:
 
@@ -223,11 +223,11 @@ nginx -g "daemon off;"
 
 ### Logging
 
-Our overlay provides a way to handle logging easily, as it's based in `s6`, it already provides logging mechanisms out-of-the-box via [`s6-log`](http://skarnet.org/software/s6/s6-log.html)!. We also provide a helper utility called `logutil-service` to make logging a matter of calling one binary. This helper does the following things:
+Our overlay provides a way to handle logging easily since `s6` already provides logging mechanisms out-of-the-box via [`s6-log`](http://skarnet.org/software/s6/s6-log.html)!. We also provide a helper utility called `logutil-service` to make logging a matter of calling one binary. This helper does the following things:
 - read how s6-log should proceed reading the logging script contained in `S6_LOGGING_SCRIPT`
-- drop privileges in favor of nobody (defaulting to 32768:32768 if it doesn't exist)
+- drop privileges to the `nobody` user (defaulting to `32768:32768` if it doesn't exist)
 - clean all the environments variables
-- initiate logging by executing s6-log, :-)
+- initiate logging by executing s6-log :-)
 
 This example will send all the log lines present in stdin (following the rules described in `S6_LOGGING_SCRIPT`) to `/var/log/myapp`: 
 
@@ -255,7 +255,7 @@ If you want your custom script to have container environments available just mak
 echo $MYENV
 ```
 
-This script will output whatever MYENV enviroment variable contains.
+This script will output whatever the `MYENV` enviroment variable contains.
 
 ### Customizing `s6` behaviour
 
@@ -268,17 +268,19 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
-* `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
-* `S6_KILL_GRACETIME` (default = 3000): How much (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
+* `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time (in milliseconds) a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
+* `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
 
 ## Performance
 
-Hei, and what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
+And what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
 
 ## Contributing
 
-TODO
+Anyway you want! Open issues, open PRs, we welcome all contributors!
+
+## Want to build the overlay on your system?
 
 ```
 mkdir dist
