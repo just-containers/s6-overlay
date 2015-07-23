@@ -245,6 +245,27 @@ If, for instance, you want to use a fifo instead of stdin as an input, write you
 exec logutil-service -f /var/run/myfifo /var/log/myapp
 ```
 
+### Dropping privileges
+
+When it comes to executing a service, no matter it's a service or a logging service, a very good practice is to drop privileges before executing it. `s6` already includes utilities to do exactly these kind of things:
+
+In `execline`:
+
+```
+#!/usr/bin/execlineb -P
+s6-setuidgid daemon
+myservice
+```
+
+In `sh`:
+
+```
+#!/bin/sh
+exec s6-setuidgid daemon myservice
+```
+
+If you want to know more about these utilities, please take a look to: [`s6-setuidgid`](http://skarnet.org/software/s6/s6-setuidgid.html), [`s6-envuidgid`](http://skarnet.org/software/s6/s6-envuidgid.html) and [`s6-applyuidgid`](http://skarnet.org/software/s6/s6-applyuidgid.html).
+
 ### Container environment
 
 If you want your custom script to have container environments available just make use of `with-contenv` helper, which will push all of those into your execution environment, for example:
