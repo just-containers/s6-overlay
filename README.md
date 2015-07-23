@@ -11,6 +11,7 @@
   - [Fixing ownership & permissions](#fixing-ownership-&-permissions)
   - [Executing initialization And/Or finalization tasks](#executing-initialization-andor-finalization-tasks)
   - [Writing a service script](#writing-a-service-script)
+  - [Dropping privileges](#dropping-privileges)
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Performance](#performance)
