@@ -8,7 +8,7 @@
 - [Init stages](#init-stages)
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
-  - [Fixing ownership & permissions](#fixing-ownership-&-permissions)
+  - [Fixing ownership & permissions](#fixing-ownership--permissions)
   - [Executing initialization And/Or finalization tasks](#executing-initialization-andor-finalization-tasks)
   - [Writing a service script](#writing-a-service-script)
   - [Dropping privileges](#dropping-privileges)

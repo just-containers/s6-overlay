@@ -6,7 +6,7 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.13.0.0}
+RELEASE_VERSION=${RELEASE_VERSION:-1.14.0.0}
 SKAWARE_VERSION=${RELEASE_VERSION%.*}
 
 PWD=$(pwd)
@@ -102,7 +102,7 @@ for edition in "${editions[@]}"; do
   chmod 0755 $overlaydstpath/usr/bin/fix-attrs
   chmod 0755 $overlaydstpath/usr/bin/logutil-{newfifo,service,service-main}
   chmod 0755 $overlaydstpath/usr/bin/printcontenv
-  chmod 0755 $overlaydstpath/usr/bin/with-{contenv,notifywhenup,retries}
+  chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries}
 
   # fix init perms
   chmod 0755 $overlaydstpath/init

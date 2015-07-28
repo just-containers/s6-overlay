@@ -1,5 +1,0 @@
-#!/usr/bin/execlineb -S0
-# DO NOT USE THIS, it's deprecated. Use a "notification-fd" file + s6-echo instead.
-foreground { s6-notifywhenup -f s6-echo }
-unexport ?
-$@
