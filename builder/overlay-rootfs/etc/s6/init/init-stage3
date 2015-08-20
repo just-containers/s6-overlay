@@ -64,4 +64,10 @@ foreground { s6-nuke -k } # foreground is process 1: it survives again
 # Reap all the zombies then sync, and we're done.
 
 wait { }
-s6-sync 
+foreground { s6-sync }
+
+
+# Use CMD exit code defaulting to zero if not present.
+
+import -u -D0 S6_CMD_EXITED
+exit ${S6_CMD_EXITED}
