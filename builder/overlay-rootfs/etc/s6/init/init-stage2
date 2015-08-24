@@ -110,7 +110,8 @@ if { s6-test ${?} -ne 0 }
 if { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 0 }
 ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 1 }
 {
-  # Stop supervision tree
+  # Stop supervision tree (if it wasn't already due to CMD execution)
+  if { s6-test ! -f /var/run/s6/env-stage3/S6_CMD_EXITED }
   s6-svscanctl -t /var/run/s6/services
 }
 s6-echo -- "\n!!!!!\n init-stage2 failed.\n!!!!!"
