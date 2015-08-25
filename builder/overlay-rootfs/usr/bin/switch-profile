@@ -1,0 +1,20 @@
+#!/usr/bin/execlineb -S0
+
+# test if S6_CONTAINER_PROFILE is valid 
+if { s6-test ${#} -eq 1 }
+
+# test if container profile directory exists
+if { s6-test -d /etc/cont-profile.d/${1} }
+
+# Uses /etc/cont-profile.d/${S6_CONTAINER_PROFILE}/{cont-init.d, cont-finish.d, services.d, fix-attrs.d}
+# /etc/{cont-init.d, cont-finish.d, services.d, fix-attrs.d} will be wiped out first, then will be made new symbolic links
+
+if { s6-rmrf /etc/cont-init.d }
+if { s6-rmrf /etc/cont-finish.d }
+if { s6-rmrf /etc/services.d }
+if { s6-rmrf /etc/fix-attrs.d }
+
+if { s6-ln -s /etc/cont-profile.d/${1}/cont-init.d /etc/cont-init.d }
+if { s6-ln -s /etc/cont-profile.d/${1}/cont-finish.d /etc/cont-finish.d }
+if { s6-ln -s /etc/cont-profile.d/${1}/services.d /etc/services.d }
+if { s6-ln -s /etc/cont-profile.d/${1}/fix-attrs.d /etc/fix-attrs.d }
