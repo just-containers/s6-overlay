@@ -33,7 +33,33 @@ foreground
         exit ${?}
       }
 
+      ##
+      ## cont-profile.d: profile set of cont-init.d/cont-finish.d/services.d/fix-attrs.d scripts
+      ##
 
+      if { s6-echo "[cont-profile.d] checking container profile..." }
+      if
+      {
+	backtick -n S6_CONTAINER_PROFILE { printcontenv S6_CONTAINER_PROFILE }
+	import -u S6_CONTAINER_PROFILE
+	
+	##
+        ## S6_CONTAINER_PROFILE (default to null):
+	## - null : Uses /etc/{cont-init.d, cont-finish.d, services.d, fix-attrs.d}
+	## - any_other_value : Uses /etc/cont-profile.d/${S6_CONTAINER_PROFILE}/{cont-init.d, cont-finish.d, services.d, fix-attrs.d}
+	##
+	
+	ifelse { s6-test -n ${S6_CONTAINER_PROFILE} }
+	{
+          foreground { switch-profile ${S6_CONTAINER_PROFILE} }
+	  import -u ?
+	  if { s6-echo -- "[cont-profile.d] switching to ${S6_CONTAINER_PROFILE}: exited ${?}." }
+          ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
+          exit ${?}
+	}
+      }
+      if { s6-echo "[cont-profile.d] done." }
+      
       ##
       ## fix-attrs.d: ensure ownership & permission sets
       ##

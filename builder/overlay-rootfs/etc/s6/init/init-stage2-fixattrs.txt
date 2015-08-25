@@ -5,3 +5,10 @@
 /etc/services.d/*/finish false root 0755 0755
 /etc/services.d/*/log/run false root 0755 0755
 /etc/services.d/*/log/finish false root 0755 0755
+/etc/cont-profile.d/*/services.d/*/run false root 0755 0755
+/etc/cont-profile.d/*/services.d/*/finish false root 0755 0755
+/etc/cont-profile.d/*/services.d/*/log/run false root 0755 0755
+/etc/cont-profile.d/*/services.d/*/log/finish false root 0755 0755
+/etc/cont-profile.d/*/cont-init.d/* false root 0755 0755
+/etc/cont-profile.d/*/cont-finish.d/* false root 0755 0755
+/etc/cont-profile.d/*/fix-attrs.d/* false root 0644 0755
