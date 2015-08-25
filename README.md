@@ -15,6 +15,7 @@
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Performance](#performance)
+- [Notes](#notes)
 - [Contributing](#contributing)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
@@ -297,6 +298,10 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 ## Performance
 
 And what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
+
+## Notes
+
+* For now, `s6-overlay` doesn't support running it with a user different than `root`, so consequently Dockerfile `USER` directive is not supported (except `USER root` of course ;P).
 
 ## Contributing
 
