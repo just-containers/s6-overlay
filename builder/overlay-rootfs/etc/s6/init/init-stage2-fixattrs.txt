@@ -1,6 +1,6 @@
+/etc/fix-attrs.d/* false root 0644 0755
 /etc/cont-init.d/* false root 0755 0755
 /etc/cont-finish.d/* false root 0755 0755
-/etc/fix-attrs.d/* false root 0644 0755
 /etc/services.d/*/run false root 0755 0755
 /etc/services.d/*/finish false root 0755 0755
 /etc/services.d/*/log/run false root 0755 0755
