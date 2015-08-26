@@ -12,23 +12,27 @@ foreground
 {
   backtick -D 5000 -n S6_KILL_FINISH_MAXTIME { printcontenv S6_KILL_FINISH_MAXTIME }
   import -u S6_KILL_FINISH_MAXTIME
-  if { s6-echo "[cont-finish.d] executing container finish scripts..." }
   if
   {
-    pipeline { s6-ls -0 -- /etc/cont-finish.d }
-    pipeline { s6-sort -0 -- }
-    forstdin -o 0 -0 -- i
-    import -u i
-    if { s6-echo -- "[cont-finish.d] ${i}: executing... " }
-    foreground
+    if -t { s6-test -d /var/run/s6/etc/cont-finish.d }
+    if { s6-echo "[cont-finish.d] executing container finish scripts..." }
+    if
     {
-      s6-maximumtime -k ${S6_KILL_FINISH_MAXTIME}
-      /etc/cont-finish.d/${i}
+      pipeline { s6-ls -0 -- /var/run/s6/etc/cont-finish.d }
+      pipeline { s6-sort -0 -- }
+      forstdin -o 0 -0 -- i
+      import -u i
+      if { s6-echo -- "[cont-finish.d] ${i}: executing... " }
+      foreground
+      {
+        s6-maximumtime -k ${S6_KILL_FINISH_MAXTIME}
+        /var/run/s6/etc/cont-finish.d/${i}
+      }
+      import -u ?
+      s6-echo -- "[cont-finish.d] ${i}: exited ${?}."
     }
-    import -u ?
-    s6-echo -- "[cont-finish.d] ${i}: exited ${?}."
+    s6-echo -- "[cont-finish.d] done."
   }
-  s6-echo -- "[cont-finish.d] done."
 }
 
 
