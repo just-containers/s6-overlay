@@ -30,7 +30,6 @@ foreground
         if { s6-echo -n -- "[s6-init] making user provided files available at /var/run/s6/etc..." }
         foreground
         {
-          
           backtick -n S6_RUNTIME_PROFILE { printcontenv S6_RUNTIME_PROFILE }
           import -u S6_RUNTIME_PROFILE
           backtick -n S6_RUNTIME_PROFILE_SRC {
@@ -69,7 +68,7 @@ foreground
       
 
       ##
-      ## fix-attrs.d: ensure ownership & permission sets
+      ## fix-attrs.d: apply user-provided ownership & permission fixes
       ##
 
       if
