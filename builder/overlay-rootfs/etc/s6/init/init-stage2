@@ -37,6 +37,7 @@ foreground
             s6-test -n ${S6_RUNTIME_PROFILE}
           }
           import -u S6_RUNTIME_PROFILE_SRC
+          if { s6-rmrf /var/run/s6/etc }
           if { s6-mkdir -pm 0755 /var/run/s6/etc }
           forx i { "fix-attrs.d" "cont-init.d" "cont-finish.d" "services.d" }
           import -u i
