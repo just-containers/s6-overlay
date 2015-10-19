@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+set -x
+
+cd builder && RELEASE_VERSION="${TRAVIS_TAG:1}" ./build-latest

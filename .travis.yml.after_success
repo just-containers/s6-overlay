@@ -1,0 +1,24 @@
+#!/bin/bash
+set -e
+set -x
+
+# don't loop if files don't exist
+shopt -s nullglob
+
+# exit if TRAVIS_TAG is empty, no need to release anything
+if [ -z "${TRAVIS_TAG}" ]; then
+  exit 0
+fi
+
+# get user and repo names
+USERNAME=$(echo ${TRAVIS_REPO_SLUG} | cut -d"/" -f1)
+REPONAME=$(echo ${TRAVIS_REPO_SLUG} | cut -d"/" -f2)
+
+# release
+./github-release release --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${TRAVIS_TAG}"
+
+# s6 overlay binaries
+for i in $HOME/dist/*.tar.gz; do
+  name=$(basename ${i})
+  ./github-release upload --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${name}" --file "${i}"
+done

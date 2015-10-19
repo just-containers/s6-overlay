@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+set -x
+
+# download and untar github-release
+wget -nv -O github-release.amd64.tar.bz2 https://github.com/aktau/github-release/releases/download/v0.6.2/linux-amd64-github-release.tar.bz2
+tar xf github-release.amd64.tar.bz2 --strip-components=3
