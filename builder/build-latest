@@ -6,8 +6,9 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.16.0.0}
+RELEASE_VERSION=${RELEASE_VERSION:-1.16.1.0}
 SKAWARE_VERSION=${RELEASE_VERSION%.*}
+SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
 PWD=$(pwd)
 OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
@@ -21,9 +22,7 @@ get_packages_with_versions_from_manifest() {
   manifest=$1
 
   # skaware versions manifest
-  curl -R -L \
-      -o /tmp/manifest.txt \
-      https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION/$manifest
+  curl -R -L -o /tmp/manifest.txt ${SKAWARE_SOURCE}/$manifest
 
   # parse manifest into s6 associative array
   versions=()
@@ -53,7 +52,7 @@ cd /tmp
 packages=($(get_packages_with_versions_from_manifest "manifest-portable.txt"))
 for package in "${packages[@]}"; do
   file=$package-linux-amd64-bin.tar.gz
-  curl -R -L -O https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION/$file
+  curl -R -L -O ${SKAWARE_SOURCE}/$file
 done
 
 # strace
