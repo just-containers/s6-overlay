@@ -334,11 +334,25 @@ Anyway you want! Open issues, open PRs, we welcome all contributors!
 
 ## Want to build the overlay on your system?
 
+First create the output folder with its corresponding required permissions:
 ```
 mkdir dist
 chmod o+rw dist
+```
+
+Then build from official skaware releases:
+```
 docker build .                                    | \
 tail -n 1 | awk '{ print $3; }'                   | \
 xargs docker run --rm -v `pwd`/dist:/builder/dist
+```
+
+Or use your own release folder:
+```
+docker build .                                                          | \
+tail -n 1 | awk '{ print $3; }'                                         | \
+xargs docker run --rm                                                     \
+  -e SKAWARE_SOURCE=file:///skaware  -v `pwd`/../skaware/dist:/skaware:ro \
+  -v `pwd`/dist:/builder/dist
 ```
 
