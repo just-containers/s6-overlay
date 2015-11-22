@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+set -x
+
+# extract signing keys
+openssl aes-256-cbc -K $encrypted_b8cbf04cae0b_key -iv $encrypted_b8cbf04cae0b_iv -in keys.tar.xz.enc -out keys.tar.xz -d
+tar xf keys.tar.xz
+gpg --import keys/public.key
+gpg --allow-secret-key-import --import keys/private.key
