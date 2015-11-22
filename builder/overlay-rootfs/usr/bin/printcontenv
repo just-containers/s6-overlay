@@ -13,6 +13,6 @@ if
     redirfd -r 0 /var/run/s6/container_environment/${1}
     s6-cat
   }
-  import -u value
+  importas -u value value
   s6-echo -- ${value}
 }

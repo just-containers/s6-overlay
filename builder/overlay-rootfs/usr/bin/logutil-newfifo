@@ -20,7 +20,7 @@ if
 if
 {
   backtick -n name { s6-uniquename ${1} }
-  import -u name
+  importas -u name name
   redirfd -rnb 0 ${1}
   s6-fdholder-store /var/run/s6/fdholderd-socket ${name}
 }
