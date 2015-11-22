@@ -241,9 +241,9 @@ It's possible to do more advanced operations - for example, here's a script from
 
 `/etc/services.d/myapp/finish`:
 ```
-#!/usr/bin/execlineb -S0
-if -n { s6-test $# -ne 0 }
-if -n { s6-test ${1} -eq 256 }
+#!/usr/bin/execlineb -S1
+if { s6-test ${1} -ne 0 }
+if { s6-test ${1} -ne 256 }
 
 s6-svscanctl -t /var/run/s6/services
 ```
