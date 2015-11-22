@@ -18,7 +18,7 @@
 {
   /usr/bin/elglob -0 -- envdirs /var/run/s6/env-*
   /usr/bin/forx -p -- envdir { ${envdirs} }
-  /usr/bin/import -u envdir
+  /usr/bin/importas -u envdir envdir
   /usr/bin/s6-rmrf ${envdir}
 }
 /usr/bin/if { /usr/bin/s6-hiercopy /etc/s6/init/env /var/run/s6/env-stage1 }
@@ -42,7 +42,7 @@
 ##
 
 backtick -D 0 -n S6_LOGGING { printcontenv S6_LOGGING }
-import -u S6_LOGGING
+importas -u S6_LOGGING S6_LOGGING
 ifelse { s6-test ${S6_LOGGING} -ne 0 }
 {
   /etc/s6/init-catchall/init-stage1 $@

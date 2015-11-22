@@ -10,7 +10,7 @@ s6-envdir -I /var/run/s6/env-stage2
 
 # This env decides what to do if stage2 fails
 backtick -D 0 -n S6_BEHAVIOUR_IF_STAGE2_FAILS { printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS }
-import -u S6_BEHAVIOUR_IF_STAGE2_FAILS
+importas -u S6_BEHAVIOUR_IF_STAGE2_FAILS S6_BEHAVIOUR_IF_STAGE2_FAILS
 
 foreground
 {
@@ -31,22 +31,22 @@ foreground
         foreground
         {
           backtick -n S6_RUNTIME_PROFILE { printcontenv S6_RUNTIME_PROFILE }
-          import -u S6_RUNTIME_PROFILE
+          importas -u S6_RUNTIME_PROFILE S6_RUNTIME_PROFILE
           backtick -n S6_RUNTIME_PROFILE_SRC {
             ifte { s6-echo "/etc/cont-profile.d/${S6_RUNTIME_PROFILE}" } { s6-echo "/etc" }
             s6-test -n ${S6_RUNTIME_PROFILE}
           }
-          import -u S6_RUNTIME_PROFILE_SRC
+          importas -u S6_RUNTIME_PROFILE_SRC S6_RUNTIME_PROFILE_SRC
           if { s6-rmrf /var/run/s6/etc }
           if { s6-mkdir -pm 0755 /var/run/s6/etc }
           forx i { "fix-attrs.d" "cont-init.d" "cont-finish.d" "services.d" }
-          import -u i
+          importas -u i i
           if { s6-test -d ${S6_RUNTIME_PROFILE_SRC}/${i} }
           # although s6-hiercopy is prefered, and until it doesn't support 'follow symlinks'
           # option, there is no clean way to allow symlinks between user provided runcoms.
           if { s6-ln -s ${S6_RUNTIME_PROFILE_SRC}/${i} /var/run/s6/etc/${i} }
         }
-        import -u ?
+        importas -u ? ?
         if { s6-echo -- "exited ${?}." }
         ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
         exit ${?}
@@ -61,7 +61,7 @@ foreground
       {
         if { s6-echo -n -- "[s6-init] ensuring user provided files have correct perms..." }
         foreground { redirfd -r 0 /etc/s6/init/init-stage2-fixattrs.txt fix-attrs }
-        import -u ?
+        importas -u ? ?
         if { s6-echo -- "exited ${?}." }
         ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
         exit ${?}
@@ -81,10 +81,10 @@ foreground
           pipeline { s6-ls -0 -- /var/run/s6/etc/fix-attrs.d }
           pipeline { s6-sort -0 -- }
           forstdin -0 -- i
-          import -u i
+          importas -u i i
           if { s6-echo -- "[fix-attrs.d] ${i}: applying... " }
           foreground { redirfd -r 0 /var/run/s6/etc/fix-attrs.d/${i} fix-attrs }
-          import -u ?
+          importas -u ? ?
           if { s6-echo -- "[fix-attrs.d] ${i}: exited ${?}." }
           ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
           exit ${?}
@@ -105,10 +105,10 @@ foreground
           pipeline { s6-ls -0 -- /var/run/s6/etc/cont-init.d }
           pipeline { s6-sort -0 -- }
           forstdin -o 0 -0 -- i
-          import -u i
+          importas -u i i
           if { s6-echo -- "[cont-init.d] ${i}: executing... " }
           foreground { /var/run/s6/etc/cont-init.d/${i} }
-          import -u ?
+          importas -u ? ?
           if { s6-echo -- "[cont-init.d] ${i}: exited ${?}." }
           ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
           exit ${?}
@@ -128,7 +128,7 @@ foreground
         {
           pipeline { s6-ls -0 -- /var/run/s6/etc/services.d }
           forstdin -0 -p -- i
-          import -u i
+          importas -u i i
           if { s6-test -d /var/run/s6/etc/services.d/${i} }
           s6-hiercopy /var/run/s6/etc/services.d/${i} /var/run/s6/services/${i}
         }
@@ -136,7 +136,7 @@ foreground
         if { s6-echo -- "[services.d] done." }
       }
     }
-    import -u ?
+    importas -u ? ?
     ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
     exit ${?}
   }
@@ -149,7 +149,7 @@ foreground
 
   if -t { s6-test $# -ne 0 }
   foreground { s6-setsid -gq -- with-contenv $@ }
-  import -u ?
+  importas -u ? ?
   if { s6-echo -- "${1} exited ${?}" }
 
   # Make CMD exit code available in stage3
@@ -164,7 +164,7 @@ foreground
   # Wait to be nuked
   s6-pause -th
 }
-import -u ?
+importas -u ? ?
 if { s6-test ${?} -ne 0 }
 if { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 0 }
 ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 1 }
