@@ -16,6 +16,7 @@
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Performance](#performance)
+- [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
 - [Contributing](#contributing)
 
@@ -323,6 +324,22 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 ## Performance
 
 And what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
+
+## Verifying Downloads
+
+The `s6-overlay` releases are signed using `gpg`, you can import our public key:
+
+```bash
+$ gpg --keyserver pgp.mit.edu --recv-key 0x337EE704693C17EF
+```
+
+Then verify the downloaded files:
+
+```bash
+$ gpg --verify s6-overlay-amd64.tar.gz.sig s6-overlay-amd64.tar.gz
+gpg: Signature made Sun 22 Nov 2015 09:11:29 AM CST using RSA key ID BD7BF0DC
+gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
+```
 
 ## Notes
 
