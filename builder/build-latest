@@ -15,7 +15,7 @@ OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
 OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 
 outputs=( 'portable' )
-editions=( '' 'debug' )
+editions=( '' 'debug' 'nobin' )
 
 get_packages_with_versions_from_manifest() {
   # manifest
@@ -67,7 +67,9 @@ for edition in "${editions[@]}"; do
   if [ "${edition}" == "debug" ]; then
     overlaydstpath="$OVERLAY_DST_PATH-raw-dbg"
     overlaytarpath="$HOME/dist/s6-overlay-dbg-amd64.tar.gz"
-    
+  elif [ "${edition}" == "nobin" ]; then
+    overlaydstpath="$OVERLAY_DST_PATH-nobin"
+    overlaytarpath="$HOME/dist/s6-overlay-nobin.tar.gz"
   else
     overlaydstpath="$OVERLAY_DST_PATH-raw"
     overlaytarpath="$HOME/dist/s6-overlay-amd64.tar.gz"
@@ -80,13 +82,15 @@ for edition in "${editions[@]}"; do
   # copy overlay files
   cp -a $OVERLAY_SRC_PATH/. $overlaydstpath/
 
-  # skarnet versions manifest
-  packages=($(get_packages_with_versions_from_manifest "manifest-portable.txt"))
+  if [ "${edition}" != "nobin" ]; then
+    # skarnet versions manifest
+    packages=($(get_packages_with_versions_from_manifest "manifest-portable.txt"))
 
-  # install required binaries for this concrete output
-  for package in "${packages[@]}"; do
-    tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaydstpath
-  done
+    # install required binaries for this concrete output
+    for package in "${packages[@]}"; do
+      tar xvfz /tmp/$package-linux-amd64-bin.tar.gz -C $overlaydstpath
+    done
+  fi
 
   # create must exist directories
   mkdir -p $overlaydstpath/etc/s6/init/env-stage2
