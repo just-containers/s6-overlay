@@ -1,2 +1,2 @@
-#!/usr/bin/execlineb -S0
+#!/bin/execlineb -S0
 /etc/s6/init/init-stage2 $@

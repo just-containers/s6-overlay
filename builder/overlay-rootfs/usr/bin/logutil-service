@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb
+#!/bin/execlineb
 
 # test if arguments were given
 elgetopt "f:"

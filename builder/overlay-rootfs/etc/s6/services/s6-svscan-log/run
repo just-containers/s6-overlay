@@ -1,2 +1,2 @@
-#!/usr/bin/execlineb -P
+#!/bin/execlineb -P
 logutil-service -f /var/run/s6/uncaught-logs-fifo /var/log/s6-uncaught-logs
