@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -S0
+#!/bin/execlineb -S0
 
 ##
 ## ensure our vital fifo exists

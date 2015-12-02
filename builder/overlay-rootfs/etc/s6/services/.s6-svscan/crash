@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -P
+#!/bin/execlineb -P
 
 # This file is run when an unrecoverable error happens
 # to s6-svscan. Edit it to suit your needs.

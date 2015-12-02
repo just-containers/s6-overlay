@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -S0
+#!/bin/execlineb -S0
 
 # This file is executed (not as process 1!) as soon as s6-svscan
 # starts, with the original stdin/out/err, but NOT the original

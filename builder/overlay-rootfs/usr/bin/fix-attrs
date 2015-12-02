@@ -1,7 +1,7 @@
-#!/usr/bin/execlineb -P
+#!/bin/execlineb -P
 
-/usr/bin/export PATH /usr/bin:/bin
-/usr/bin/export recfunction "\
+/bin/export PATH /usr/bin:/bin
+/bin/export recfunction "\
 multidefine -Cd"," -- ${3} { account uidgid }
 backtick -n envuidgid_opts
 {

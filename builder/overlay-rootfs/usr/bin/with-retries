@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb
+#!/bin/execlineb
 
 #
 # with-retries -n numretries -t millisecs prog...

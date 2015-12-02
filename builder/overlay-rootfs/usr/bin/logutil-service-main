@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -S1
+#!/bin/execlineb -S1
 
 # this env decides what to log and how.
 backtick -D "n20 s1000000 T" -n S6_LOGGING_SCRIPT { printcontenv S6_LOGGING_SCRIPT }

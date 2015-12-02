@@ -1,4 +1,4 @@
-#!/usr/bin/execlineb -S0
+#!/bin/execlineb -S0
 
 # This is the shutdown script, running as process 1.
 cd /
