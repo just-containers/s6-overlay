@@ -1,11 +1,22 @@
 #!/bin/execlineb -S0
 
 ##
+## we add /usr/bin:/bin to PATH at least for the very first init-stage1 steps,
+## this was motivated due to this issue:
+## - https://github.com/just-containers/s6-overlay/issues/108
+## although this change we'll keep how stages envs are handled, see below.
+##
+
+/bin/export PATH /usr/bin:/bin
+/bin/import PATH
+
+
+##
 ## dump environment into an envdir
 ##
 
-/bin/if { /bin/s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
-/bin/if { /bin/s6-dumpenv -- /var/run/s6/container_environment }
+if { s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
+if { s6-dumpenv -- /var/run/s6/container_environment }
 
 
 ##
@@ -14,16 +25,16 @@
 ## consistency.
 ##
 
-/bin/if
+if
 {
-  /bin/elglob -0 -- envdirs /var/run/s6/env-*
-  /bin/forx -p -- envdir { ${envdirs} }
-  /bin/importas -u envdir envdir
-  /bin/s6-rmrf ${envdir}
+  elglob -0 -- envdirs /var/run/s6/env-*
+  forx -p -- envdir { ${envdirs} }
+  importas -u envdir envdir
+  s6-rmrf ${envdir}
 }
-/bin/if { /bin/s6-hiercopy /etc/s6/init/env /var/run/s6/env-stage1 }
-/bin/if { /bin/s6-mkdir -pm 0755 -- /var/run/s6/env-stage2 }
-/bin/if { /bin/s6-mkdir -pm 0755 -- /var/run/s6/env-stage3 }
+if { s6-hiercopy /etc/s6/init/env /var/run/s6/env-stage1 }
+if { s6-mkdir -pm 0755 -- /var/run/s6/env-stage2 }
+if { s6-mkdir -pm 0755 -- /var/run/s6/env-stage3 }
 
 
 ##
@@ -32,9 +43,9 @@
 ## environment by using "with-contenv program".
 ##
 
-/bin/exec -c --
-/bin/s6-envdir /var/run/s6/env-stage1
-/bin/exec --
+exec -c --
+s6-envdir /var/run/s6/env-stage1
+exec --
 
 
 ##
