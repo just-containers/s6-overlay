@@ -1,17 +1,6 @@
 #!/bin/execlineb -S0
 
 ##
-## we add /usr/bin:/bin to PATH at least for the very first init-stage1 steps,
-## this was motivated due to this issue:
-## - https://github.com/just-containers/s6-overlay/issues/108
-## although this change we'll keep how stages envs are handled, see below.
-##
-
-/bin/export PATH /usr/bin:/bin
-/bin/import PATH
-
-
-##
 ## dump environment into an envdir
 ##
 
