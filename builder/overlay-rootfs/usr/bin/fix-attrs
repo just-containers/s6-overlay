@@ -2,20 +2,13 @@
 
 /bin/export PATH /usr/bin:/bin
 /bin/export recfunction "\
-multidefine -Cd"," -- ${3} { account uidgid }
-backtick -n envuidgid_opts
-{
-  ifte { s6-echo -- -D${uidgid} } { s6-echo -- -i }
-  s6-test -n ${uidgid}
-}
-importas -u envuidgid_opts envuidgid_opts
-foreground { s6-envuidgid ${envuidgid_opts} ${account} s6-chown -U -- ${1} }
+s6-chown -u ${3} -g ${4} -- ${1}
 ifelse -- { if { s6-${2} } s6-test -d ${1} }
 {
   foreground
   {
-    if -t { s6-test ! ${5} = "-" }
-    s6-chmod ${5} ${1}
+    if -t { s6-test ! ${6} = "-" }
+    s6-chmod ${6} ${1}
   }
   forbacktickx -0 subfile { s6-ls -0 ${1} }
   multisubstitute
@@ -23,15 +16,39 @@ ifelse -- { if { s6-${2} } s6-test -d ${1} }
     importas -u subfile subfile
     importas recfunction recfunction
   }
-  execlineb -S5 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5}
+  execlineb -S5 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5} ${6}
 }
-if -t { s6-test ! ${4} = "-" }
-s6-chmod ${4} ${1}"
+if -t { s6-test ! ${5} = "-" }
+s6-chmod ${5} ${1}"
 
+# process each line
 forstdin -d"\n" -- line
 importas -u line line
 if { s6-test -n ${line} }
-multidefine -0 -Cd" \t" -- ${line} { globex recurse user fmode dmode }
+multidefine -0 -Cd" \t" -- ${line} { globex recurse userentry fmode dmode }
+# get 'uid' and 'gid'
+multidefine -Cd"," -- ${userentry} { account uidgid }
+backtick -n envuidgid_opts
+{
+  backtick -n opts
+  {
+    ifte { s6-echo -- -D${uidgid} } { s6-echo -- -i }
+    s6-test -n ${uidgid}
+  }
+  importas -u opts opts
+  ifte { s6-echo -- -nB ${opts} } { s6-echo -- ${opts} }
+  pipeline { s6-echo ${account} }
+  if
+  {
+    redirfd -w 1 /dev/null
+    fdmove -c 2 1
+    s6-grep -- ":"
+  }
+}
+importas -u -sCd" \t" envuidgid_opts envuidgid_opts
+s6-envuidgid ${envuidgid_opts} ${account}
+importas -u uid UID
+importas -u gid GID
 elglob -0 -- files ${globex}
 forx -p -- file { ${files} }
 multisubstitute
@@ -39,4 +56,4 @@ multisubstitute
   importas -u file file
   importas recfunction recfunction
 }
-execlineb -S5 -c ${recfunction} ${file} ${recurse} ${user} ${fmode} ${dmode}
+execlineb -S5 -c ${recfunction} ${file} ${recurse} ${uid} ${gid} ${fmode} ${dmode}
