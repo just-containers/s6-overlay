@@ -3,23 +3,24 @@
 /bin/export PATH /usr/bin:/bin
 /bin/export recfunction "\
 foreground { s6-chown -u ${3} -g ${4} -- ${1} }
-ifelse -- { if { s6-${2} } s6-test -d ${1} }
+foreground
 {
-  foreground
+  ifelse { s6-test -d ${1} }
   {
     if -t { s6-test ! ${6} = "-" }
     s6-chmod ${6} ${1}
   }
-  forbacktickx -0 subfile { s6-ls -0 ${1} }
-  multisubstitute
-  {
-    importas -u subfile subfile
-    importas recfunction recfunction
-  }
-  execlineb -S6 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5} ${6}
+  if -t { s6-test ! ${5} = "-" }
+  s6-chmod ${5} ${1}
 }
-if -t { s6-test ! ${5} = "-" }
-s6-chmod ${5} ${1}"
+if -t { if { s6-${2} } s6-test -d ${1} }
+forbacktickx -0 subfile { s6-ls -0 ${1} }
+multisubstitute
+{
+  importas -u subfile subfile
+  importas recfunction recfunction
+}
+execlineb -S6 -c ${recfunction} ${1}/${subfile} true ${3} ${4} ${5} ${6}"
 
 # process each line
 forstdin -d"\n" -- line
