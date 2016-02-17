@@ -181,6 +181,16 @@ path recurse account fmode dmode
 * `path`: File or dir path.
 * `recurse`: (Set to `true` or `false`) If a folder is found, recurse through all containing files & folders in it.
 * `account`: Target account. It's possible to default to fallback `uid:gid` if the account isn't found. For example, `nobody,32768:32768` would try to use the `nobody` account first, then fallback to `uid 32768` instead.
+If, for instance, `daemon` account is `UID=2` and `GID=2`, these are the possible values for `account` field:
+  * `daemon:                UID=2     GID=2`
+  * `daemon,3:4:            UID=2     GID=2`
+  * `2:2,3:4:               UID=2     GID=2`
+  * `daemon:11111,3:4:      UID=11111 GID=2`
+  * `11111:daemon,3:4:      UID=2     GID=11111`
+  * `daemon:daemon,3:4:     UID=2     GID=2`
+  * `daemon:unexisting,3:4: UID=2     GID=4`
+  * `unexisting:daemon,3:4: UID=3     GID=2`
+  * `11111:11111,3:4:       UID=11111 GID=11111`
 * `fmode`: Target file mode. For example, `0644`.
 * `dmode`: Target dir/folder mode. For example, `0755`.
 
