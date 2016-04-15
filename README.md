@@ -15,6 +15,8 @@
   - [Dropping privileges](#dropping-privileges)
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
+- [Known issues and workarounds](#known-issues-and-workarounds)
+  - [`/bin` and `/sbin` are symlinks](#bin-and-sbin-are-symlinks)
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
@@ -330,6 +332,25 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time (in milliseconds) a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
 * `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
+
+## Known issues and workarounds
+
+### `/bin` and `/sbin` are symlinks
+
+Some Linux distros (like CentOS 7) have started replacing `/bin` with a symlink
+to `/usr/bin` (and the same for `/sbin -> /usr/sbin`). When you extract the
+tarball, these symlinks are overwritten, so important programs like `/bin/sh`
+disappear.
+
+The current workaround is to extract the tarball in two steps:
+
+```
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" --exclude="./sbin" && \
+    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin ./sbin
+```
+
+This will prevent tar from deleting those `/bin` and `/sbin` symlinks, and
+everything will work as normal.
 
 ## Performance
 
