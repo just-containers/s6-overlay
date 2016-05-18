@@ -49,6 +49,9 @@ ifthenelse -s { ${DO_NOT_KEEP_ENV} }
 }
 { }
 
+backtick -n S6_CMD_ARG0 { printcontenv S6_CMD_ARG0 }
+importas -d "\n" -s -u S6_CMD_ARG0 S6_CMD_ARG0
+
 ##
 ## route based on what was provided in S6_LOGGING
 ##
@@ -57,6 +60,6 @@ backtick -D 0 -n S6_LOGGING { printcontenv S6_LOGGING }
 importas -u S6_LOGGING S6_LOGGING
 ifelse { s6-test ${S6_LOGGING} -ne 0 }
 {
-  /etc/s6/init-catchall/init-stage1 $@
+  /etc/s6/init-catchall/init-stage1 ${S6_CMD_ARG0} $@
 }
-/etc/s6/init-no-catchall/init-stage1 $@
+/etc/s6/init-no-catchall/init-stage1 ${S6_CMD_ARG0} $@
