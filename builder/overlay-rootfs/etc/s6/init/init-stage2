@@ -164,18 +164,38 @@ foreground
 
 
   ##
-  ## The init is complete. If the user has given a CMD, run it now, then
-  ## kill everything when it exits.
+  ## The init is complete. If the user has given a CMD, run it now wrapped
+  ## into a docker-cmd service, then kill everything when it exits.
   ##
 
   if -t { s6-test $# -ne 0 }
-  foreground { s6-setsid -gq -- with-contenv $@ }
+  # append CMD to docker-cmd service run script
+  # FIXME: need to do a correct escaping of "$@"
+  if { redirfd -a 1 /var/run/s6/services/docker-cmd/run s6-echo -- with-contenv $@ }
+  if { s6-mkdir -p /var/run/s6/services/docker-cmd/supervise }
+  if { s6-svscanctl -a /var/run/s6/services }
+
+  if { loopwhilex -x 0 s6-svok /var/run/s6/services/s6-fdholderd }
+  if { s6-svc -u -wU /var/run/s6/services/s6-fdholderd }
+
+  # store current stdout and stderr which are read by docker into fdholderd.
+  # Our docker-cmd service will then retrieve and use them when executing CMD
+  if { s6-fdholder-store -d 1 /var/run/s6/fdholderd-socket init-stdout }
+  if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
+
+  if { loopwhilex -x 0 s6-svok /var/run/s6/services/docker-cmd }
+  foreground
+  {
+    if { s6-svc -o -wu /var/run/s6/services/docker-cmd }
+    if { s6-svwait -D /var/run/s6/services/docker-cmd }
+    # finish script in docker-cmd writes exit status of CMD.
+    # we then read it here and make it an exit status of this block
+    s6-envdir -I /var/run/s6/env-stage3
+    import -u -D0 S6_CMD_EXITED
+    exit ${S6_CMD_EXITED}
+  }
   importas -u ? ?
   if { s6-echo -- "${1} exited ${?}" }
-
-  # Make CMD exit code available in stage3
-  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_CMD_EXITED s6-echo -n -- "${?}" }
-
   # Stop supervision tree
   foreground { s6-svscanctl -t /var/run/s6/services }
 

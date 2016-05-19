@@ -1,0 +1,2 @@
+#!/bin/execlineb -S0
+redirfd -w 1 /var/run/s6/env-stage3/S6_CMD_EXITED s6-echo -n -- "${1}"
