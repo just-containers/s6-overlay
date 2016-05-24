@@ -1,12 +1,20 @@
 #!/bin/execlineb -S0
 
 ##
-## dump environment into an envdir
+## dump environment into an envdir if S6_KEEP_ENV is unset
 ##
 
-if { s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
-if { s6-dumpenv -- /var/run/s6/container_environment }
-
+import -D 0 S6_KEEP_ENV
+define -s DO_NOT_KEEP_ENV "s6-test ${S6_KEEP_ENV} -eq 0"
+if
+{
+  ifelse { ${DO_NOT_KEEP_ENV} }
+  {
+    if { s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
+    s6-dumpenv -- /var/run/s6/container_environment
+  }
+  exit 0
+}
 
 ##
 ## create env folder for each init stage, although stage1 is always copied from
@@ -21,6 +29,7 @@ if
   importas -u envdir envdir
   s6-rmrf ${envdir}
 }
+if { s6-mkdir -pm 0755 -- /var/run/s6 }
 if { s6-hiercopy /etc/s6/init/env /var/run/s6/env-stage1 }
 if { s6-mkdir -pm 0755 -- /var/run/s6/env-stage2 }
 if { s6-mkdir -pm 0755 -- /var/run/s6/env-stage3 }
@@ -28,14 +37,17 @@ if { s6-mkdir -pm 0755 -- /var/run/s6/env-stage3 }
 
 ##
 ## run everything else with only the environment defined in
-## /var/run/s6/env-stage1. Programs can get back the container
+## /var/run/s6/env-stage1 if we are not instructed to keep
+## docker env. Programs can get back the container
 ## environment by using "with-contenv program".
 ##
 
-exec -c --
-s6-envdir /var/run/s6/env-stage1
-exec --
-
+ifthenelse -s { ${DO_NOT_KEEP_ENV} }
+{
+  exec -c --
+  s6-envdir /var/run/s6/env-stage1
+}
+{ }
 
 ##
 ## route based on what was provided in S6_LOGGING
