@@ -184,26 +184,7 @@ foreground
   if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
 
   if { loopwhilex -x 0 s6-svok /var/run/s6/services/docker-cmd }
-  foreground
-  {
-    if { s6-svc -o -wu /var/run/s6/services/docker-cmd }
-    if { s6-svwait -D /var/run/s6/services/docker-cmd }
-    # finish script in docker-cmd writes exit status of CMD.
-    # we then read it here and make it an exit status of this block
-    s6-envdir -I /var/run/s6/env-stage3
-    import -u -D0 S6_CMD_EXITED
-    exit ${S6_CMD_EXITED}
-  }
-  importas -u ? ?
-  if { s6-echo -- "${1} exited ${?}" }
-  # Stop supervision tree
-  foreground { s6-svscanctl -t /var/run/s6/services }
-
-  # Race condition here, but it's ok: the sync in stage 3 takes ages,
-  # and if we get killed by the SIGTERM instead of the SIGKILL, meh, who cares.
-
-  # Wait to be nuked
-  s6-pause -th
+  s6-svc -o -wu /var/run/s6/services/docker-cmd
 }
 importas -u ? ?
 if { s6-test ${?} -ne 0 }
