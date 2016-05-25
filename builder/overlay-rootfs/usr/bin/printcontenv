@@ -8,8 +8,8 @@ import -D 0 S6_KEEP_ENV
 # original docker environement
 ifelse  { s6-test ${S6_KEEP_ENV} -ne 0 }
 {
-  importas value ${1}
-  s6-echo -- ${value}
+  redirfd -w 2 /dev/null importas -i value ${1}
+  s6-echo -n -- ${value}
 }
 
 # else: original docker env was dumped into container_environment
