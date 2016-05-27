@@ -1,6 +1,0 @@
-#!/bin/execlineb -S0
-s6-fdholder-retrieve -D /var/run/s6/fdholderd-socket init-stdout
-fdmove -c 0 1
-s6-fdholder-retrieve -D /var/run/s6/fdholderd-socket init-stderr
-fdmove -c 0 2
-#actual CMD will be appended here by init-stage2 script

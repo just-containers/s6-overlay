@@ -166,14 +166,18 @@ foreground
   ##
   ## The init is complete. If the user has given a CMD, run it now wrapped
   ## into a docker-cmd service, then kill everything when it exits.
-  ##
+  ## if no CMD is given, but container provided docker-cmd/run 
+  ## then use it as a "default" CMD
 
-  if -t { s6-test $# -ne 0 }
-  # append CMD to docker-cmd service run script
-  # FIXME: need to do a correct escaping of "$@"
-  if { redirfd -a 1 /var/run/s6/services/docker-cmd/run s6-echo -- with-contenv $@ }
-  if { s6-mkdir -p /var/run/s6/services/docker-cmd/supervise }
-  if { s6-svscanctl -a /var/run/s6/services }
+  if
+  {
+    if -t { s6-test $# -ne 0 } # CMD was passed to container
+    # overwrite default docker-cmd service run script with CMD
+    # FIXME: need to do a correct escaping of "$@"
+    if { redirfd -w 1 /var/run/s6/services/docker-cmd/run s6-echo -s "\n" -- "#!/bin/execlineb -S0" "with-docker-fds" with-contenv $@ }
+    s6-chmod 0755 /var/run/s6/services/docker-cmd/run
+  }
+  if -t { s6-test -x /var/run/s6/services/docker-cmd/run }
 
   if { loopwhilex -x 0 s6-svok /var/run/s6/services/s6-fdholderd }
   if { s6-svc -u -wU /var/run/s6/services/s6-fdholderd }
@@ -182,9 +186,7 @@ foreground
   # Our docker-cmd service will then retrieve and use them when executing CMD
   if { s6-fdholder-store -d 1 /var/run/s6/fdholderd-socket init-stdout }
   if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
-
-  if { loopwhilex -x 0 s6-svok /var/run/s6/services/docker-cmd }
-  s6-svc -o -wu /var/run/s6/services/docker-cmd
+  s6-svc -o -wu -T1000 /var/run/s6/services/docker-cmd
 }
 importas -u ? ?
 if { s6-test ${?} -ne 0 }

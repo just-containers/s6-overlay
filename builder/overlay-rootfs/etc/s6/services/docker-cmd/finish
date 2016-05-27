@@ -1,4 +1,4 @@
 #!/bin/execlineb -S0
 foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_CMD_EXITED s6-echo -n -- "${1}" }
-foreground { s6-echo -- "docker CMD exited ${?}" }
+foreground { s6-echo -- "docker CMD exited ${1}" }
 s6-svscanctl -t /var/run/s6/services
