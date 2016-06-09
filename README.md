@@ -322,6 +322,7 @@ This script will output whatever the `MYENV` enviroment variable contains.
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
 
+* `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into noop.
 * `S6_LOGGING` (default = 0): 
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Nothing would be written to stdout/stderr.
