@@ -133,6 +133,25 @@ foreground
           s6-hiercopy /var/run/s6/etc/services.d/${i} /var/run/s6/services/${i}
         }
         if { s6-svscanctl -a /var/run/s6/services }
+        if
+        {
+          # This env decides if CMD should wait until services are up
+          backtick -D 0 -n S6_CMD_WAIT_FOR_SERVICES { printcontenv S6_CMD_WAIT_FOR_SERVICES }
+          importas -u S6_CMD_WAIT_FOR_SERVICES S6_CMD_WAIT_FOR_SERVICES
+
+          if -t { if { s6-test ${S6_CMD_WAIT_FOR_SERVICES} -ne 0 } s6-test $# -ne 0 }
+          if
+          {
+            pipeline { s6-ls -0 -- /var/run/s6/etc/services.d }
+            forstdin -0 -p -- i
+            importas -u i i
+            ifelse { s6-test -f /var/run/s6/services/${i}/notification-fd }
+            {
+              s6-svwait -t 1000 -U /var/run/s6/services/${i}
+            }
+            s6-svwait -t 1000 -u /var/run/s6/services/${i}
+          }
+        }
         if { s6-echo -- "[services.d] done." }
       }
     }
