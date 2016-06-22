@@ -4,7 +4,7 @@
 ## dump environment into an envdir if S6_KEEP_ENV is unset
 ##
 
-import -D 0 S6_KEEP_ENV
+importas -D 0 S6_KEEP_ENV S6_KEEP_ENV
 define -s DO_NOT_KEEP_ENV "s6-test ${S6_KEEP_ENV} -eq 0"
 if
 {
