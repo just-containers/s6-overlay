@@ -337,6 +337,8 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_FIX_ATTRS_HIDDEN` (default = 0): Controls how `fix-attrs.d` scripts process files and directories.
   * **`0`**: Hidden files and directories are excluded.
   * **`1`**: All files and directories are processed.
+* `S6_CMD_WAIT_FOR_SERVICES` (default = 0): In order to proceed executing CMD overlay will wait until services are up. Be aware that up doesn't mean ready. Depending if `notification-fd` was found inside the servicedir overlay will use `s6-svwait -U` or `s6-svwait -u` as the waiting statement.
+* `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 5000): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
 
 ## Known issues and workarounds
 
