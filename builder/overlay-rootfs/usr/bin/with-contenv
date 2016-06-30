@@ -1,6 +1,6 @@
 #!/bin/execlineb -S0
 /bin/importas -D 0 S6_KEEP_ENV S6_KEEP_ENV
-/bin/ifelse { /bin/s6-test ${S6_KEEP_ENV} -eq 0 }
+/bin/ifelse { s6-test ${S6_KEEP_ENV} -eq 0 }
 {
   /bin/exec -c --
   /bin/s6-envdir -fn -- /var/run/s6/container_environment
