@@ -14,7 +14,7 @@ foreground
   s6-chmod ${5} ${1}
 }
 if -t { if { s6-${2} } s6-test -d ${1} }
-forbacktickx -0 subfile { s6-ls -0 ${1} }
+forbacktickx -0 subfile { s6-ls -0 -a ${1} }
 multisubstitute
 {
   importas -u subfile subfile
