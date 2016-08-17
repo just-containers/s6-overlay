@@ -14,7 +14,12 @@ foreground
   s6-chmod ${5} ${1}
 }
 if -t { if { s6-${2} } s6-test -d ${1} }
-forbacktickx -0 subfile { s6-ls -0 ${1} }
+forbacktickx -0 subfile
+{
+  importas -D 0 S6_ATTRS_FIX_HIDDEN S6_ATTRS_FIX_HIDDEN
+  ifelse { s6-test ${S6_ATTRS_FIX_HIDDEN} -eq 0 } { s6-ls -0 ${1} }
+  s6-ls -0 -a ${1}
+}
 multisubstitute
 {
   importas -u subfile subfile
