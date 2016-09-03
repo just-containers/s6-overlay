@@ -12,6 +12,11 @@ s6-envdir -I /var/run/s6/env-stage2
 backtick -D 0 -n S6_BEHAVIOUR_IF_STAGE2_FAILS { printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS }
 importas -u S6_BEHAVIOUR_IF_STAGE2_FAILS S6_BEHAVIOUR_IF_STAGE2_FAILS
 
+# This env determines whether user provided files in /etc should be linked 
+# or copied into /var/run/s6
+backtick -D 0 -n S6_READ_ONLY_ROOT { printcontenv S6_READ_ONLY_ROOT }
+importas -u S6_READ_ONLY_ROOT S6_READ_ONLY_ROOT
+
 foreground
 {
   if
@@ -44,7 +49,10 @@ foreground
           if { s6-test -d ${S6_RUNTIME_PROFILE_SRC}/${i} }
           # although s6-hiercopy is prefered, and until it doesn't support 'follow symlinks'
           # option, there is no clean way to allow symlinks between user provided runcoms.
-          if { s6-ln -s ${S6_RUNTIME_PROFILE_SRC}/${i} /var/run/s6/etc/${i} }
+          ifelse { s6-test ${S6_READ_ONLY_ROOT} -eq 0 } { 
+            s6-ln -s ${S6_RUNTIME_PROFILE_SRC}/${i} /var/run/s6/etc/${i} 
+          }
+          if { s6-hiercopy ${S6_RUNTIME_PROFILE_SRC}/${i} /var/run/s6/etc/${i} }
         }
         importas -u ? ?
         if { s6-echo -- "exited ${?}." }
