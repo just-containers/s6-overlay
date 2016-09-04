@@ -329,6 +329,8 @@ This of course assumes that at least `/var` is backed by a writeable filesystem 
 docker run -e S6_READ_ONLY_ROOT=1 --read-only --tmpfs /var:rw,exec [image name]
 ```
 
+**NOTE**: When using `S6_READ_ONLY_ROOT=1` you should _avoid using symbolic links_ in `fix-attrs.d`, `cont-init.d`, `cont-finish.d`, and `services.d`. Due to limitations of `s6`, symbolic links will be followed when these directories are copied to `/var/run/s6`, resulting in unexpected duplication.
+
 ### Customizing `s6` behaviour
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
