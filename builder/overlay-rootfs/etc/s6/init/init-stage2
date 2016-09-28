@@ -173,8 +173,17 @@ foreground
   {
     if -t { s6-test $# -ne 0 } # CMD was passed to container
     # overwrite default docker-cmd service run script with CMD
-    # FIXME: need to do a correct escaping of "$@"
-    if { redirfd -w 1 /var/run/s6/services/docker-cmd/run s6-echo -s "\n" -- "#!/bin/execlineb -S0" "with-docker-fds" with-contenv $@ }
+    if { redirfd -w 1 /var/run/s6/services/docker-cmd/cmd execlineb -c "dollarat -d \"\"" $@ }
+    if {
+          redirfd -w 1 /var/run/s6/services/docker-cmd/run heredoc 0
+"#!/bin/execlineb -S0
+with-docker-fds
+with-contenv
+redirfd -r 0 ./cmd withstdinas cmd importas -u -s -d \"\" cmd cmd
+${cmd}
+"
+          s6-cat
+       }
     s6-chmod 0755 /var/run/s6/services/docker-cmd/run
   }
   if -t { s6-test -x /var/run/s6/services/docker-cmd/run }
