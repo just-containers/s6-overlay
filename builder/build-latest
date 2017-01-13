@@ -6,7 +6,7 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.18.1.1}
+RELEASE_VERSION=${RELEASE_VERSION:-1.19.0.0}
 SKAWARE_VERSION=${RELEASE_VERSION%.*}
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
@@ -15,7 +15,6 @@ OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
 OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 
 targets=( 'amd64' 'armhf' )
-outputs=( 'portable' )
 editions=( '' 'nobin' )
 
 get_packages_with_versions_from_manifest() {
@@ -50,7 +49,7 @@ get_packages_with_versions_from_manifest() {
 # destination folder
 cd /tmp
 
-packages=($(get_packages_with_versions_from_manifest "manifest-portable.txt"))
+packages=($(get_packages_with_versions_from_manifest "manifest-linux.txt"))
 for package in "${packages[@]}"; do
   for target in "${targets[@]}"; do
     file=${package}-linux-${target}-bin.tar.gz
