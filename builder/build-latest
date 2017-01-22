@@ -14,7 +14,7 @@ PWD=$(pwd)
 OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
 OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 
-targets=( 'amd64' 'armhf' )
+targets=( 'amd64' 'armhf' 'x86' )
 editions=( '' 'nobin' )
 
 get_packages_with_versions_from_manifest() {
