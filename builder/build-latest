@@ -6,7 +6,7 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.19.0.0}
+RELEASE_VERSION=${RELEASE_VERSION:-1.19.1.0}
 SKAWARE_VERSION=${RELEASE_VERSION%.*}
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
@@ -14,7 +14,7 @@ PWD=$(pwd)
 OVERLAY_SRC_PATH=${OVERLAY_SRC_PATH:-$PWD/overlay-rootfs}
 OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 
-targets=( 'amd64' 'armhf' 'x86' )
+targets=( 'amd64' 'armhf' 'x86' 'aarch64' )
 editions=( '' 'nobin' )
 
 get_packages_with_versions_from_manifest() {
