@@ -84,7 +84,7 @@ for edition in "${editions[@]}"; do
   
     if [ "${edition}" != "nobin" ]; then
       # skarnet versions manifest
-      packages=($(get_packages_with_versions_from_manifest "manifest-portable.txt"))
+      packages=($(get_packages_with_versions_from_manifest "manifest-linux.txt"))
   
       # install required binaries for this concrete output
       for package in "${packages[@]}"; do
