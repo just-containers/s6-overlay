@@ -73,5 +73,5 @@ foreground { s6-sync }
 
 # Use CMD exit code defaulting to zero if not present.
 
-importas -u -D0 S6_CMD_EXITED S6_CMD_EXITED
-exit ${S6_CMD_EXITED}
+importas -u -D0 S6_STAGE2_EXITED S6_STAGE2_EXITED
+exit ${S6_STAGE2_EXITED}

@@ -159,6 +159,9 @@ foreground
     }
     importas -u ? ?
     ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -eq 0 } { exit 0 }
+
+    # Make stage2 exit code available in stage3
+    foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- "${?}" }
     exit ${?}
   }
 
@@ -174,7 +177,7 @@ foreground
   if { s6-echo -- "${1} exited ${?}" }
 
   # Make CMD exit code available in stage3
-  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_CMD_EXITED s6-echo -n -- "${?}" }
+  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- "${?}" }
 
   # Stop supervision tree
   foreground { s6-svscanctl -t /var/run/s6/services }
@@ -190,8 +193,6 @@ if { s6-test ${?} -ne 0 }
 if { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 0 }
 ifelse { s6-test ${S6_BEHAVIOUR_IF_STAGE2_FAILS} -ne 1 }
 {
-  # Stop supervision tree (if it wasn't already due to CMD execution)
-  if { s6-test ! -f /var/run/s6/env-stage3/S6_CMD_EXITED }
   s6-svscanctl -t /var/run/s6/services
 }
 s6-echo -- "\n!!!!!\n init-stage2 failed.\n!!!!!"
