@@ -173,28 +173,38 @@ foreground
 
 
   ##
-  ## The init is complete. If the user has given a CMD, run it now, then
-  ## kill everything when it exits.
-  ##
+  ## The init is complete. If the user has given a CMD, run it now wrapped
+  ## into a docker-cmd service, then kill everything when it exits.
+  ## if no CMD is given, but container provided docker-cmd/run
+  ## then use it as a "default" CMD
 
-  if -t { s6-test $# -ne 0 }
-  foreground { s6-setsid -gq -- with-contenv $@ }
-  importas -u ? ?
-  foreground {
-    /etc/s6/init/init-stage2-redirfd
-    if { s6-echo -- "[cmd] ${1} exited ${?}" }
+  if
+  {
+    if -t { s6-test $# -ne 0 } # CMD was passed to container
+    # overwrite default docker-cmd service run script with CMD
+    if { redirfd -w 1 /var/run/s6/services/docker-cmd/cmd execlineb -c "dollarat -d \"\"" $@ }
+    if {
+          redirfd -w 1 /var/run/s6/services/docker-cmd/run heredoc 0
+"#!/bin/execlineb -S0
+with-docker-fds
+with-contenv
+redirfd -r 0 ./cmd withstdinas cmd importas -u -s -d \"\" cmd cmd
+${cmd}
+"
+          s6-cat
+       }
+    s6-chmod 0755 /var/run/s6/services/docker-cmd/run
   }
-  # Make CMD exit code available in stage3
-  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- "${?}" }
+  if -t { s6-test -x /var/run/s6/services/docker-cmd/run }
 
-  # Stop supervision tree
-  foreground { s6-svscanctl -t /var/run/s6/services }
+  if { loopwhilex -x 0 s6-svok /var/run/s6/services/s6-fdholderd }
+  if { s6-svc -u -wU /var/run/s6/services/s6-fdholderd }
 
-  # Race condition here, but it's ok: the sync in stage 3 takes ages,
-  # and if we get killed by the SIGTERM instead of the SIGKILL, meh, who cares.
-
-  # Wait to be nuked
-  s6-pause -th
+  # store current stdout and stderr which are read by docker into fdholderd.
+  # Our docker-cmd service will then retrieve and use them when executing CMD
+  if { s6-fdholder-store -d 1 /var/run/s6/fdholderd-socket init-stdout }
+  if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
+  s6-svc -o -wu -T1000 /var/run/s6/services/docker-cmd
 }
 importas -u ? ?
 if { s6-test ${?} -ne 0 }
