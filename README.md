@@ -13,6 +13,7 @@
   - [Writing a service script](#writing-a-service-script)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
   - [Dropping privileges](#dropping-privileges)
+  - [Read-only Root Filesystem](#read-only-root-filesystem)
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Known issues and workarounds](#known-issues-and-workarounds)
@@ -318,6 +319,18 @@ echo $MYENV
 
 This script will output whatever the `MYENV` enviroment variable contains.
 
+### Read-Only Root Filesystem
+
+Recent versions of Docker allow running containers with a read-only root filesystem. During init stage 2, the overlay modifies permissions for user-provided files in `cont-init.d`, etc. If the root filesystem is read-only, you can set `S6_READ_ONLY_ROOT=1` to inform stage 2 that it should first copy user-provided files to its work area in `/var/run/s6` before attempting to change permissions. 
+
+This of course assumes that at least `/var` is backed by a writeable filesystem with execute privileges. This could be done with a `tmpfs` filesystem as follows:
+
+```
+docker run -e S6_READ_ONLY_ROOT=1 --read-only --tmpfs /var:rw,exec [image name]
+```
+
+**NOTE**: When using `S6_READ_ONLY_ROOT=1` you should _avoid using symbolic links_ in `fix-attrs.d`, `cont-init.d`, `cont-finish.d`, and `services.d`. Due to limitations of `s6`, symbolic links will be followed when these directories are copied to `/var/run/s6`, resulting in unexpected duplication.
+
 ### Customizing `s6` behaviour
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
@@ -339,6 +352,7 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`1`**: All files and directories are processed.
 * `S6_CMD_WAIT_FOR_SERVICES` (default = 0): In order to proceed executing CMD overlay will wait until services are up. Be aware that up doesn't mean ready. Depending if `notification-fd` was found inside the servicedir overlay will use `s6-svwait -U` or `s6-svwait -u` as the waiting statement.
 * `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 5000): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
+* `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 
 ## Known issues and workarounds
 
