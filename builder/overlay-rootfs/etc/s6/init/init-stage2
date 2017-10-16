@@ -174,8 +174,10 @@ foreground
   if -t { s6-test $# -ne 0 }
   foreground { s6-setsid -gq -- with-contenv $@ }
   importas -u ? ?
-  if { s6-echo -- "${1} exited ${?}" }
-
+  foreground {
+    /etc/s6/init/init-stage2-redirfd
+    if { s6-echo -- "[cmd] ${1} exited ${?}" }
+  }
   # Make CMD exit code available in stage3
   foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- "${?}" }
 
