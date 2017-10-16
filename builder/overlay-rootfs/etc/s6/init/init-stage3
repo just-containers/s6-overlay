@@ -48,7 +48,6 @@ foreground { s6-echo "[s6-finish] sending all processes the TERM signal." }
 foreground { s6-nuke -th } # foreground is process 1: it survives
 foreground
 {
-
   backtick -D 3000 -n S6_KILL_GRACETIME { printcontenv S6_KILL_GRACETIME }
   importas -u S6_KILL_GRACETIME S6_KILL_GRACETIME
   s6-sleep -m -- ${S6_KILL_GRACETIME}
