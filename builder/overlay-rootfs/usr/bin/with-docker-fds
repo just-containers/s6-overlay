@@ -4,5 +4,7 @@
 /bin/s6-fdholder-retrieve -D /var/run/s6/fdholderd-socket init-stderr
 /bin/fdmove -c 0 2
 
+/bin/s6-fdholder-retrieve -D /var/run/s6/fdholderd-socket init-stdin
+
 /bin/exec --
 $@

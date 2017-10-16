@@ -186,9 +186,9 @@ foreground
     if {
           redirfd -w 1 /var/run/s6/services/docker-cmd/run heredoc 0
 "#!/bin/execlineb -S0
-with-docker-fds
 with-contenv
 redirfd -r 0 ./cmd withstdinas cmd importas -u -s -d \"\" cmd cmd
+with-docker-fds
 ${cmd}
 "
           s6-cat
@@ -204,6 +204,7 @@ ${cmd}
   # Our docker-cmd service will then retrieve and use them when executing CMD
   if { s6-fdholder-store -d 1 /var/run/s6/fdholderd-socket init-stdout }
   if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
+  if { s6-fdholder-store -d 0 /var/run/s6/fdholderd-socket init-stdin }
   s6-svc -o -wu -T1000 /var/run/s6/services/docker-cmd
 }
 importas -u ? ?
