@@ -10,6 +10,7 @@ if
 {
   ifelse { ${DO_NOT_KEEP_ENV} }
   {
+    if { s6-rmrf /var/run/s6/container_environment }
     if { s6-mkdir -pm 0755 -- /var/run/s6/container_environment }
     s6-dumpenv -- /var/run/s6/container_environment
   }
