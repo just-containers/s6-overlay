@@ -188,6 +188,8 @@ foreground
 "#!/bin/execlineb -S0
 with-contenv
 redirfd -r 0 ./cmd withstdinas cmd importas -u -s -d \"\" cmd cmd
+importas -i CWD CWD
+cd ${CWD}
 with-docker-fds
 ${cmd}
 "
