@@ -17,6 +17,7 @@
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Known issues and workarounds](#known-issues-and-workarounds)
+  - [syslog](#syslog)
   - [`/bin` and `/sbin` are symlinks](#bin-and-sbin-are-symlinks)
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
@@ -355,6 +356,21 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 
 ## Known issues and workarounds
+
+### syslog
+
+Some software is particularly picky about syslog - it refuses to start
+if syslog isn't available, or refuses to log anywhere besides syslog, etc.
+
+We have an add-on with a pre-configured instance of
+[socklog](http://smarden.org/socklog/) that saves syslog messages to
+`/var/log/socklog`. It's called the
+[`socklog-overlay`](https://github.com/just-containers/socklog-overlay).
+
+Installation is similar to installing the `s6-overlay` - just download
+and extract a tarball. Logs are automatically rotated, so you never
+have to worry about syslog messages filling up your disk.
+
 
 ### `/bin` and `/sbin` are symlinks
 
