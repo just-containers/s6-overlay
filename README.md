@@ -339,7 +339,8 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into noop.
 * `S6_LOGGING` (default = 0): 
   * **`0`**: Outputs everything to stdout/stderr.
-  * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Nothing would be written to stdout/stderr.
+  * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Anything run as a `CMD` is still output to stdout/stderr.
+  * **`2`**: Uses an internal `catch-all` logger and persists everything on it, including the output of `CMD`. Absolutely nothing is written to stdout/stderr.
 * `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
   * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
   * **`1`**: Continue but warn with an annoying error message.
