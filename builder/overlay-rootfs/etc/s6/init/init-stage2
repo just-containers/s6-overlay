@@ -181,6 +181,7 @@ foreground
   if
   {
     if -t { s6-test $# -ne 0 } # CMD was passed to container
+    if { s6-echo "[s6-init] creating docker-cmd service" }
     # overwrite default docker-cmd service run script with CMD
     if { redirfd -w 1 /var/run/s6/services/docker-cmd/cmd execlineb -c "dollarat -d \"\"" $@ }
     if {
@@ -207,6 +208,7 @@ ${cmd}
   if { s6-fdholder-store -d 1 /var/run/s6/fdholderd-socket init-stdout }
   if { s6-fdholder-store -d 2 /var/run/s6/fdholderd-socket init-stderr }
   if { s6-fdholder-store -d 0 /var/run/s6/fdholderd-socket init-stdin }
+  if { s6-echo "[s6-init] starting docker-cmd service" }
   s6-svc -o -wu -T1000 /var/run/s6/services/docker-cmd
 }
 importas -u ? ?

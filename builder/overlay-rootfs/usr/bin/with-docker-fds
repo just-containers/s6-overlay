@@ -7,4 +7,5 @@
 /bin/s6-fdholder-retrieve -D /var/run/s6/fdholderd-socket init-stdin
 
 /bin/exec --
+/bin/s6-setsid -g
 $@
