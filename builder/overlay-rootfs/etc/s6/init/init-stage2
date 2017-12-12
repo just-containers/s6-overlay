@@ -181,6 +181,7 @@ foreground
 
   foreground {
       s6-setsid -gq -- with-contenv
+      backtick -D 0 -n S6_LOGGING { printcontenv S6_LOGGING }
       importas S6_LOGGING S6_LOGGING
       ifelse { s6-test ${S6_LOGGING} -eq 2 }
       {
