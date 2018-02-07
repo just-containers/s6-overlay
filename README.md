@@ -12,6 +12,7 @@
   - [Executing initialization And/Or finalization tasks](#executing-initialization-andor-finalization-tasks)
   - [Writing a service script](#writing-a-service-script)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
+  - [Logging](#logging)
   - [Dropping privileges](#dropping-privileges)
   - [Read-only Root Filesystem](#read-only-root-filesystem)
   - [Container environment](#container-environment)
