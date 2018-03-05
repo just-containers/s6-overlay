@@ -1,6 +1,8 @@
 before_install:
 - gem install travis -v 1.8.8
 - travis login --org --github-token $GITHUB_TOKEN
+- travis whoami
+- travis sync
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/PRoot
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/qemu
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/musl-cross-make
