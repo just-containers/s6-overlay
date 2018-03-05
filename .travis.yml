@@ -2,6 +2,12 @@ before_install:
 - gem install travis
 - travis login --github-token $GITHUB_TOKEN
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/PRoot
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/qemu
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/musl-cross-make
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/skaware
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/busybox-chroots
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog-overlay
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog-static
 - bash -e ${TRAVIS_BUILD_DIR}/.travis.yml.before_install
 install:
 - bash -e ${TRAVIS_BUILD_DIR}/.travis.yml.install
