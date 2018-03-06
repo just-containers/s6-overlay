@@ -8,6 +8,7 @@ before_install:
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/busybox-chroots
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog-overlay
 - travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog-static
+- travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog
 - bash -e ${TRAVIS_BUILD_DIR}/.travis.yml.before_install
 install:
 - bash -e ${TRAVIS_BUILD_DIR}/.travis.yml.install
