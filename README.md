@@ -384,8 +384,8 @@ disappear.
 The current workaround is to extract the tarball in two steps:
 
 ```
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" --exclude="./sbin" && \
-    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin ./sbin
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" && \
+    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
 ```
 
 This will prevent tar from deleting those `/bin` and `/sbin` symlinks, and
