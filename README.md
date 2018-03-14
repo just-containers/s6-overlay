@@ -23,6 +23,7 @@
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
+- [Releases](#releases)
 - [Contributing](#contributing)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
@@ -414,6 +415,30 @@ gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 ## Notes
 
 * For now, `s6-overlay` doesn't support running it with a user different than `root`, so consequently Dockerfile `USER` directive is not supported (except `USER root` of course ;P).
+
+## Releases
+
+Over on the releases tab, we have 6 release variants.
+
+* `s6-overlay-nobin.tar.gz`
+* `s6-overlay-amd64.tar.gz`
+* `s6-overlay-x86.tar.gz`
+* `s6-overlay-armhf.tar.gz`
+* `s6-overlay-arm.tar.gz`
+* `s6-overlay-aarch64.tar.gz`
+
+The "nobin" variant is strictly the scripts of the s6-overlay, with absolutely
+no binaries.
+
+The other releases are named after their intended platform:
+
+* `s6-overlay-amd64.tar.gz` - includes binaries for 64-bit Intel/AMD platforms
+* `s6-overlay-x86.tar.gz` - includes binaries for 32-bit Intel/AMD platforms
+* `s6-overlay-armhf.tar.gz` - includes binaries for 32-bit ARM (hard-float) platforms, ie, Raspberry Pi
+* `s6-overlay-arm.tar.gz` - includes binaries for 32-bit ARM platforms
+* `s6-overlay-aarch64.tar.gz` - includes binaries for 64-bit ARM platforms.
+
+All binaries are statically compiled and should work on any Linux distro.
 
 ## Contributing
 
