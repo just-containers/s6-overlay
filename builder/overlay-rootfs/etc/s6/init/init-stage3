@@ -35,6 +35,17 @@ foreground
   }
 }
 
+# Wait service down
+
+foreground { s6-echo "[s6-finish] waiting for services." }
+foreground
+{
+  backtick -D 3000 -n S6_SERVICES_GRACETIME { printcontenv S6_SERVICES_GRACETIME }
+  importas -u S6_SERVICES_GRACETIME S6_SERVICES_GRACETIME
+  elglob SERVICES /var/run/s6/services/*
+  foreground { s6-svwait -D -t ${S6_SERVICES_GRACETIME} ${SERVICES} }
+  s6-sleep -m 200
+}
 
 # Sync before TERM'n
 
