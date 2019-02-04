@@ -348,6 +348,7 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time (in milliseconds) a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
+* `S6_SERVICES_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait services before sending a `TERM` signal.
 * `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
 * `S6_CMD_ARG0` (default = not set): Value of this env var will be prepended to any `CMD` args passed by docker. Use it if you are migrting an existing image to a s6-overlay and want to make it a drop-in replacement, then setting this variable to a value of previously used ENTRYPOINT will improve compatibility with the way image is used.
