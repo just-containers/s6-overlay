@@ -6,6 +6,10 @@ cd /
 # Merge environments from our custom stage into current context
 s6-envdir -I /var/run/s6/env-stage3
 
+# This env decides if we should call s6-sync or not (default no)
+backtick -D 0 -n S6_SYNC_DISKS { printcontenv S6_SYNC_DISKS }
+importas -u S6_SYNC_DISKS S6_SYNC_DISKS
+
 # cont-finish.d: one-time finish scripts
 
 foreground
@@ -48,9 +52,12 @@ foreground
 }
 
 # Sync before TERM'n
-
-foreground { s6-echo "[s6-finish] syncing disks." }
-foreground { s6-sync }
+foreground
+{
+  if { s6-test ${S6_SYNC_DISKS} -eq 1 }
+    foreground { s6-echo "[s6-finish] syncing disks." }
+    foreground { s6-sync }
+}
 
 
 # Kill everything, gently.
@@ -79,7 +86,11 @@ foreground { s6-nuke -k } # foreground is process 1: it survives again
 # Reap all the zombies then sync, and we're done.
 
 wait { }
-foreground { s6-sync }
+foreground
+{
+  if { s6-test ${S6_SYNC_DISKS} -eq 1 }
+    s6-sync
+}
 
 
 # Use CMD exit code defaulting to zero if not present.
