@@ -16,7 +16,8 @@ foreground
 if -t { if { s6-${2} } s6-test -d ${1} }
 forbacktickx -0 subfile
 {
-  importas -D 0 S6_FIX_ATTRS_HIDDEN S6_FIX_ATTRS_HIDDEN
+  backtick -D 0 -n S6_FIX_ATTRS_HIDDEN { printcontenv S6_FIX_ATTRS_HIDDEN }
+  importas S6_FIX_ATTRS_HIDDEN S6_FIX_ATTRS_HIDDEN
   ifelse { s6-test ${S6_FIX_ATTRS_HIDDEN} -eq 0 } { s6-ls -0 ${1} }
   s6-ls -0 -a ${1}
 }
