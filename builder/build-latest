@@ -143,7 +143,7 @@ for edition in "${editions[@]}"; do
         -zcvf                     \
         $overlaytarpath           \
         -C $overlaydstpath        \
-        ./ || touch $overlaytarpath
+        ./
   done
 done
 
