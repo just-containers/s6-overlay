@@ -475,6 +475,6 @@ xargs docker run --rm                                                     \
 
 * Up to and including version `1.21.8.0`, the init system would call `s6-sync` to sync disks when
   the container exited. This actually syncs all block devices on the hosts, which is
-  likely not what you want to do. As of version `1.28.0.0`, this is disabled by default, see the
+  likely not what you want to do. As of version `1.22.0.0`, this is disabled by default, see the
   README on how to re-enable it.
 
