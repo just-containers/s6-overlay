@@ -18,7 +18,7 @@ fi
 
 # sync up vars for decoding keys on other projects
 
-gem install travis -v 1.8.8
+gem install travis
 travis login --org --github-token $GITHUB_TOKEN
 travis endpoint --org --set-default
 travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/PRoot
