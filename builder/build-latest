@@ -7,7 +7,7 @@ set -x
 ##
 
 RELEASE_VERSION=${RELEASE_VERSION:-1.21.8.0}
-SKAWARE_VERSION=${RELEASE_VERSION%.*}
+SKAWARE_VERSION="1.21.8"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
 PWD=$(pwd)
