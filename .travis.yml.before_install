@@ -16,16 +16,3 @@ if [[ -z "$GITHUB_TOKEN" ]] ; then
     exit 0
 fi
 
-# sync up vars for decoding keys on other projects
-
-gem install travis
-travis login --org --github-token $GITHUB_TOKEN
-travis endpoint --org --set-default
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/PRoot
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/qemu
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/musl-cross-make
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/skaware
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/busybox-chroots
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog-overlay
-travis env copy OPENSSL_IV OPENSSL_KEY --repo just-containers/socklog
-
