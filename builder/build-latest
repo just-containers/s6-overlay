@@ -6,8 +6,8 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.22.0.0}
-SKAWARE_VERSION="1.21.8"
+RELEASE_VERSION=${RELEASE_VERSION:-1.22.1.0}
+SKAWARE_VERSION="1.22.1"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
 PWD=$(pwd)
@@ -19,7 +19,7 @@ OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 mkdir -p ${TMP}
 mkdir -p ${DIST}
 
-targets=( 'amd64' 'arm' 'armhf' 'x86' 'aarch64' )
+targets=( 'amd64' 'arm' 'armhf' 'x86' 'aarch64' 'ppc64le' )
 editions=( '' 'nobin' )
 
 generate_release() {
