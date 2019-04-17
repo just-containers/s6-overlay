@@ -5,3 +5,4 @@
 /var/run/s6/etc/services.d/*/finish false root 0755 0755
 /var/run/s6/etc/services.d/*/log/run false root 0755 0755
 /var/run/s6/etc/services.d/*/log/finish false root 0755 0755
+/var/run/s6/etc/services.d/*/data/check false root 0755 0755
