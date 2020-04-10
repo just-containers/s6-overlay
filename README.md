@@ -274,6 +274,22 @@ Our overlay provides a way to handle logging easily since `s6` already provides 
 - clean all the environments variables
 - initiate logging by executing s6-log :-)
 
+Please note:
+- Since the privileges are dropped automatically, there is no need to switch users with `s6-setuidgid`
+- You should ensure the log folder either:
+  - exists, and is writable by the `nobody` user
+  - does not exist, but the parent folder is writable by the `nobody` user.
+
+You can create log folders in `cont-init.d` scripts, or create them in your run script. Here, we'll create
+them with `cont-init.d` scripts.
+
+`/etc/cont-init.d/myapp-logfolder`:
+```
+#!/bin/sh
+mkdir -p /var/log/myapp
+chown nobody:nogroup /var/log/myapp
+```
+
 This example will send all the log lines present in stdin (following the rules described in `S6_LOGGING_SCRIPT`) to `/var/log/myapp`: 
 
 `/etc/services.d/myapp/log/run`:
