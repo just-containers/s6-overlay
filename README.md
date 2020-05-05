@@ -32,13 +32,14 @@
 The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
 
 ## Quickstart
+>**Note:** This example is for Ubuntu 20.04+
 
 Build the following Dockerfile and try this guy out:
 
 ```
 FROM ubuntu
 ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude='./bin' && tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
 RUN apt-get update && \
     apt-get install -y nginx && \
     echo "daemon off;" >> /etc/nginx/nginx.conf
