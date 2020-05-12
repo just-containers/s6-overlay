@@ -193,8 +193,8 @@ If, for instance, `daemon` account is `UID=2` and `GID=2`, these are the possibl
   * `daemon:                UID=2     GID=2`
   * `daemon,3:4:            UID=2     GID=2`
   * `2:2,3:4:               UID=2     GID=2`
-  * `daemon:11111,3:4:      UID=11111 GID=2`
-  * `11111:daemon,3:4:      UID=2     GID=11111`
+  * `daemon:11111,3:4:      UID=2     GID=11111`
+  * `11111:daemon,3:4:      UID=11111 GID=2`
   * `daemon:daemon,3:4:     UID=2     GID=2`
   * `daemon:unexisting,3:4: UID=2     GID=4`
   * `unexisting:daemon,3:4: UID=3     GID=2`
