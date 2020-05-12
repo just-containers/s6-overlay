@@ -490,6 +490,11 @@ xargs docker run --rm                                                     \
 
 ## Upgrade Notes
 
+* Starting with version `2.0.0.0`, `with-contenv` no longer uses `s6-envdir`, instead it
+  uses [justc-envdir](https://github.com/just-containers/justc-envdir), a small fork that
+  uses the entire contents of the files in the envdir. A new script is introduced, `with-contenv-legacy`,
+  in case you rely on the old behavior.
+
 * Up to and including version `1.21.8.0`, the init system would call `s6-sync` to sync disks when
   the container exited. This actually syncs all block devices on the hosts, which is
   likely not what you want to do. As of version `1.22.0.0`, this is disabled by default, see the

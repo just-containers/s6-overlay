@@ -6,9 +6,12 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-1.22.1.0}
-SKAWARE_VERSION="1.22.1"
+RELEASE_VERSION=${RELEASE_VERSION:-2.0.0.0}
+SKAWARE_VERSION="2.0.0"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
+
+ENVDIR_VERSION="1.0.0"
+ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_VERSION}
 
 PWD=$(pwd)
 TMP=${PWD}/tmp
@@ -36,6 +39,8 @@ generate_release() {
       fi
   done < ${DIST}/manifest.txt
   printf "\n" >> $DIST/release.md
+
+  printf "Additionally, justc-envdir version %s\n" "${ENVDIR_VERSION}" >> ${DIST}/release.md
 }
 
 get_packages_with_versions_from_manifest() {
@@ -68,6 +73,10 @@ get_packages_with_versions_from_manifest() {
 
 # destination folder
 cd ${TMP}
+
+for target in "${targets[@]}"; do
+  curl -R -L -O ${ENVDIR_SOURCE}/justc-envdir-${ENVDIR_VERSION}-linux-${target}.tar.gz
+done
 
 packages=($(get_packages_with_versions_from_manifest "manifest-linux.txt"))
 for package in "${packages[@]}"; do
@@ -112,6 +121,7 @@ for edition in "${editions[@]}"; do
       for package in "${packages[@]}"; do
         tar xvfz ${TMP}/$package-linux-$target-bin.tar.gz -C $overlaydstpath
       done
+      tar xvfz ${TMP}/justc-envdir-${ENVDIR_VERSION}-linux-$target.tar.gz -C $overlaydstpath
     fi
   
     # create must exist directories
@@ -127,7 +137,7 @@ for edition in "${editions[@]}"; do
     chmod 0755 $overlaydstpath/usr/bin/fix-attrs
     chmod 0755 $overlaydstpath/usr/bin/logutil-{newfifo,service,service-main}
     chmod 0755 $overlaydstpath/usr/bin/printcontenv
-    chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries}
+    chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries,contenv-legacy}
   
     # fix init perms
     chmod 0755 $overlaydstpath/init
