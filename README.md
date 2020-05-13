@@ -38,7 +38,7 @@ Build the following Dockerfile and try this guy out:
 
 ```
 FROM ubuntu
-ADD https://github.com/just-containers/s6-overlay/releases/download/v2.0.0.0/s6-overlay-amd64.tar.gz /tmp/
+ADD https://github.com/just-containers/s6-overlay/releases/download/v2.0.0.1/s6-overlay-amd64.tar.gz /tmp/
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude='./bin' && tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
 RUN apt-get update && \
     apt-get install -y nginx && \
@@ -489,6 +489,10 @@ xargs docker run --rm                                                     \
 ```
 
 ## Upgrade Notes
+
+* Version `2.0.0.1` - fixes issues with shells overwriting the `cd`
+  binary [#278](https://github.com/just-containers/s6-overlay/issues/278)
+  and tarballs having too-loose permissions [#274](https://github.com/just-containers/s6-overlay/issues/274).
 
 * Starting with version `2.0.0.0`, `with-contenv` no longer uses `s6-envdir`, instead it
   uses [justc-envdir](https://github.com/just-containers/justc-envdir), a small fork that
