@@ -154,6 +154,7 @@ foreground
           pipeline { s6-ls -0 -- /var/run/s6/etc/services.d }
           forstdin -0 -o 0 -- i
           importas -u i i
+          ifelse { s6-test -f /var/run/s6/services/${i}/down } { exit 0 }
           ifelse { s6-test -f /var/run/s6/services/${i}/notification-fd }
           {
             s6-svwait -t ${S6_CMD_WAIT_FOR_SERVICES_MAXTIME} -U /var/run/s6/services/${i}

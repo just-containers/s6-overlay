@@ -25,19 +25,21 @@
 - [Notes](#notes)
 - [Releases](#releases)
 - [Contributing](#contributing)
+- [Upgrade notes](#upgrade-notes)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
 
 The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
 
 ## Quickstart
+>**Note:** This example is for Ubuntu 20.04+
 
 Build the following Dockerfile and try this guy out:
 
 ```
 FROM ubuntu
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.7.0/s6-overlay-amd64.tar.gz /tmp/
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
+ADD https://github.com/just-containers/s6-overlay/releases/download/v2.0.0.0/s6-overlay-amd64.tar.gz /tmp/
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude='./bin' && tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
 RUN apt-get update && \
     apt-get install -y nginx && \
     echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -146,7 +148,7 @@ For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.7.0/s6-overlay-amd64.tar.gz /tmp/
+ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-amd64.tar.gz /tmp/
 RUN gunzip -c /tmp/s6-overlay-amd64.tar.gz | tar -xf - -C /
 ENTRYPOINT ["/init"]
 ```
@@ -191,8 +193,8 @@ If, for instance, `daemon` account is `UID=2` and `GID=2`, these are the possibl
   * `daemon:                UID=2     GID=2`
   * `daemon,3:4:            UID=2     GID=2`
   * `2:2,3:4:               UID=2     GID=2`
-  * `daemon:11111,3:4:      UID=11111 GID=2`
-  * `11111:daemon,3:4:      UID=2     GID=11111`
+  * `daemon:11111,3:4:      UID=2     GID=11111`
+  * `11111:daemon,3:4:      UID=11111 GID=2`
   * `daemon:daemon,3:4:     UID=2     GID=2`
   * `daemon:unexisting,3:4: UID=2     GID=4`
   * `unexisting:daemon,3:4: UID=3     GID=2`
@@ -273,6 +275,22 @@ Our overlay provides a way to handle logging easily since `s6` already provides 
 - clean all the environments variables
 - initiate logging by executing s6-log :-)
 
+Please note:
+- Since the privileges are dropped automatically, there is no need to switch users with `s6-setuidgid`
+- You should ensure the log folder either:
+  - exists, and is writable by the `nobody` user
+  - does not exist, but the parent folder is writable by the `nobody` user.
+
+You can create log folders in `cont-init.d` scripts, or create them in your run script. Here, we'll create
+them with `cont-init.d` scripts.
+
+`/etc/cont-init.d/myapp-logfolder`:
+```
+#!/bin/sh
+mkdir -p /var/log/myapp
+chown nobody:nogroup /var/log/myapp
+```
+
 This example will send all the log lines present in stdin (following the rules described in `S6_LOGGING_SCRIPT`) to `/var/log/myapp`: 
 
 `/etc/services.d/myapp/log/run`:
@@ -348,6 +366,7 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time (in milliseconds) a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
+* `S6_SERVICES_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait services before sending a `TERM` signal.
 * `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
 * `S6_CMD_ARG0` (default = not set): Value of this env var will be prepended to any `CMD` args passed by docker. Use it if you are migrting an existing image to a s6-overlay and want to make it a drop-in replacement, then setting this variable to a value of previously used ENTRYPOINT will improve compatibility with the way image is used.
@@ -357,6 +376,7 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_CMD_WAIT_FOR_SERVICES` (default = 0): In order to proceed executing CMD overlay will wait until services are up. Be aware that up doesn't mean ready. Depending if `notification-fd` was found inside the servicedir overlay will use `s6-svwait -U` or `s6-svwait -u` as the waiting statement.
 * `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 5000): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
+* `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
 
 ## Known issues and workarounds
 
@@ -467,4 +487,16 @@ xargs docker run --rm                                                     \
   -e SKAWARE_SOURCE=file:///skaware  -v `pwd`/../skaware/dist:/skaware:ro \
   -v `pwd`/dist:/builder/dist
 ```
+
+## Upgrade Notes
+
+* Starting with version `2.0.0.0`, `with-contenv` no longer uses `s6-envdir`, instead it
+  uses [justc-envdir](https://github.com/just-containers/justc-envdir), a small fork that
+  uses the entire contents of the files in the envdir. A new script is introduced, `with-contenv-legacy`,
+  in case you rely on the old behavior.
+
+* Up to and including version `1.21.8.0`, the init system would call `s6-sync` to sync disks when
+  the container exited. This actually syncs all block devices on the hosts, which is
+  likely not what you want to do. As of version `1.22.0.0`, this is disabled by default, see the
+  README on how to re-enable it.
 
