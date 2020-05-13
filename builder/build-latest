@@ -115,6 +115,31 @@ for edition in "${editions[@]}"; do
     chmod 0755 $overlaydstpath/etc/s6/services/.s6-svscan/{crash,finish}
     chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/run
     chmod 0755 $overlaydstpath/etc/s6/services/s6-svscan-log/run
+
+    # fix misc perms
+    chmod 0755 $overlaydstpath/etc
+    chmod 0755 $overlaydstpath/etc/{cont-init.d,cont-finish.d,fix-attrs.d,services.d}
+    chmod 0755 $overlaydstpath/etc/s6
+    chmod 0755 $overlaydstpath/etc/s6/{services,init-catchall,init-no-catchall,init}
+    chmod 0755 $overlaydstpath/etc/s6/{init-catchall,init-no-catchall,init,services}
+    chmod 0755 $overlaydstpath/etc/s6/init/{env,env-stage2}
+    chmod 0755 $overlaydstpath/etc/s6/services/{.s6-svscan,s6-fdholderd,s6-svscan-log}
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/rules
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/rules/uid
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/rules/uid/{0,default}
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/rules/uid/0/env
+    chmod 0755 $overlaydstpath/etc/s6/services/s6-fdholderd/rules/uid/default/env
+    chmod 0755 $overlaydstpath/usr/bin
+
+    if [ "${edition}" != "nobin" ]; then
+        chmod 0755 $overlaydstpath/bin
+        chmod 0755 $overlaydstpath/libexec
+    fi
+
+    chmod 0644 $overlaydstpath/etc/leapsecs.dat
+    chmod 0644 $overlaydstpath/etc/s6/services/s6-fdholderd/notification-fd
+    chmod 0644 $overlaydstpath/etc/s6/init/env/*
+    chmod 0644 $overlaydstpath/etc/s6/init/init-stage2-fixattrs.txt
   
     # dist!
     tar --owner=root --group=root \
