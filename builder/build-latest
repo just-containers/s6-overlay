@@ -67,6 +67,16 @@ get_packages_with_versions_from_manifest() {
   echo ${versions[@]}
 }
 
+build_init() {
+  local -r name='s6-overlay-init-builder'
+  cd "$OVERLAY_SRC_PATH/.."
+  docker build -t $name -f build-init.Dockerfile .
+  docker run -d --name $name $name sleep infinity
+  docker cp $name:/workspace/init "$OVERLAY_SRC_PATH/init"
+  docker rm -f $name
+  cd -
+}
+
 ##
 ## DOWNLOAD PACKAGES
 ##
@@ -91,6 +101,8 @@ generate_release
 ##
 ## OVERLAYS
 ##
+
+build_init
 
 for edition in "${editions[@]}"; do
   for target in "${targets[@]}"; do
@@ -140,7 +152,7 @@ for edition in "${editions[@]}"; do
     chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries,contenv-legacy}
   
     # fix init perms
-    chmod 0755 $overlaydstpath/init
+    chmod 4755 $overlaydstpath/init
     chmod 0755 $overlaydstpath/etc/s6/init/init-*
     chmod 0755 $overlaydstpath/etc/s6/init-catchall/init-*
     chmod 0755 $overlaydstpath/etc/s6/init-no-catchall/init-*
