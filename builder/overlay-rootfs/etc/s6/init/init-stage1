@@ -1,6 +1,12 @@
 #!/bin/execlineb -S0
 
 ##
+## create the needed /var/run (and /var/run/s6) directories
+##
+
+if { /bin/s6-overlay-preinit }
+
+##
 ## dump environment into an envdir if S6_KEEP_ENV is unset
 ##
 
