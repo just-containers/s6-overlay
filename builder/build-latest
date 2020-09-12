@@ -123,22 +123,17 @@ for edition in "${editions[@]}"; do
       done
       tar xvfz ${TMP}/justc-envdir-${ENVDIR_VERSION}-linux-$target.tar.gz -C $overlaydstpath
     fi
-  
+
     # create must exist directories
     mkdir -p $overlaydstpath/etc/s6/init/env-stage2
     mkdir -p $overlaydstpath/etc/{cont-init.d,cont-finish.d,fix-attrs.d,services.d}
-  
-    # create "supervise" directory in fdholder, its needed for no-catchall
-    # stage2 wake up
-    mkdir -p $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
-    chmod 0700 $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
-  
+
     # fix perms for utilities
     chmod 0755 $overlaydstpath/usr/bin/fix-attrs
     chmod 0755 $overlaydstpath/usr/bin/logutil-{newfifo,service,service-main}
     chmod 0755 $overlaydstpath/usr/bin/printcontenv
     chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries,contenv-legacy}
-  
+
     # fix init perms
     chmod 0755 $overlaydstpath/init
     chmod 0755 $overlaydstpath/etc/s6/init/init-*
