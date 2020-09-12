@@ -92,6 +92,7 @@ The project has the following goals:
 * Distributed as a single .tar.gz file, to keep your image's number of layers small.
 * A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our lives much, much easier.
 * Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](http://skarnet.org/software/s6/s6-log.html) under the hood.
+* Some support for Docker's `USER` directive, to run your whole process tree as a specific user. Not compatible with all features, details in the [notes](#notes) section.
 
 ## The Docker Way?
 
@@ -434,7 +435,16 @@ gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 
 ## Notes
 
-* For now, `s6-overlay` doesn't support running it with a user different than `root`, so consequently Dockerfile `USER` directive is not supported (except `USER root` of course ;P).
+### `USER` directive
+
+As of version `2.1.0.0`, `s6-overlay` has preliminary support for running as a user other than `root` with
+some limitations:
+
+* `S6_LOGGING` only supports mode 0 (default mode, all logs sent to stdout/stderr).
+* Tools like `fix-attrs`, `logutil-newfifo`, and `logutil-service` are unlikely to work (they rely
+  on being able to change UID).
+* You may want to use a [`Read-Only Root Filesystem`](#read-only-root-filesystem), since that
+  ensures `s6-overlay` copies files into the `/var/run/s6` directory rather than use symlinks.
 
 ## Releases
 
@@ -489,6 +499,10 @@ xargs docker run --rm                                                     \
 ```
 
 ## Upgrade Notes
+
+* Version `2.1.0.0` - adds initial support for Docker's `USER` directive. Adds
+  a new binary to the tarball (`s6-overlay-preinit`), and moves creating
+  a specific folder from the build-time to runtime.
 
 * Version `2.0.0.1` - fixes issues with shells overwriting the `cd`
   binary [#278](https://github.com/just-containers/s6-overlay/issues/278)

@@ -13,6 +13,8 @@ if { s6-rmrf /var/run/s6/services/s6-svscan-log }
 ## ensure our vital fifo exists
 ##
 
+if { s6-rmrf /var/run/s6/services/s6-fdholderd/supervise }
+if { s6-mkdir -m 0700 /var/run/s6/services/s6-fdholderd/supervise }
 if { s6-rmrf /var/run/s6/services/s6-fdholderd/supervise/control }
 if { s6-mkfifo -m 0600 /var/run/s6/services/s6-fdholderd/supervise/control }
 

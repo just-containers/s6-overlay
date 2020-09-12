@@ -6,12 +6,15 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-2.0.0.1}
+RELEASE_VERSION=${RELEASE_VERSION:-2.1.0.0}
 SKAWARE_VERSION="2.0.0"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
 ENVDIR_VERSION="1.0.0"
 ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_VERSION}
+
+PREINIT_VERSION="1.0.2"
+PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_VERSION}
 
 PWD=$(pwd)
 TMP=${PWD}/tmp
@@ -76,6 +79,7 @@ cd ${TMP}
 
 for target in "${targets[@]}"; do
   curl -R -L -O ${ENVDIR_SOURCE}/justc-envdir-${ENVDIR_VERSION}-linux-${target}.tar.gz
+  curl -R -L -O ${PREINIT_SOURCE}/s6-overlay-preinit-${PREINIT_VERSION}-linux-${target}.tar.gz
 done
 
 packages=($(get_packages_with_versions_from_manifest "manifest-linux.txt"))
@@ -122,23 +126,19 @@ for edition in "${editions[@]}"; do
         tar xvfz ${TMP}/$package-linux-$target-bin.tar.gz -C $overlaydstpath
       done
       tar xvfz ${TMP}/justc-envdir-${ENVDIR_VERSION}-linux-$target.tar.gz -C $overlaydstpath
+      tar xvfz ${TMP}/s6-overlay-preinit-${PREINIT_VERSION}-linux-$target.tar.gz -C $overlaydstpath
     fi
-  
+
     # create must exist directories
     mkdir -p $overlaydstpath/etc/s6/init/env-stage2
     mkdir -p $overlaydstpath/etc/{cont-init.d,cont-finish.d,fix-attrs.d,services.d}
-  
-    # create "supervise" directory in fdholder, its needed for no-catchall
-    # stage2 wake up
-    mkdir -p $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
-    chmod 0700 $overlaydstpath/etc/s6/services/s6-fdholderd/supervise
-  
+
     # fix perms for utilities
     chmod 0755 $overlaydstpath/usr/bin/fix-attrs
     chmod 0755 $overlaydstpath/usr/bin/logutil-{newfifo,service,service-main}
     chmod 0755 $overlaydstpath/usr/bin/printcontenv
     chmod 0755 $overlaydstpath/usr/bin/with-{contenv,retries,contenv-legacy}
-  
+
     # fix init perms
     chmod 0755 $overlaydstpath/init
     chmod 0755 $overlaydstpath/etc/s6/init/init-*
@@ -166,6 +166,9 @@ for edition in "${editions[@]}"; do
     if [ "${edition}" != "nobin" ]; then
         chmod 0755 $overlaydstpath/bin
         chmod 0755 $overlaydstpath/libexec
+
+        # setuid for preinit
+        chmod 4755 $overlaydstpath/bin/s6-overlay-preinit
     fi
 
     chmod 0644 $overlaydstpath/etc/leapsecs.dat
