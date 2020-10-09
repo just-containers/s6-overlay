@@ -6,14 +6,14 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-2.1.0.0}
-SKAWARE_VERSION="2.0.0"
+RELEASE_VERSION=${RELEASE_VERSION:-2.1.0.1}
+SKAWARE_VERSION="2.0.2"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
 ENVDIR_VERSION="1.0.0"
 ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_VERSION}
 
-PREINIT_VERSION="1.0.2"
+PREINIT_VERSION="1.0.3"
 PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_VERSION}
 
 PWD=$(pwd)
