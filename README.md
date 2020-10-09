@@ -38,7 +38,7 @@ Build the following Dockerfile and try this guy out:
 
 ```
 FROM ubuntu
-ADD https://github.com/just-containers/s6-overlay/releases/download/v2.0.0.1/s6-overlay-amd64.tar.gz /tmp/
+ADD https://github.com/just-containers/s6-overlay/releases/download/v2.1.0.1/s6-overlay-amd64.tar.gz /tmp/
 RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude='./bin' && tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
 RUN apt-get update && \
     apt-get install -y nginx && \
@@ -437,7 +437,7 @@ gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 
 ### `USER` directive
 
-As of version `2.1.0.0`, `s6-overlay` has preliminary support for running as a user other than `root` with
+As of version ``, `s6-overlay` has preliminary support for running as a user other than `root` with
 some limitations:
 
 * `S6_LOGGING` only supports mode 0 (default mode, all logs sent to stdout/stderr).
@@ -500,7 +500,7 @@ xargs docker run --rm                                                     \
 
 ## Upgrade Notes
 
-* Version `2.1.0.0` - adds initial support for Docker's `USER` directive. Adds
+* Version `` - adds initial support for Docker's `USER` directive. Adds
   a new binary to the tarball (`s6-overlay-preinit`), and moves creating
   a specific folder from the build-time to runtime.
 
