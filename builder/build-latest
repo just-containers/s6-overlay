@@ -16,6 +16,12 @@ ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/r
 PREINIT_VERSION="1.0.3"
 PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_VERSION}
 
+INSTALLER_VERSION="1.0.0"
+INSTALLER_SOURCE=${INSTALLER_SOURCE:-https://github.com/just-containers/justc-installer/releases/download/v$INSTALLER_VERSION}
+
+MUSL_CROSS_MAKE_RELEASE=15
+MUSL_CROSS_MAKE_SRC=${MUSL_CROSS_MAKE_SRC:-https://github.com/just-containers/musl-cross-make/releases/download/v$MUSL_CROSS_MAKE_RELEASE}
+
 PWD=$(pwd)
 TMP=${PWD}/tmp
 DIST=${PWD}/dist
@@ -27,6 +33,22 @@ mkdir -p ${DIST}
 
 targets=( 'amd64' 'arm' 'armhf' 'x86' 'aarch64' 'ppc64le' )
 editions=( '' 'nobin' )
+gccs=(
+'x86_64-linux-musl'
+'arm-linux-musleabi'
+'arm-linux-musleabihf'
+'i486-linux-musl'
+'aarch64-linux-musl'
+'powerpc64le-linux-musl'
+)
+
+declare -A targets_gcc
+targets_gcc[arm]=arm-linux-musleabi
+targets_gcc[armhf]=arm-linux-musleabihf
+targets_gcc[aarch64]=aarch64-linux-musl
+targets_gcc[x86]=i486-linux-musl
+targets_gcc[amd64]=x86_64-linux-musl
+targets_gcc[ppc64le]=powerpc64le-linux-musl
 
 generate_release() {
   printf "Binary releases include the following skaware packages:\n\n" > ${DIST}/release.md
@@ -77,9 +99,16 @@ get_packages_with_versions_from_manifest() {
 # destination folder
 cd ${TMP}
 
+for gcc in "${gccs[@]}"; do
+  curl -R -L -O ${MUSL_CROSS_MAKE_SRC}/gcc-7.3.0-${gcc}.tar.xz
+  tar xf gcc-7.3.0-${gcc}.tar.xz
+done
+
 for target in "${targets[@]}"; do
   curl -R -L -O ${ENVDIR_SOURCE}/justc-envdir-${ENVDIR_VERSION}-linux-${target}.tar.gz
   curl -R -L -O ${PREINIT_SOURCE}/s6-overlay-preinit-${PREINIT_VERSION}-linux-${target}.tar.gz
+  curl -R -L -O ${INSTALLER_SOURCE}/justc-installer-${INSTALLER_VERSION}-linux-${target}-dev.tar.gz
+  tar xf justc-installer-${INSTALLER_VERSION}-linux-${target}-dev.tar.gz --strip-components=1 -C "${targets_gcc[$target]}"
 done
 
 packages=($(get_packages_with_versions_from_manifest "manifest-linux.txt"))
@@ -87,8 +116,12 @@ for package in "${packages[@]}"; do
   for target in "${targets[@]}"; do
     file=${package}-linux-${target}-bin.tar.gz
     curl -R -L -O ${SKAWARE_SOURCE}/$file
+    file=${package}-linux-${target}-dev.tar.gz
+    curl -R -L -O ${SKAWARE_SOURCE}/$file
+    tar xf ${package}-linux-${target}-dev.tar.gz --strip-components=1 -C "${targets_gcc[$target]}"
   done
 done
+
 
 generate_release
 
@@ -101,14 +134,17 @@ for edition in "${editions[@]}"; do
     # overlay path and dist file
     if [ "${edition}" == "nobin" ]; then
       overlaydstpath="$OVERLAY_DST_PATH-nobin"
-      overlaytarpath="${DIST}/s6-overlay-nobin.tar.gz"
+      overlaytarpath="${DIST}/s6-overlay-nobin.tar"
     else
       overlaydstpath="$OVERLAY_DST_PATH-raw"
-      overlaytarpath="${DIST}/s6-overlay-$target.tar.gz"
+      overlaytarpath="${DIST}/s6-overlay-$target.tar"
     fi
 
     rm -rf $overlaydstpath
     rm -f  $overlaytarpath
+    rm -f  $overlaytarpath.gz
+    rm -f  payload.tar
+    rm -f  payload.o
   
     # create overlay folder
     mkdir -p $overlaydstpath
@@ -175,13 +211,22 @@ for edition in "${editions[@]}"; do
     chmod 0644 $overlaydstpath/etc/s6/services/s6-fdholderd/notification-fd
     chmod 0644 $overlaydstpath/etc/s6/init/env/*
     chmod 0644 $overlaydstpath/etc/s6/init/init-stage2-fixattrs.txt
-  
+
     # dist!
     tar --owner=root --group=root \
-        -zcvf                     \
+        -cvf                     \
         $overlaytarpath           \
         -C $overlaydstpath        \
         ./
+    gzip -k $overlaytarpath
+
+    # create installer
+    if [ "${edition}" != "nobin" ] ; then
+        mv $overlaytarpath payload.tar
+        ${TMP}/bin/${targets_gcc[$target]}-ld -r -b binary payload.tar -o payload.o
+        ${TMP}/bin/${targets_gcc[$target]}-gcc -static -o ${DIST}/s6-overlay-${target}-installer -ljustc_installer payload.o -lskarnet
+    fi
+
   done
 done
 

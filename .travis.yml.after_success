@@ -24,3 +24,11 @@ for i in builder/dist/*.tar.gz; do
   ./github-release upload --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${name}" --file "${i}"
   ./github-release upload --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${name}.sig" --file "${i}.sig"
 done
+
+# s6 overlay installer
+for i in builder/dist/*-installer; do
+  name=$(basename ${i})
+  gpg -u 0x3B2FD161 --output "${i}.sig" --detach-sig "${i}"
+  ./github-release upload --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${name}" --file "${i}"
+  ./github-release upload --user "${USERNAME}" --repo "${REPONAME}" --tag "${TRAVIS_TAG}" --name "${name}.sig" --file "${i}.sig"
+done
