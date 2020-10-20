@@ -138,7 +138,12 @@ There's two ways to install the s6-overlay in your docker image:
 
 The self-extracting installer is a small wrapper around the tar file,
 but it auto-detects if your distro has replaced `/bin` with a symlink
-to `/usr/bin` and does the right thing.
+to `/usr/bin` and does the right thing. Just give it the folder you
+want to extract into (usually `/`).
+
+```
+RUN /tmp/s6-overlay-amd64-installer /
+```
 
 If you want to use the tarball, how you extract depends on your distro.
 If you try one method and receive an error message like
