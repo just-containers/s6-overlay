@@ -6,7 +6,7 @@ set -x
 ## PARAMS
 ##
 
-RELEASE_VERSION=${RELEASE_VERSION:-2.1.0.1}
+RELEASE_VERSION=${RELEASE_VERSION:-2.1.0.2}
 SKAWARE_VERSION="2.0.2"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
 
@@ -16,7 +16,7 @@ ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/r
 PREINIT_VERSION="1.0.3"
 PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_VERSION}
 
-INSTALLER_VERSION="1.0.0"
+INSTALLER_VERSION="1.0.1"
 INSTALLER_SOURCE=${INSTALLER_SOURCE:-https://github.com/just-containers/justc-installer/releases/download/v$INSTALLER_VERSION}
 
 MUSL_CROSS_MAKE_RELEASE=15
