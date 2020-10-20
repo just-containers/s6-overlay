@@ -437,7 +437,7 @@ gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 
 ### `USER` directive
 
-As of version ``, `s6-overlay` has preliminary support for running as a user other than `root` with
+As of version `2.1.0.0`, `s6-overlay` has preliminary support for running as a user other than `root` with
 some limitations:
 
 * `S6_LOGGING` only supports mode 0 (default mode, all logs sent to stdout/stderr).
@@ -500,7 +500,7 @@ xargs docker run --rm                                                     \
 
 ## Upgrade Notes
 
-* Version `` - adds initial support for Docker's `USER` directive. Adds
+* Version `2.1.0.0` - adds initial support for Docker's `USER` directive. Adds
   a new binary to the tarball (`s6-overlay-preinit`), and moves creating
   a specific folder from the build-time to runtime.
 
