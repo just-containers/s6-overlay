@@ -6,6 +6,7 @@
 - [The Docker Way?](#the-docker-way)
 - [Our `s6-overlay` based images](#our-s6-overlay-based-images)
 - [Init stages](#init-stages)
+- [Installation](#installation)
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
   - [Fixing ownership & permissions](#fixing-ownership--permissions)
@@ -19,7 +20,6 @@
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
 - [Known issues and workarounds](#known-issues-and-workarounds)
   - [syslog](#syslog)
-  - [`/bin` and `/sbin` are symlinks](#bin-and-sbin-are-symlinks)
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
@@ -128,6 +128,36 @@ Our overlay init is a properly customized one to run appropriately in containeri
   2. Execute initialization scripts contained in `/etc/cont-init.d`.
   3. Copy user services (`/etc/services.d`) to the folder where s6 is running its supervision and signal it so that it can properly start supervising them. 
 3. **stage 3**: This is the shutdown stage. Its purpose is to clean everything up, stop services and execute finalization scripts contained in `/etc/cont-finish.d`. This is when our init system stops all container processes, first gracefully using `SIGTERM` and then (after `S6_KILL_GRACETIME`) forcibly using `SIGKILL`. And, of course, it reaps all zombies :-).
+
+## Installation
+
+There's two ways to install the s6-overlay in your docker image:
+
+1. With the self-extracting installer.
+2. Extracting a tar file.
+
+The self-extracting installer is a small wrapper around the tar file,
+but it auto-detects if your distro has replaced `/bin` with a symlink
+to `/usr/bin` and does the right thing.
+
+If you want to use the tarball, how you extract depends on your distro.
+If you try one method and receive an error message like
+`/bin/execlineb: bad interpreter: No such file or directory`, try
+the other method (or use the installer).
+
+For Alpine, Debian, and distros that have `/bin` as a directory:
+
+```
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
+```
+
+For CentOS 7, Ubuntu 20.04, and distros that have `/bin` as a symlink
+to `/usr/bin`:
+
+```
+RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" && \
+    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
+```
 
 ## Usage
 
@@ -393,24 +423,6 @@ We have an add-on with a pre-configured instance of
 Installation is similar to installing the `s6-overlay` - just download
 and extract a tarball. Logs are automatically rotated, so you never
 have to worry about syslog messages filling up your disk.
-
-
-### `/bin` and `/sbin` are symlinks
-
-Some Linux distros (like CentOS 7) have started replacing `/bin` with a symlink
-to `/usr/bin` (and the same for `/sbin -> /usr/sbin`). When you extract the
-tarball, these symlinks are overwritten, so important programs like `/bin/sh`
-disappear.
-
-The current workaround is to extract the tarball in two steps:
-
-```
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" && \
-    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
-```
-
-This will prevent tar from deleting those `/bin` and `/sbin` symlinks, and
-everything will work as normal.
 
 ## Performance
 
