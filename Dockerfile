@@ -5,7 +5,7 @@ ENV LC_ALL C
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
-    apt-get -y install curl && \
+    apt-get -y install curl xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY builder /builder
