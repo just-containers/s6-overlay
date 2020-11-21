@@ -25,6 +25,15 @@ if { s6-chmod 2700 /var/log/s6-uncaught-logs }
 if { s6-rmrf /var/run/s6/services }
 if { s6-hiercopy /etc/s6/services /var/run/s6/services }
 
+##
+## ensure s6-fdholderd fifo exists
+##
+
+if { s6-rmrf /var/run/s6/services/s6-fdholderd/supervise }
+if { s6-mkdir -m 0700 /var/run/s6/services/s6-fdholderd/supervise }
+if { s6-rmrf /var/run/s6/services/s6-fdholderd/supervise/control }
+if { s6-mkfifo -m 0600 /var/run/s6/services/s6-fdholderd/supervise/control }
+
 
 ##
 ## fork the "init-stage2" script

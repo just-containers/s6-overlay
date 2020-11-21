@@ -10,7 +10,7 @@ if { s6-rmrf /var/run/s6/services/s6-svscan-log }
 
 
 ##
-## ensure our vital fifo exists
+## ensure s6-fdholderd fifo exists
 ##
 
 if { s6-rmrf /var/run/s6/services/s6-fdholderd/supervise }
