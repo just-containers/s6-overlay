@@ -10,4 +10,8 @@
 
 /bin/importas -D /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PATH PATH
 export PATH ${PATH}
-/etc/s6/init/init-stage1 $@
+
+foreground {
+    backtick -n REMAPPED_ROOT_UID { /usr/bin/stat -c '%u' /bin/s6-overlay-preinit }
+    if { s6-test $REMAPPED_ROOT_UID -ne 0 } /bin/s6-chown -u 0 /bin/s6-overlay-preinit
+} /etc/s6/init/init-stage1 $@
