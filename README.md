@@ -127,7 +127,13 @@ Our overlay init is a properly customized one to run appropriately in containeri
   1. Fix ownership and permissions using `/etc/fix-attrs.d`.
   2. Execute initialization scripts contained in `/etc/cont-init.d`.
   3. Copy user services (`/etc/services.d`) to the folder where s6 is running its supervision and signal it so that it can properly start supervising them. 
-3. **stage 3**: This is the shutdown stage. Its purpose is to clean everything up, stop services and execute finalization scripts contained in `/etc/cont-finish.d`. This is when our init system stops all container processes, first gracefully using `SIGTERM` and then (after `S6_KILL_GRACETIME`) forcibly using `SIGKILL`. And, of course, it reaps all zombies :-).
+3. **stage 3**: This is the shutdown stage. It will:
+  1. Send a TERM signal to all supervised services.
+  2. Run any finalization scripts contained in `/etc/cont-finish.d` - this is done while services may still be shutting down.
+  3. Wait on all services to finish (up to `S6_SERVICES_GRACETIME` milliseconds (default `3000`)).
+  4. Send all processes a `TERM` signal.
+  5. Sleep `S6_KILL_GRACETIME` milliseconds (default `3000`)
+  6. Send all processes a `KILL` signal.
 
 ## Installation
 
