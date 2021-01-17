@@ -7,17 +7,22 @@ set -x
 ##
 
 RELEASE_VERSION=${RELEASE_VERSION:-2.1.1.0}
+
 SKAWARE_VERSION="2.0.3"
-SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_VERSION}
+SKAWARE_RELEASE="${SKAWARE_VERSION}"
+SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_RELEASE}
 
 ENVDIR_VERSION="1.0.1"
-ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_VERSION}
+ENVDIR_RELEASE="${ENVDIR_RELEASE}"
+ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_RELEASE}
 
 PREINIT_VERSION="1.0.4"
-PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_VERSION}
+PREINIT_RELEASE="${PREINIT_VERSION}"
+PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_RELEASE}
 
-INSTALLER_VERSION="1.0.1-1"
-INSTALLER_SOURCE=${INSTALLER_SOURCE:-https://github.com/just-containers/justc-installer/releases/download/v$INSTALLER_VERSION}
+INSTALLER_VERSION="1.0.1"
+INSTALLER_RELEASE="${INSTALLER_VERSION}-1"
+INSTALLER_SOURCE=${INSTALLER_SOURCE:-https://github.com/just-containers/justc-installer/releases/download/v$INSTALLER_RELEASE}
 
 MUSL_CROSS_MAKE_RELEASE=15
 MUSL_CROSS_MAKE_SRC=${MUSL_CROSS_MAKE_SRC:-https://github.com/just-containers/musl-cross-make/releases/download/v$MUSL_CROSS_MAKE_RELEASE}
