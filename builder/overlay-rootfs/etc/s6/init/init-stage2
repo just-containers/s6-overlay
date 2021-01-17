@@ -86,10 +86,13 @@ foreground
         if { s6-echo "[fix-attrs.d] applying ownership & permissions fixes..." }
         if
         {
-          pipeline { s6-ls -0 -- /var/run/s6/etc/fix-attrs.d }
-          pipeline { s6-sort -0 -- }
-          forstdin -0 -- i
-          importas -u i i
+          elglob -s0 g "/var/run/s6/etc/fix-attrs.d/*"
+          forx d { $g }
+          importas -ui d d
+          backtick -n i {
+              s6-basename "$d"
+          }
+          importas -ui i i
           if { s6-echo -- "[fix-attrs.d] ${i}: applying... " }
           foreground { redirfd -r 0 /var/run/s6/etc/fix-attrs.d/${i} fix-attrs }
           importas -u ? ?
@@ -110,10 +113,13 @@ foreground
         if { s6-echo "[cont-init.d] executing container initialization scripts..." }
         if
         {
-          pipeline { s6-ls -0 -- /var/run/s6/etc/cont-init.d }
-          pipeline { s6-sort -0 -- }
-          forstdin -o 0 -0 -- i
-          importas -u i i
+          elglob -s0 g "/var/run/s6/etc/cont-init.d/*"
+          forx d { $g }
+          importas -ui d d
+          backtick -n i {
+              s6-basename "$d"
+          }
+          importas -ui i i
           if { s6-echo -- "[cont-init.d] ${i}: executing... " }
           foreground { /var/run/s6/etc/cont-init.d/${i} }
           importas -u ? ?
@@ -134,9 +140,13 @@ foreground
         if { s6-echo "[services.d] starting services" }
         if
         {
-          pipeline { s6-ls -0 -- /var/run/s6/etc/services.d }
-          forstdin -0 -p -- i
-          importas -u i i
+          elglob -s0 g "/var/run/s6/etc/services.d/*"
+          forx -p d { $g }
+          importas -ui d d
+          backtick -n i {
+              s6-basename "$d"
+          }
+          importas -ui i i
           if { s6-test -d /var/run/s6/etc/services.d/${i} }
           s6-hiercopy /var/run/s6/etc/services.d/${i} /var/run/s6/services/${i}
         }
@@ -151,9 +161,13 @@ foreground
 
           if -t { if { s6-test ${S6_CMD_WAIT_FOR_SERVICES} -ne 0 } s6-test $# -ne 0 }
           s6-maximumtime -t ${S6_CMD_WAIT_FOR_SERVICES_MAXTIME}
-          pipeline { s6-ls -0 -- /var/run/s6/etc/services.d }
-          forstdin -0 -o 0 -- i
-          importas -u i i
+          elglob -s0 g "/var/run/s6/etc/services.d/*"
+          forx -o 0 d { $g }
+          importas -ui d d
+          backtick -n i {
+              s6-basename "$d"
+          }
+          importas -ui i i
           ifelse { s6-test -f /var/run/s6/services/${i}/down } { exit 0 }
           ifelse { s6-test -f /var/run/s6/services/${i}/notification-fd }
           {

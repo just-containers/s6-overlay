@@ -22,10 +22,13 @@ foreground
     if { s6-echo "[cont-finish.d] executing container finish scripts..." }
     if
     {
-      pipeline { s6-ls -0 -- /var/run/s6/etc/cont-finish.d }
-      pipeline { s6-sort -0 -- }
-      forstdin -o 0 -0 -- i
-      importas -u i i
+      elglob -s0 g "/var/run/s6/etc/cont-finish.d/*"
+      forx d { $g }
+      importas -ui d d
+      backtick -n i {
+          s6-basename "$d"
+      }
+      importas -ui i i
       if { s6-echo -- "[cont-finish.d] ${i}: executing... " }
       foreground
       {
