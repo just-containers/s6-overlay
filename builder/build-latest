@@ -13,7 +13,7 @@ SKAWARE_RELEASE="${SKAWARE_VERSION}"
 SKAWARE_SOURCE=${SKAWARE_SOURCE:-https://github.com/just-containers/skaware/releases/download/v$SKAWARE_RELEASE}
 
 ENVDIR_VERSION="1.0.1"
-ENVDIR_RELEASE="${ENVDIR_RELEASE}"
+ENVDIR_RELEASE="${ENVDIR_VERSION}"
 ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_RELEASE}
 
 PREINIT_VERSION="1.0.4"
