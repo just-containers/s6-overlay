@@ -218,7 +218,7 @@ foreground
   foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- "${?}" }
 
   # Stop supervision tree
-  foreground { s6-svscanctl -t /var/run/s6/services }
+  foreground { s6-svscanctl -tb /var/run/s6/services }
 
   # Wait to be nuked
   s6-pause -th
