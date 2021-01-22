@@ -16,7 +16,7 @@ ENVDIR_VERSION="1.0.1"
 ENVDIR_RELEASE="${ENVDIR_VERSION}"
 ENVDIR_SOURCE=${ENVDIR_SOURCE:-https://github.com/just-containers/justc-envdir/releases/download/v$ENVDIR_RELEASE}
 
-PREINIT_VERSION="1.0.4"
+PREINIT_VERSION="1.0.5"
 PREINIT_RELEASE="${PREINIT_VERSION}"
 PREINIT_SOURCE=${PREINIT_SOURCE:-https://github.com/just-containers/s6-overlay-preinit/releases/download/v$PREINIT_RELEASE}
 
