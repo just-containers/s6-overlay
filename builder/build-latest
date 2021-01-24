@@ -212,7 +212,6 @@ for edition in "${editions[@]}"; do
         chmod 4755 $overlaydstpath/bin/s6-overlay-preinit
     fi
 
-    chmod 0644 $overlaydstpath/etc/leapsecs.dat
     chmod 0644 $overlaydstpath/etc/s6/services/s6-fdholderd/notification-fd
     chmod 0644 $overlaydstpath/etc/s6/init/env/*
     chmod 0644 $overlaydstpath/etc/s6/init/init-stage2-fixattrs.txt
