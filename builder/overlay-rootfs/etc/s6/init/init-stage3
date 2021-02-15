@@ -23,7 +23,7 @@ foreground
     if
     {
       elglob -s0 g "/var/run/s6/etc/cont-finish.d/*"
-      forx d { $g }
+      forx -o0 d { $g }
       importas -ui d d
       backtick -n i {
           s6-basename "$d"
