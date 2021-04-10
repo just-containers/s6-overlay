@@ -58,7 +58,7 @@ ifthenelse -s { ${DO_NOT_KEEP_ENV} }
 }
 { }
 
-backtick -n S6_CMD_ARG0 { printcontenv S6_CMD_ARG0 }
+backtick -D "" -n S6_CMD_ARG0 { printcontenv S6_CMD_ARG0 }
 importas -d "\n" -s -u S6_CMD_ARG0 S6_CMD_ARG0
 
 ##

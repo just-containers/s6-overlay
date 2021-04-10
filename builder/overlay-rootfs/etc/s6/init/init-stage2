@@ -35,7 +35,7 @@ foreground
         if { s6-echo -n -- "[s6-init] making user provided files available at /var/run/s6/etc..." }
         foreground
         {
-          backtick -n S6_RUNTIME_PROFILE { printcontenv S6_RUNTIME_PROFILE }
+          backtick -D "" -n S6_RUNTIME_PROFILE { printcontenv S6_RUNTIME_PROFILE }
           importas -u S6_RUNTIME_PROFILE S6_RUNTIME_PROFILE
           backtick -n S6_RUNTIME_PROFILE_SRC {
             ifte { s6-echo "/etc/cont-profile.d/${S6_RUNTIME_PROFILE}" } { s6-echo "/etc" }
