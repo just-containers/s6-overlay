@@ -316,7 +316,7 @@ If you want your custom script to have container environments available just mak
 echo $MYENV
 ```
 
-This script will output whatever the `MYENV` enviroment variable contains.
+This script will output whatever the `MYENV` environment variable contains.
 
 ### Customizing `s6` behaviour
 
