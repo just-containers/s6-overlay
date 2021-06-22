@@ -1,4 +1,8 @@
-**Table of Contents**
+# s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
+
+The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
+
+## Table of Contents
 
 - [Quickstart](#quickstart)
 - [Goals](#goals)
@@ -27,15 +31,11 @@
 - [Contributing](#contributing)
 - [Upgrade notes](#upgrade-notes)
 
-# s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
-
-The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
-
 ## Quickstart
 
 Build the following Dockerfile and try this guy out:
 
-```
+```dockerfile
 FROM ubuntu
 ADD https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.1/s6-overlay-amd64-installer /tmp/
 RUN chmod +x /tmp/s6-overlay-amd64-installer && /tmp/s6-overlay-amd64-installer /
