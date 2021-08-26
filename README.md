@@ -444,7 +444,7 @@ And what about numbers? `s6-overlay` takes more or less **`904K`** compressed an
 The `s6-overlay` releases are signed using `gpg`, you can import our public key:
 
 ```bash
-$ curl https://keybase.io/justcontainers/key.asc | gpg --import
+$ gpg --keyserver pgp.surfnet.nl  --recv-keys 6101B2783B2FD161
 ```
 
 Then verify the downloaded files:
