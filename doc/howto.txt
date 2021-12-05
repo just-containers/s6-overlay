@@ -1,0 +1,54 @@
+
+ How to build this version of s6-overlay:
+
+ - look at the variables in conf/defaults.mk. Do not
+modify defaults.mk itself, but those variables are the ones
+you can pass to make for configuration.
+
+ - look at the first column of conf/toolchains. These are
+the valid values for ARCH. More may be added later. The
+second column is an opaque tag for the downloaded toolchain
+giving the flavour of the arch. For instance, the
+aarch64-linux-musl toolchain is called "pi4" and will build
+binaries for a Raspberry Pi 4.
+
+ - invoke make with the OUTPUT, ARCH, DL_CMD etc. that you want.
+Do not hesitate to -j8 if you have a big machine. Or to -j128
+if you have a REALLY big machine.
+
+ - When it's done, there's a lot of stuff in the output directory. 
+The ultimate targets are:
+
+   * s6-overlay-${ARCH}-${VERSION}.tar.xz: the tarball containing
+all the skaware binaries for ${ARCH}, all nice and static. It
+should be used by everyone who does not use a distro that provides
+the same binaries.
+
+   * s6-overlay-symlinks-arch-${VERSION}.tar.xz: the tarball
+containing /usr/bin symlinks to those binaries. It should normally
+not be used. It MUST NOT be used by distros providing binaries in
+/usr/bin. The only people who want this are the ones who want to
+manually call skaware binaries without putting /command in their PATH.
+The tarball is called "arch" because the symlinks point to the
+programs in the arch-dependent package; but since they're only
+symlinks, this tarball itself is not arch-dependent.
+
+   * s6-overlay-noarch-${VERSION}.tar.xz: this tarball contains
+s6-overlay itself, i.e. the set of scripts and files that allow a
+container to run under s6. Everyone who wants to run s6-overlay
+must install this.
+
+   * s6-overlay-symlinks-noarch-${VERSION}.tar.xz: this tarball
+contains /usr/bin symlinks to the few scripts provided by s6-overlay.
+The overlay itself will run without it, but if users have stuff
+like "/usr/bin/printcontenv" hardcoded in their scripts, these
+symlinks will help them. Distros that provide skaware binaries
+themselves (and do not use slashpackage) will almost certainly
+want to install this.
+
+  * syslogd-overlay-noarch-${VERSION}.tar.xz: this tarball
+contains scripts to run a syslogd emulation at container boot
+time. It basically replaces socklog-overlay. (The socklog binary
+itself isn't needed anymore since s6 provides a similar utility.)
+Users who install this will have a syslogd service in their
+container, logging to subdirs of /var/log/syslogd.

@@ -1,0 +1,3 @@
+#!@SHEBANGDIR@/execlineb -P
+
+s6-rc -v2 -bda change

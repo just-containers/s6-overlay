@@ -1,0 +1,25 @@
+#!@SHEBANGDIR@/execlineb
+
+elgetopt "m:o:"
+multisubstitute
+{
+  importas -u -D "0600" fmode ELGETOPT_m
+  importas -u -D "root" owner ELGETOPT_o
+  elgetpositionals -P0
+}
+emptyenv -P
+if { s6-test ${#} -ge 1 }
+
+if
+{
+  fdmove -c 1 2
+  s6-echo "logutil-newfifo: warning: this binary is deprecated, use s6-mkfifo and s6-chown instead"
+}
+
+if { s6-rmrf ${1} }
+if { s6-mkfifo -m ${fmode} -- ${1} }
+if
+{
+  s6-envuidgid -- ${owner}
+  s6-chown -U -- ${1}
+}

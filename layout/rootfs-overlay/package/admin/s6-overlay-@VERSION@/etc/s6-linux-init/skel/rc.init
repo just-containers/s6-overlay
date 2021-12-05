@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+top="$1" ; shift
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+s6-rc-compile -v1 /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
+s6-rc-init -c /run/s6/db /run/service
+
+if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` ; then : ; else
+  timeout=5000
+fi
+
+set +e
+s6-rc -v2 -u -t "$timeout" -- change "$top"
+r=$?
+set -e
+
+if test "$r" -ne 0 && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` ; then
+  if test "$b" -eq 2 ; then
+    echo 1 > /run/s6-linux-init-container-results/exitcode
+    exec /run/s6/basedir/bin/halt
+  elif test "$b" -eq 1 ; then
+    echo '/run/s6/basedir/scripts/rc.init: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs if you have in-container logging) for more information.' 1>&2
+  fi
+fi
+
+if test -n "$1" ; then
+  set +e
+  arg0=`printcontenv S6_CMD_ARG0`
+  $arg0 "$@"
+  echo "$?" > /run/s6-linux-init-container-results/exitcode
+  set -e
+  exec /run/s6/basedir/bin/halt
+fi

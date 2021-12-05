@@ -1,8 +1,0 @@
-#!/bin/execlineb -P
-
-# This file is run when an unrecoverable error happens
-# to s6-svscan. Edit it to suit your needs.
-
-fdmove -c 2 1
-foreground { s6-echo "s6-svscan panicked! Dropping to a root shell.\n" }
-/bin/sh -i

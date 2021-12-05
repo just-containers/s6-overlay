@@ -1,0 +1,27 @@
+#!/bin/sh
+
+dir=/run/s6/legacy-services
+list=
+links=
+
+echo '[s6-overlay] legacy-services: bringing all services down...'
+
+for i in `s6-ls "$dir"` ; do
+  links="$links /run/service/$i"
+  list="$list $dir/$i"
+  if test -d "$dir/$i/log" ; then
+    list="$list $dir/$i/log"
+  fi
+done
+
+if test -n "$list" ; then
+  s6-rmrf "$links"
+  s6-svscanctl -an /run/service
+  if ! grace=`printcontenv S6_SERVICES_GRACETIME` ; then
+    grace=3000
+  fi
+  s6-svwait -D -t "$grace" -- $list
+fi
+
+s6-echo '[s6-overlay] legacy-services:   ... done'
+exit 0

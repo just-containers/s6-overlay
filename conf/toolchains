@@ -1,0 +1,6 @@
+aarch64-linux-musl	pi4
+arm-linux-musleabi	genericv7a
+arm-linux-musleabihf	pi1
+i486-linux-musl		i486
+i686-linux-musl		i686
+x86_64-linux-musl	pc

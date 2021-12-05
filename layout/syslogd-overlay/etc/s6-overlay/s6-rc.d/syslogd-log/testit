@@ -1,0 +1,25 @@
+#!/command/execlineb -P
+
+define T T
+define line "T s1000000 n20"
+
+s6-envuidgid -D 32761:32761: -- sysllog
+multisubstitute
+{
+  define -sC options $line
+  define dir /tmp/toto
+}
+exec -c
+s6-log -- $options
+
+ - +^auth\\. +^authpriv\\.  $T ${dir}/secure
+ - +^cron\\.  $T ${dir}/cron
+ - +^daemon\\.  $T ${dir}/daemon
+ - +^[[:alnum:]]*\\.debug:  $T ${dir}/debug
+ - +^[[:alnum:]]*\\.err: +^[[:alnum:]]*\\.error: +^[[:alnum:]]*\\.emerg: +^[[:alnum:]]*\\.alert: +^[[:alnum:]]*\\.crit:  $T ${dir}/errors
+ - +^kern\\.  $T ${dir}/kernel
+ - +mail\\.  $T ${dir}/mail
+ - +user\\.  $T ${dir}/user
+ - +^[[:alnum:]]*\\.info: +^[[:alnum:]]*\\.notice: +^[[:alnum:]]*\\.warn: -^auth\\. -^authpriv\\. -^cron\\. -daemon\\. -mail\\.  $T ${dir}/messages
+ + -^auth\\. -^authpriv\\.  $T ${dir}/everything
+

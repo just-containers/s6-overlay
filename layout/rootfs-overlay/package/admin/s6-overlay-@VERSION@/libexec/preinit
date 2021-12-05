@@ -1,0 +1,43 @@
+#!/bin/sh -e
+
+# This script is spawned by s6-overlay-suexec, as the
+# first thing in the userland boot process.
+# It is run as root even with a USER directive present.
+# If USER, then UID and GID hold the uid and gid of the user
+# (this is used by s6-chown -U).
+
+prog=/package/admin/s6-overlay/libexec/preinit
+
+# Ensure /run is writable and /var/run is a symlink to it.
+
+if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
+  echo "$prog: info: read-only root" 1>&2
+  if ! test -d /run ; then
+    echo "$prog: fatal: /run is missing or not a directory" 1>&2
+    exit 100
+  fi
+  if : > '/run/test of writability' 2>/dev/null ; then
+    echo "$prog: info: writable /run. Remounting exec just in case." 1>&2
+    s6-rmrf '/run/test of writability'
+    s6-mount -o remount,rw,exec tmpfs /run || :
+  else
+    echo "$prog: info: creating a tmpfs on /run" 1>&2
+    s6-mount -wt tmpfs -o exec,mode=0755 tmpfs /run
+  fi
+else
+  s6-mkdir -p -m 0755 /run
+fi
+
+if test -L /var/run && test "`/command/s6-linkname -f /var/run`" = /run ; then : ; else
+  echo "$prog: notice: /var/run is not a symlink to /run, fixing it" 1>&2
+  s6-rmrf /var/run
+  s6-ln -s /run /var/run
+fi
+
+# /run/s6 is recreated every time and belongs to the USER.
+
+s6-rmrf /run/s6
+s6-mkdir -m 0755 /run/s6
+if test "0$UID" -ne 0 ; then
+  s6-chown -U -- /run/s6
+fi

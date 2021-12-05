@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+got=0
+err=0
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+apply () {
+  echo "[s6-overlay] fix-attrs: applying $1"
+  got=1
+  if ! /package/admin/s6-overlay-@VERSION@/libexec/fix-attrs < "$1" ; then
+    err=1
+  fi
+}
+
+for file in `s6-ls "$etc/fix-attrs.d" 2>/dev/null | s6-sort` ; do
+  apply "$etc/fix-attrs.d/$file"
+done
+
+if test "$got" -ne 0 ; then
+  echo '[s6-overlay] fix-attrs: warning: fix-attrs is deprecated, please fix volume permissions in Dockerfile instead' 1>&2
+fi
+if test "$err" -ne 0 && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -eq 2 ; then
+  exit 1
+fi

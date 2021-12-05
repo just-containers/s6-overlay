@@ -1,0 +1,78 @@
+
+ How the init works:
+
+ - The entry point is /init.
+
+ - /init sets PATH according to the user-configurable
+/etc/s6-overlay/config/global_path but makes sure it can still access the
+required binaries no matter where they are.
+ - /init runs /package/admin/s6-overlay/libexec/preinit as root, even if
+the container is running with the USER directive.
+   * preinit ensures that /run exists and is writable and executable, and
+that /var/run is a symlink to it.
+   * preinit deletes and recreates /run/s6 and sets it to the real uid/gid
+of the process running the container.
+ - /init execs into /package/admin/s6-overlay/libexec/stage0
+
+ - stage0 invokes s6-linux-init-maker to create the stage 1 infrastructure
+depending on the S6_* environment variables given to the container.
+s6-l-i-m is normally intended to be run offline, but since we need a lot of
+runtime configurability, we run it online here; it works.
+ - stage0 execs into the "init" script created by s6-l-i-m, which is the
+real stage1 init that normal machines boot on. It's in /run/s6/basedir/bin/init
+(it had to be created at run-time by stage0, which is why it's under /run)
+but it's just an execution of the s6-linux-init binary with some options.
+
+ - stage1 sets up the supervision tree on /run/service, with (depending on
+the value of $S6_LOGGING) a catch-all logger logging to /run/uncaught-logs.
+   * There are two early services: the catch-all logger (if required), and
+a service named s6-linux-init-shutdownd, which you can ignore - it's only
+active when the container is going to shut down.
+ - stage1 execs into s6-svscan, which will remain pid 1 for the rest of
+the container's lifetime.
+ - When the supervision tree is operational, stage2 runs; this is the
+/run/s6/basedir/scripts/rc.init script, whose source you can read in
+/package/admin/s6-overlay/etc/s6-linux-init/skel/rc.init
+
+ - stage2 reads two s6-rc source directories: the system one in
+/package/admin/s6-overlay/etc/s6-rc/sources, and a user-provided one
+in /etc/s6-overlay/s6-rc.d which must provide a bundle named "user"
+(which can be empty). It compiles these source directories into a
+compiled s6-rc database in /run/s6/db. s6-rc-compile is normally intended
+to be run offline, but just like with s6-l-i-m, we don't care and we
+run it online here because we're going for flexibility and simplicity
+for users over a bootability guarantee and optimization of speed.
+ - stage2 runs the s6-rc engine on that compiled database. This brings
+up several services, in that order: (note that S6_RUNTIME_PROFILE is
+supported for legacy stuff)
+   * fix-attrs: reads the files in /etc/fix-attrs.d and fixes permissions
+accordingly. This is deprecated; please fix your file permissions from
+outside the container instead (or in your Dockerfile).
+   * legacy-cont-init: runs all the scripts in /etc/cont-init.d
+   * user: all the services defined in the user bundle, their source
+is in /etc/s6-overlay/s6-rc.d - that's where users should migrate
+their services in order to benefit from parallelism and dependency
+management. By default that user bundle is empty, unless the user has
+installed the syslogd-overlay tarball, in which case it contains the
+services that implement syslogd.
+   * legacy-services: all the service directories in /etc/services.d
+are copied to /run/s6/legacy-services and linked to the scandir in
+/run/service, then s6-svscan is notified. Note that all of this happens
+*after* the user bundle has completed: legacy services are the last
+ones started.
+ - That's it, the container is fully operational.
+
+ - If there is no CMD, stage2 exits, having started all its services,
+and the container will keep running until something or someone instructs
+it to exit.
+ - If there is a CMD, instead of exiting, stage2 spawns it, and waits
+for it to finish. Then it stops the container and returns the exit
+code of the CMD to the host.
+
+ To make the container stop with a given exitcode, run:
+ echo $exitcode > /run/s6-linux-init-container-results/exitcode && /run/s6/basedir/bin/halt
+
+ Signals to s6-svscan (typically triggered by an outside "docker stop" command),
+s6-svscanctl commands, or manually running /run/s6/basedir/bin/poweroff or
+/run/s6/basedir/bin/shutdown should work as well, but then you do not have
+control on the exit code.

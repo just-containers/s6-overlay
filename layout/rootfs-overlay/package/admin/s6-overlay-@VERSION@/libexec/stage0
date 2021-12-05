@@ -1,0 +1,47 @@
+#!/bin/sh -e
+
+# This script is run as pid 1 after preinit has exited.
+# It doesn't need privileges: it will run with or without USER.
+# It invokes s6-linux-init-maker with options depending on run-time
+# control variables, then execs into the init script created by
+# s6-linux-init-maker, which is stage 1.
+
+basedir=/run/s6/basedir
+
+if test "0$S6_KEEP_ENV" -ne 0 ; then
+  dumpopt=''
+else
+  dumpopt='-s /run/s6/container_environment'
+fi
+
+if test "0$S6_LOGGING" -eq 2 ; then
+  logopt=''
+elif test "0$S6_LOGGING" -eq 1 ; then
+  logopt='-1'
+else
+  logopt='-B'
+fi
+
+if test "0$S6_KILL_GRACETIME" -ne 0 ; then
+  graceopt="-q $S6_KILL_GRACETIME"
+else
+  graceopt=''
+fi
+
+if test "0$S6_SYNC_DISKS" -ne 0 ; then
+  syncopt='-S'
+else
+  syncopt=''
+fi
+
+s6-linux-init-maker -D top -c "$basedir" -NCt2 -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $dumpopt $logopt $graceopt $syncopt
+
+if test "0$S6_KEEP_ENV" -ne 0 ; then
+  s6-rename "$basedir/env" "$basedir/env.orig"
+  s6-dumpenv "$basedir/env"
+  for file in `s6-ls "$basedir/env.orig"` ; do
+    s6-hiercopy "$basedir/env.orig/$file" "$basedir/env/$file"
+  done
+fi
+
+exec "$basedir/bin/init" "$@"

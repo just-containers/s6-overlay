@@ -1,0 +1,11 @@
+#!@SHEBANGDIR@/execlineb -S1
+
+backtick -D "n20 s1000000 T" -n S6_LOGGING_SCRIPT
+{
+  printcontenv S6_LOGGING_SCRIPT
+}
+importas -u -sCd" \t" S6_LOGGING_SCRIPT S6_LOGGING_SCRIPT
+s6-envuidgid -D 65534:65534 nobody
+s6-applyuidgid -U
+exec -c
+s6-log -b -- ${S6_LOGGING_SCRIPT} ${1}

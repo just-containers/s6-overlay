@@ -1,0 +1,5 @@
+ Please add a Signed-Off-By: line at the end of your commit,
+which certifies that you have the right and authority to pass
+it on as an open-source patch, as explicited in the Developer's
+Certificate of Origin available in this project's DCO file,
+or at https://developercertificate.org/

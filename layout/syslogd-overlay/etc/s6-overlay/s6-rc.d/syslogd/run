@@ -1,0 +1,4 @@
+#!@SHEBANGDIR@/execlineb -P
+
+s6-envuidgid -D 32760:32760: -- syslog
+s6-socklog -d3 -U -t3000

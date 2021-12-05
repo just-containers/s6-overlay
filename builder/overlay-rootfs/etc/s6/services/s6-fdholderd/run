@@ -1,3 +1,0 @@
-#!/bin/execlineb -P
-s6-envuidgid -D 32769:32769 daemon
-s6-fdholder-daemon -U -1 -i rules -- /var/run/s6/fdholderd-socket

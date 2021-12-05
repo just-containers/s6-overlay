@@ -1,0 +1,25 @@
+#!@SHEBANGDIR@/execlineb -P
+
+define T T
+
+s6-envuidgid -D 32761:32761: -- sysllog
+s6-applyuidgid -U --
+backtick -E line { printcontenv S6_LOGGING_SCRIPT }
+multisubstitute
+{
+  define -sC options $line
+  define dir /var/log/syslogd
+}
+exec -c
+s6-log -d3 $options
+
+ - +^auth\\. +^authpriv\\.  $T ${dir}/secure
+ - +^cron\\.  $T ${dir}/cron
+ - +^daemon\\.  $T ${dir}/daemon
+ - +^[[:alnum:]]*\\.debug:  $T ${dir}/debug
+ - +^[[:alnum:]]*\\.err: +^[[:alnum:]]*\\.error: +^[[:alnum:]]*\\.emerg: +^[[:alnum:]]*\\.alert: +^[[:alnum:]]*\\.crit:  $T ${dir}/errors
+ - +^kern\\.  $T ${dir}/kernel
+ - +mail\\.  $T ${dir}/mail
+ - +user\\.  $T ${dir}/user
+ - +^[[:alnum:]]*\\.info: +^[[:alnum:]]*\\.notice: +^[[:alnum:]]*\\.warn: -^auth\\. -^authpriv\\. -^cron\\. -daemon\\. -mail\\.  $T ${dir}/messages
+ + -^auth\\. -^authpriv\\.  $T ${dir}/everything

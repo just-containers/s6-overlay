@@ -1,0 +1,18 @@
+#!/bin/sh
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+if ! kimeout=`printcontenv S6_KILL_FINISH_MAXTIME` ; then
+  kimeout=0
+fi
+
+for file in `s6-ls "$etc/cont-finish.d" 2>/dev/null | s6-sort` ; do
+  echo "[s6-overlay] cont-finish: running $etc/cont-finish.d/$file"
+  s6-maximumtime -k "$kimeout" "$etc/cont-finish.d/$file"
+done
+
+exit 0

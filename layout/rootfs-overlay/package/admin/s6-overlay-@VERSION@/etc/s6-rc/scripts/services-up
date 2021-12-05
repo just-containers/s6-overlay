@@ -1,0 +1,56 @@
+#!/bin/sh -e
+
+if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
+  etc="/etc/cont-profile.d/$profile"
+else
+  etc=/etc
+fi
+
+dir=/run/s6/legacy-services
+echo "[s6-overlay] legacy-services: copying and starting services in $etc/services.d"
+
+s6-rmrf "$dir"
+s6-mkdir -p -m 0755 "$dir"
+list=
+notifno=
+notifyes=
+for i in `s6-ls "$etc/services.d" 2>/dev/null | s6-sort` ; do
+  if test -d "$etc/services.d/$i" ; then
+    list="$list $i"
+    if test -r "$dir/$i/notification-fd" ; then
+      notifyes="$notifyes $dir/$i"
+    else
+      notifno="$notifno $dir/$i"
+    fi
+    s6-hiercopy "$etc/services.d/$i" "$dir/$i"
+  fi
+done
+
+for file in $list ; do
+  s6-ln -nsf "$dir/$file" "/run/service/$file"
+done
+
+s6-svscanctl -a /run/service
+
+if test 0`printcontenv S6_CMD_WAIT_FOR_SERVICES` -ne 0 ; then
+  if ! maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` ; then
+    maxtime=0
+  fi
+  echo "[s6-overlay] legacy-services: waiting for services to get ready..."
+
+  # Increase if necessary. Unavoidable race condition, use s6-rc instead!
+  s6-sleep -m 5
+
+  r=0
+  if test -n "$notifno" && ! s6-svwait -u -t "$maxtime" -- $notifno ; then
+    r=1
+  fi
+  if test -n "$notifyes" && ! s6-svwait -U -t "$maxtime" -- $notifyes ; then
+    r=1
+  fi
+  if test "$r" -ne 0 && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -eq 2 ; then
+    echo "[s6-overlay] legacy-services:   ... failed"
+    exit 1
+  fi
+  echo "[s6-overlay] legacy-services:   ... done"
+fi

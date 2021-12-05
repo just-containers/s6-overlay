@@ -1,0 +1,44 @@
+#!/bin/sh -e
+
+if test "0`printcontenv S6_FIX_ATTRS_HIDDEN`" -ne 0 ; then
+  lsopt='-a'
+else
+  lsopt=''
+fi
+
+applyrec () {
+  s6-chown -u "$3" -g "$4" -- "$1"
+  if test -d "$1" ; then
+    s6-chmod "$6" "$1"
+    if test "$2" = true ; then
+      for subfile in `s6-ls $lsopt "$1" ; do
+        applyrec "$subfile" "$2" "$3" "$4" "$5" "$6"
+      done
+    fi
+  else
+    s6-chmod "$5" "$1"
+  fi
+}
+
+while read globex recurse userentry fmode dmode ; do
+  if test -n "$globex" && test "$globex" != "#" ; then
+    account="${userentry%%,*}"
+    if test "$account" != "$userentry" ; then
+      default="-D${userentry#*,}"
+    else
+      default='-i'
+    fi
+    if test "${account%%:*}" != "$account" ; then
+      opts='-nB'
+    else
+      opts=""
+    fi
+    uidgid=`s6-envuidgid "$default" $opts -- "$account" multisubstitute importas UID UID importas GID GID '' s6-echo -- '${UID}:${GID}'`
+    uid=${uidgid%%:*}
+    gid=${uidgid#*:}
+
+    for file in $globex ; do
+      applyrec "$file" "$recurse" "$uid" "$gid" "$fmode" "$dmode"
+    done
+  fi
+done

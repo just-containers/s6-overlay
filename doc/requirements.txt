@@ -1,0 +1,18 @@
+In order to build s6-overlay, you need:
+
+ Hardware:
+ - an x86_64 machine (we don't support crossing from other arches yet)
+ - more or less 350 MB of disk per arch
+   * ~ 250 MB for the toolchain
+   * up to 100 MB for all the build artifacts
+   * don't worry, the end results are super small
+ - a functional network connection to d/l via https and git
+
+ Software:
+ - regular POSIX utilities (grep, find, xargs)
+ - a "cp" that supports -a (GNU coreutils or busybox)
+ - a sed that supports -i (GNU sed or busybox)
+ - GNU make >= 3.81
+ - GNU tar with support for .xz archives. We need the --owner options from GNU.
+ - git
+ - wget or curl or similar fetching command line utility

@@ -1,0 +1,16 @@
+#!/bin/sh -e
+
+dir=/var/log/syslogd
+subdirs='cron daemon debug errors everything kernel mail messages secure user'
+
+s6-mkdir -p -m 02750 "$dir"
+cd "$dir"
+s6-mkdir -p -m 02750 $subdirs
+
+if s6-applyuidgid -u 1 -- exit 0 2>/dev/null ; then
+  uid=`s6-envuidgid -D 32761:32761: -- sysllog importas UID UID s6-echo '$UID'`
+  gid=`s6-envuidgid -D 32761:32761: -- sysllog importas GID GID s6-echo '$GID'`
+  for subdir in $subdirs ; do
+    s6-chown -u "$uid" -g "$gid" -- "$subdir"
+  done
+fi

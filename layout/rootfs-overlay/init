@@ -1,0 +1,40 @@
+#!/bin/sh -e
+
+# This is the first program launched at container start.
+# We don't know where our binaries are and we cannot guarantee
+# that the default PATH can access them.
+# So this script needs to be entirely self-contained until it has
+# at least /command, /usr/bin and /bin in its PATH.
+
+addpath () {
+  x="$1"
+  IFS=:
+  set -- $PATH
+  IFS=
+  while test "$#" -gt 0 ; do
+    if test "$1" = "$x" ; then
+      PATH="${x}:$PATH"
+    fi
+    shift
+  done
+}
+
+if ! read PATH < /etc/s6-overlay/config/global_path ; then
+  PATH=
+fi
+
+addpath /bin
+addpath /usr/bin
+addpath /command
+export PATH
+
+# Now we're good: s6-overlay-suexec is accessible via PATH, as are
+# all our binaries.
+# Run preinit as root, then run stage0 as the container's user (can be
+# root, can be a normal user).
+
+exec s6-overlay-suexec \
+  ' /package/admin/s6-overlay-@VERSION@/libexec/preinit' \
+  '' \
+  /package/admin/s6-overlay-@VERSION@/libexec/stage0 \
+  "$@"

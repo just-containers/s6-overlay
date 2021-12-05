@@ -1,3 +1,6 @@
+(This document is not up-to-date for s6-overlay v3;
+it will be updated over time.)
+
 **Table of Contents**
 
 - [Quickstart](#quickstart)
@@ -444,7 +447,7 @@ And what about numbers? `s6-overlay` takes more or less **`904K`** compressed an
 The `s6-overlay` releases are signed using `gpg`, you can import our public key:
 
 ```bash
-$ gpg --keyserver pgp.surfnet.nl  --recv-keys 6101B2783B2FD161
+$ curl https://keybase.io/justcontainers/key.asc | gpg --import
 ```
 
 Then verify the downloaded files:
