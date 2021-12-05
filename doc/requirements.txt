@@ -10,7 +10,7 @@ In order to build s6-overlay, you need:
 
  Software:
  - regular POSIX utilities (grep, find, xargs)
- - a "cp" that supports -a (GNU coreutils or busybox)
+ - a cp that supports -a (GNU coreutils or busybox)
  - a sed that supports -i (GNU sed or busybox)
  - GNU make >= 3.81
  - GNU tar with support for .xz archives. We need the --owner options from GNU.
