@@ -13,14 +13,15 @@ addpath () {
   IFS=
   while test "$#" -gt 0 ; do
     if test "$1" = "$x" ; then
-      PATH="${x}:$PATH"
+      return
     fi
     shift
   done
+  PATH="${x}:$PATH"
 }
 
 if ! read PATH < /etc/s6-overlay/config/global_path ; then
-  PATH=
+  PATH=/bin
 fi
 
 addpath /bin
