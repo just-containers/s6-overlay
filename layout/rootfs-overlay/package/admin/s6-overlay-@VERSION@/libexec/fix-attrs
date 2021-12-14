@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-if test "0`printcontenv S6_FIX_ATTRS_HIDDEN`" -ne 0 ; then
+if test 0`printcontenv S6_FIX_ATTRS_HIDDEN` -ne 0 ; then
   lsopt='-a'
 else
   lsopt=''
@@ -11,7 +11,7 @@ applyrec () {
   if test -d "$1" ; then
     s6-chmod "$6" "$1"
     if test "$2" = true ; then
-      for subfile in `s6-ls $lsopt "$1" ; do
+      for subfile in `s6-ls $lsopt "$1"` ; do
         applyrec "$subfile" "$2" "$3" "$4" "$5" "$6"
       done
     fi

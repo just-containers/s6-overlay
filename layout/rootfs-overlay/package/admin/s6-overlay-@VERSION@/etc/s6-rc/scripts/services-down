@@ -13,7 +13,7 @@ for i in `s6-ls "$dir"` ; do
 done
 
 if test -n "$list" ; then
-  s6-rmrf "$links"
+  s6-rmrf $links
   s6-svscanctl -an /run/service
   if ! grace=`printcontenv S6_SERVICES_GRACETIME` ; then
     grace=3000
