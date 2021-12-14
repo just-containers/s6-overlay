@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-r=0
+r=false
 
 if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
   etc="/etc/cont-profile.d/$profile"
@@ -9,17 +9,20 @@ else
 fi
 
 for file in `s6-ls "$etc/cont-init.d" 2>/dev/null | s6-sort` ; do
-  echo "[s6-overlay] cont-init: running $etc/cont-init.d/$file"
+  echo "cont-init: info: running $etc/cont-init.d/$file" 1>&2
   set +e
   "$etc/cont-init.d/$file"
   b="$?"
   set -e
-  echo "[s6-overlay] cont-init: $etc/cont-init.d/$file exited $b"
+  echo "cont-init: info: $etc/cont-init.d/$file exited $b" 1>&2
   if test "$b" -ne 0 ; then
-    r=1
+    r=true
   fi
 done
 
-if test "$r" -ne 0 && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "0$b" -eq 2 ; then
-  exit 1
+if $r && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
+  echo 'cont-init: warning: some scripts exited nonzero' 1>&2
+  if test "$b" -ge 2 ; then
+    exit 1
+  fi
 fi

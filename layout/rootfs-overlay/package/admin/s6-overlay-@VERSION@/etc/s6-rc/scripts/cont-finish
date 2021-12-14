@@ -11,7 +11,7 @@ if ! kimeout=`printcontenv S6_KILL_FINISH_MAXTIME` ; then
 fi
 
 for file in `s6-ls "$etc/cont-finish.d" 2>/dev/null | s6-sort` ; do
-  echo "[s6-overlay] cont-finish: running $etc/cont-finish.d/$file"
+  echo "cont-finish: info: running $etc/cont-finish.d/$file" 1>&2
   s6-maximumtime -k "$kimeout" "$etc/cont-finish.d/$file"
 done
 

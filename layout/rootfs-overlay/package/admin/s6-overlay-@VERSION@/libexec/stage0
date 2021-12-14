@@ -34,9 +34,9 @@ else
   syncopt=''
 fi
 
-s6-linux-init-maker -D top -c "$basedir" -NCt2 -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $dumpopt $logopt $graceopt $syncopt
+s6-linux-init-maker -D top -c "$basedir" -NCt2 -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $dumpopt $logopt $graceopt $syncopt -- "$basedir"
 
-if test "0$S6_KEEP_ENV" -ne 0 ; then
+if test -z "$dumpopt" ; then
   s6-rename "$basedir/env" "$basedir/env.orig"
   s6-dumpenv "$basedir/env"
   for file in `s6-ls "$basedir/env.orig"` ; do
