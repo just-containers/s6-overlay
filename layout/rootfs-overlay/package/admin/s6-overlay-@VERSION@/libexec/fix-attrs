@@ -31,7 +31,7 @@ while read globex recurse userentry fmode dmode ; do
     if test "${account%%:*}" != "$account" ; then
       opts='-nB'
     else
-      opts=""
+      opts=''
     fi
     uidgid=`s6-envuidgid "$default" $opts -- "$account" multisubstitute importas UID UID importas GID GID '' s6-echo -- '${UID}:${GID}'`
     uid=${uidgid%%:*}

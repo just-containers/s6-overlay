@@ -10,7 +10,6 @@ prog=/package/admin/s6-overlay/libexec/preinit
 
 
 # Ensure /run is writable
-
 if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
   echo "$prog: info: read-only root" 1>&2
   if ! test -d /run ; then
@@ -28,19 +27,18 @@ if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
 else
   s6-mkdir -p -m 0755 /run
 fi
-
+if test "0$UID" -ne 0 ; then
+  s6-chown -U -- /run
+fi
 
 # Ensure /var/run is a symlink to /run
-
 if test -L /var/run && test "`s6-linkname -f /var/run`" = /run ; then : ; else
   echo "$prog: notice: /var/run is not a symlink to /run, fixing it" 1>&2
   s6-rmrf /var/run
   s6-ln -s /run /var/run
 fi
 
-
-# /run/s6 is recreated every time and belongs to the USER.
-
+# /run/s6 is recreated every time.
 s6-rmrf /run/s6
 s6-mkdir -m 0755 /run/s6
 if test "0$UID" -ne 0 ; then

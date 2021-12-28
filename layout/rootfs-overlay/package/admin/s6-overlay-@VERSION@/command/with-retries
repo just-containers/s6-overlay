@@ -11,7 +11,7 @@ multisubstitute
   importas -u -D 500 timeout ELGETOPT_t
   elgetpositionals -P0
 }
-emptyenv -P
+emptyenv -oP
 forbacktickx -x 0,1 -d"\n" i { s6-seq 0 ${nretries} }
   importas -u i i
   if { s6-test ${i} -ne ${nretries} }

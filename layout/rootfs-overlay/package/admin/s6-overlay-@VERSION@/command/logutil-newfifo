@@ -7,7 +7,7 @@ multisubstitute
   importas -u -D "root" owner ELGETOPT_o
   elgetpositionals -P0
 }
-emptyenv -P
+emptyenv -oP
 if { s6-test ${#} -ge 1 }
 
 if
