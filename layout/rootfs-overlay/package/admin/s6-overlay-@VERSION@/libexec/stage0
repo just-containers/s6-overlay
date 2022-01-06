@@ -6,7 +6,31 @@
 # control variables, then execs into the init script created by
 # s6-linux-init-maker, which is stage 1.
 
+analyze_logging_script () {
+  val=0
+  t1=true
+  t2=true
+  set -- $S6_LOGGING_SCRIPT
+  while test "$#" -gt 0 ; do
+    if test "$1" = t && $t1 ; then
+      val=$((val + 1))
+      t1=false
+    elif test "$1" = T && $t2 ; then
+      val=$((val + 2))
+      t2=false
+    fi
+    shift
+  done
+  echo $val
+}
+
 basedir=/run/s6/basedir
+
+if test -n "S6_LOGGING_SCRIPT" ; then
+  stampopt="-t `analyze_logging_script`"
+else
+  stampopt='-t 2'
+fi
 
 if test "0$S6_KEEP_ENV" -ne 0 ; then
   dumpopt=''
@@ -22,6 +46,12 @@ else
   logopt='-B'
 fi
 
+if test -n "$S6_CATCHALL_USER" && test "0$CONTAINER_UID" -eq 0 ; then
+  loguseropt="-u $S6_CATCHALL_USER"
+else
+  loguseropt=''
+fi
+
 if test "0$S6_KILL_GRACETIME" -ne 0 ; then
   graceopt="-q $S6_KILL_GRACETIME"
 else
@@ -34,7 +64,7 @@ else
   syncopt=''
 fi
 
-s6-linux-init-maker -D top -c "$basedir" -NCt2 -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $dumpopt $logopt $graceopt $syncopt -- "$basedir"
+s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $stampopt $dumpopt $logopt $loguseropt $graceopt $syncopt -- "$basedir"
 
 if test -z "$dumpopt" ; then
   s6-rename "$basedir/env" "$basedir/env.orig"

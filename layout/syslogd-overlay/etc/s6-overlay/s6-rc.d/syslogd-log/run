@@ -1,17 +1,15 @@
 #!@SHEBANGDIR@/execlineb -P
 
-define T T
-
 s6-envuidgid -D 32761:32761: -- sysllog
 s6-applyuidgid -U --
-backtick -E line { printcontenv S6_LOGGING_SCRIPT }
+backtick -D "n20 s1000000 T" line { printcontenv S6_LOGGING_SCRIPT }
 multisubstitute
 {
-  define -sC options $line
+  importas -usC T line
   define dir /var/log/syslogd
 }
 exec -c
-s6-log -d3 $options
+s6-log -d3 --
 
  - +^auth\\. +^authpriv\\.  $T ${dir}/secure
  - +^cron\\.  $T ${dir}/cron
