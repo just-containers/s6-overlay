@@ -32,7 +32,10 @@ fi
 if test "$#" -ne 0 ; then
   set +e
   arg0=`printcontenv S6_CMD_ARG0`
-  $arg0 "$@"
+  $arg0 "$@" &
+  pid=$!
+  echo "$pid" > /run/s6-linux-init-container-results/pid
+  wait "$pid"
   echo "$?" > /run/s6-linux-init-container-results/exitcode
   set -e
   exec /run/s6/basedir/bin/halt
