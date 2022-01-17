@@ -36,7 +36,7 @@ OVERLAY_DST_PATH=${OVERLAY_DST_PATH:-$PWD/overlay-rootfs}
 mkdir -p ${TMP}
 mkdir -p ${DIST}
 
-targets=( 'amd64' 'arm' 'armhf' 'x86' 'aarch64' 'ppc64le' )
+targets=( 'amd64' 'arm' 'armhf' 'x86' 'aarch64' 'ppc64le' 'riscv64' )
 editions=( '' 'nobin' )
 gccs=(
 'x86_64-linux-musl'
@@ -45,6 +45,7 @@ gccs=(
 'i486-linux-musl'
 'aarch64-linux-musl'
 'powerpc64le-linux-musl'
+'riscv64-linux-musl'
 )
 
 declare -A targets_gcc
@@ -54,6 +55,7 @@ targets_gcc[aarch64]=aarch64-linux-musl
 targets_gcc[x86]=i486-linux-musl
 targets_gcc[amd64]=x86_64-linux-musl
 targets_gcc[ppc64le]=powerpc64le-linux-musl
+targets_gcc[riscv64]=riscv64-linux-musl
 
 generate_release() {
   printf "Binary releases include the following skaware packages:\n\n" > ${DIST}/release.md
