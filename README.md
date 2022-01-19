@@ -509,7 +509,7 @@ You can create log folders in `cont-init.d` scripts, or as s6-rc oneshots.
 Here is an example of a logged service `myapp` implemented the old way:
 
 `/etc/cont-init.d/myapp-log-prepare`:
-```
+```sh
 #!/bin/sh -e
 mkdir -p /var/log/myapp
 chown nobody:nogroup /var/log/myapp
@@ -524,7 +524,7 @@ exec mydaemon-in-the-foreground-and-logging-to-stderr
 ```
 
 `/etc/services.d/myapp/log/run`:
-```
+```sh
 #!/bin/sh
 exec logutil-service /var/log/myapp
 ```
@@ -549,7 +549,7 @@ longrun
 ```
 
 `/etc/s6-overlay/s6-rc.d/myapp/run`:
-```
+```sh
 #!/bin/sh
 exec 2>&1
 exec mydaemon-in-the-foreground-and-logging-to-stderr
@@ -566,7 +566,7 @@ oneshot
 ```
 
 `/etc/s6-overlay/s6-rc.d/myapp-log/run`:
-```
+```sh
 #!/bin/sh
 exec logutil-service /var/log/myapp
 ```
@@ -638,7 +638,7 @@ you can use the `with-contenv` helper, which will push all of those into your
 execution environment, for example:
 
 `/etc/cont-init.d/01-contenv-example`:
-```
+```sh
 #!/usr/bin/with-contenv sh
 env
 ```
