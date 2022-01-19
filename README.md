@@ -1,6 +1,3 @@
-(This document is not up-to-date for s6-overlay v3;
-it will be updated over time.)
-
 **Table of Contents**
 
 - [Quickstart](#quickstart)
@@ -763,6 +760,9 @@ They are statically compiled and will work with any Linux distribution.
 * `s6-overlay-symlinks-arch-${version}.tar.xz`: `/usr/bin` symlinks to the skaware binaries. Totally optional.
 * `syslogd-overlay-noarch-${version}.tar.xz`: the syslogd emulation. Totally optional.
 * `s6-overlay-${version}.tar.xz`: the s6-overlay source. Download it if you want to build s6-overlay yourself.
+
+We have binaries for at least x86_64, aarch64, arm32, i486, i686, and riscv64.
+The full list of supported arches can be found in [conf/toolchains](https://github.com/just-containers/s6-overlay/blob/master/conf/toolchains).
 
 ## Contributing
 
