@@ -31,7 +31,9 @@ it will be updated over time.)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
 
-The s6-overlay-builder project is a series of init scripts and utilities to ease creating Docker images using [s6](http://skarnet.org/software/s6/overview.html) as a process supervisor.
+s6-overlay is an easy-to-install (just extract a tarball or two!) set of scripts and utilities
+allowing you to use existing Docker images while using [s6](https://skarnet.org/software/s6/overview.html)
+as a pid 1 for your container and process supervisor for your services.
 
 ## Quickstart
 
@@ -84,8 +86,11 @@ Accept-Ranges: bytes
 ## Goals
 The project has the following goals:
 
-* Make it easy for image authors to take advantage of s6
-* Still operate like other Docker images
+* Be usable on top of *any* Docker image
+* Make it easy to create new images, that will operate like any other images
+* Provide users with a turnkey s6 installation that will give them a stable
+pid 1, a fast and orderly init sequence and shutdown sequence, and the power
+of process supervision and automatically rotated logs.
 
 ## Features
 
@@ -126,7 +131,7 @@ Our interpretation of "The Docker Way" is thus:
 * Containers should do one thing
 * Containers should stop when that thing stops
 
-and our init system is designed to do exactly that! Your images will still behave like
+and our init system is designed to do exactly that. Your images will behave like
 other Docker images and fit in with the existing ecosystem of images.
 
 See "Writing an optional finish script" under the [Usage](#usage) section for details on stopping "the thing."
@@ -134,8 +139,8 @@ See "Writing an optional finish script" under the [Usage](#usage) section for de
 ## Init stages
 
 Our overlay init is a properly customized one to run appropriately in containerized environments.
-This section briefly explains how our stages work but if you want to know how a complete init system
-should work, you can read this article: [How to run s6-svscan as process 1](https://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
+This section briefly explains how stages work but if you want to know how a complete init system
+should work, you can read this article: [How to run s6-svscan as process 1](https://skarnet.org/software/s6/s6-svscan-1.html)
 
 1. **stage 1**: Its purpose is to set up the image to execute the supervision tree which
 will handle all the auxiliary services, and to launch stage 2. Stage 1 is where all the
