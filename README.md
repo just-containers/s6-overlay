@@ -13,7 +13,7 @@ it will be updated over time.)
   - [Using `CMD`](#using-cmd)
   - [Writing a service script](#writing-a-service-script)
   - [Fixing ownership and permissions](#fixing-ownership-and-permissions)
-  - [Executing initialization and/or finalization tasks](#executing-initialization-and-or-finalization-tasks)
+  - [Executing initialization and finalization tasks](#executing-initialization-and-finalization-tasks)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
   - [Logging](#logging)
   - [Dropping privileges](#dropping-privileges)
@@ -387,7 +387,7 @@ Here you have some working examples:
 /var/log/mysql-slow-query-logs true nobody,32768:32768 0644 2700
 ```
 
-### Executing initialization And/Or finalization tasks
+### Executing initialization and finalization tasks
 
 Here is the old way of doing it:
 
