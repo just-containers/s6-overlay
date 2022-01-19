@@ -7,27 +7,26 @@ it will be updated over time.)
 - [Goals](#goals)
 - [Features](#features)
 - [The Docker Way?](#the-docker-way)
-- [Our `s6-overlay` based images](#our-s6-overlay-based-images)
 - [Init stages](#init-stages)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
-  - [Fixing ownership & permissions](#fixing-ownership--permissions)
-  - [Executing initialization And/Or finalization tasks](#executing-initialization-andor-finalization-tasks)
   - [Writing a service script](#writing-a-service-script)
+  - [Fixing ownership & permissions](#fixing-ownership-permissions)
+  - [Executing initialization and/or finalization tasks](#executing-initialization-and-or-finalization-tasks)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
   - [Logging](#logging)
   - [Dropping privileges](#dropping-privileges)
   - [Read-only Root Filesystem](#read-only-root-filesystem)
   - [Container environment](#container-environment)
   - [Customizing `s6` behaviour](#customizing-s6-behaviour)
-- [Known issues and workarounds](#known-issues-and-workarounds)
   - [syslog](#syslog)
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
 - [Releases](#releases)
 - [Contributing](#contributing)
+- [Building the overlay yourself](#building-the-overlay-yourself)
 - [Upgrade notes](#upgrade-notes)
 
 # s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
@@ -36,17 +35,20 @@ The s6-overlay-builder project is a series of init scripts and utilities to ease
 
 ## Quickstart
 
-Build the following Dockerfile and try this guy out:
+Build the following Dockerfile and try it out:
 
 ```
+# Use your favorite image
 FROM ubuntu
-ADD https://github.com/just-containers/s6-overlay/releases/download/v2.2.0.1/s6-overlay-amd64-installer /tmp/
-RUN chmod +x /tmp/s6-overlay-amd64-installer && /tmp/s6-overlay-amd64-installer /
-RUN apt-get update && \
-    apt-get install -y nginx && \
-    echo "daemon off;" >> /etc/nginx/nginx.conf
+RUN apt-get update && apt-get install -y nginx xz-utils
+RUN echo "daemon off;" >> /etc/nginx/nginx.conf
+CMD ["/usr/sbin/nginx"]
+
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
 ENTRYPOINT ["/init"]
-CMD ["nginx"]
 ```
 
 ```
@@ -54,27 +56,29 @@ docker-host $ docker build -t demo .
 docker-host $ docker run --name s6demo -d -p 80:80 demo
 docker-host $ docker top s6demo acxf
 PID                 TTY                 STAT                TIME                COMMAND
-3788                ?                   Ss                  0:00                \_ s6-svscan
-3827                ?                   S                   0:00                | \_ foreground
-3834                ?                   S                   0:00                | | \_ foreground
-3879                ?                   S                   0:00                | | \_ nginx
-3880                ?                   S                   0:00                | | \_ nginx
-3881                ?                   S                   0:00                | | \_ nginx
-3882                ?                   S                   0:00                | | \_ nginx
-3883                ?                   S                   0:00                | | \_ nginx
-3828                ?                   S                   0:00                | \_ s6-supervise
-3829                ?                   S                   0:00                | \_ s6-supervise
-3830                ?                   Ss                  0:00                | \_ s6-log
+11735               ?                   Ss                  0:00                \_ s6-svscan
+11772               ?                   S                   0:00                \_ s6-supervise
+11773               ?                   Ss                  0:00                | \_ s6-linux-init-s
+11771               ?                   Ss                  0:00                \_ rc.init
+11812               ?                   S                   0:00                | \_ nginx
+11814               ?                   S                   0:00                | \_ nginx
+11816               ?                   S                   0:00                | \_ nginx
+11813               ?                   S                   0:00                | \_ nginx
+11815               ?                   S                   0:00                | \_ nginx
+11779               ?                   S                   0:00                \_ s6-supervise
+11785               ?                   Ss                  0:00                | \_ s6-ipcserverd
+11778               ?                   S                   0:00                \_ s6-supervise
 docker-host $ curl --head http://127.0.0.1/
 HTTP/1.1 200 OK
-Server: nginx/1.4.6 (Ubuntu)
-Date: Thu, 26 Mar 2015 14:57:34 GMT
+Server: nginx/1.18.0 (Ubuntu)
+Date: Mon, 17 Jan 2022 13:33:58 GMT
 Content-Type: text/html
 Content-Length: 612
-Last-Modified: Tue, 04 Mar 2014 11:46:45 GMT
+Last-Modified: Mon, 17 Jan 2022 13:32:11 GMT
 Connection: keep-alive
-ETag: "5315bd25-264"
+ETag: "61e56fdb-264"
 Accept-Ranges: bytes
+
 ```
 
 ## Goals
@@ -85,147 +89,271 @@ The project has the following goals:
 
 ## Features
 
-* A simple init process which allows to the end-user execute tasks like initialization (`cont-init.d`), finalization (`cont-finish.d`) as well as fixing ownership permissions (`fix-attrs.d`).
+* A simple init process which allows the end-user to execute tasks like initialization (`cont-init.d`), finalization (`cont-finish.d`) and its own services with dependencies between them
 * The s6-overlay provides proper `PID 1` functionality
   * You'll never have zombie processes hanging around in your container, they will be properly cleaned up.
 * Multiple processes in a single container
 * Able to operate in "The Docker Way"
-* Usable with all base images - Ubuntu, CentOS, Fedora, and even Busybox.
-* Distributed as a single .tar.gz file, to keep your image's number of layers small.
+* Usable with all base images - Ubuntu, CentOS, Fedora, Alpine, Busybox...
+* Distributed as a small number of .tar.xz files depending on what exact functionality you need - to keep your image's number of layers small.
 * A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our lives much, much easier.
 * Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](http://skarnet.org/software/s6/s6-log.html) under the hood.
 * Some support for Docker's `USER` directive, to run your whole process tree as a specific user. Not compatible with all features, details in the [notes](#notes) section.
 
 ## The Docker Way?
 
-One of the oft-repeated Docker mantras is "one process per container", but we disagree. There's nothing inherently *bad* about running multiple processes in a container. The more abstract "one *thing* per container" is our policy - a container should do one thing, such as "run a chat service" or "run gitlab." This may involve multiple processes, which is fine.
+One of the oft-repeated Docker mantras is "one process per container", but we disagree.
+There's nothing inherently *bad* about running multiple processes in a container.
+The more abstract "one *thing* per container" is our policy - a container should do one thing,
+such as "run a chat service" or "run gitlab." This may involve multiple processes, which is fine.
 
-The other reason image authors shy away from process supervisors is they believe a process supervisor *must* restart failed services, meaning the Docker container will never die.
+The other reason image authors shy away from process supervisors is they believe a process supervisor
+*must* restart failed services, meaning the Docker container will never die.
 
-This does effectively break the Docker ecosystem - most images run one process that will exit when there's an error. By exiting on error, you allow the system administrator to handle failures however they prefer. If your image will never exit, you now need some alternative method of error recovery and failure notification.
+This does effectively break the Docker ecosystem - most images run one process that will
+exit when there's an error. By exiting on error, you allow the system administrator to
+handle failures however they prefer. If your image will never exit, you now need some
+alternative method of error recovery and failure notification.
 
-Our policy is that if "the thing" fails, then the container should fail, too. We do this by determining which processes can restart, and which should bring down the container. For example, if `cron` or `syslog` fails, your container can most likely restart it without any ill effects, but if `ejabberd` fails, the container should exit so the system administrator can take action.
+Our policy is that if "the thing" fails, then the container should fail, too.
+We do this by determining which processes can restart, and which should bring down
+the container. For example, if `cron` or `syslog` fails, your container can most
+likely restart it without any ill effects, but if `ejabberd` fails, the container
+should exit so the system administrator can take action.
 
 Our interpretation of "The Docker Way" is thus:
 
 * Containers should do one thing
 * Containers should stop when that thing stops
 
-and our init system is designed to do exactly that! Your images will still behave like other Docker images and fit in with the existing ecosystem of images.
+and our init system is designed to do exactly that! Your images will still behave like
+other Docker images and fit in with the existing ecosystem of images.
 
 See "Writing an optional finish script" under the [Usage](#usage) section for details on stopping "the thing."
 
-## Our `s6-overlay` based images
-
-We've developed two docker images which can be used as base images:
-* [base](https://github.com/just-containers/base): Based on Ubuntu 14.04 LTS, it was intended to use as a general purpose image.
-* [base-alpine](https://github.com/just-containers/base-alpine): Based on Alpine Linux 3.1, as advertised on their website: "a security-oriented, lightweight Linux distribution based on musl libc and busybox" - the base image is under 10MB but still includes a package manager!
-
 ## Init stages
 
-Our overlay init is a properly customized one to run appropriately in containerized environments. This section briefly explains how our stages work but if you want to know how a complete init system should work, please read this article: [How to run s6-svscan as process 1](http://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
+Our overlay init is a properly customized one to run appropriately in containerized environments.
+This section briefly explains how our stages work but if you want to know how a complete init system
+should work, you can read this article: [How to run s6-svscan as process 1](https://skarnet.org/software/s6/s6-svscan-1.html) by Laurent Bercot.
 
-1. **stage 1**: Its purpose is to prepare the image to enter into the second stage. Among other things, it is responsible for preparing the container environment variables, block the startup of the second stage until `s6` is effectively started, ...
-2. **stage 2**: This is where most of the end-user provided files are mean to be executed:
-    1. Fix ownership and permissions using `/etc/fix-attrs.d`.
-    2. Execute initialization scripts contained in `/etc/cont-init.d`.
-    3. Copy user services (`/etc/services.d`) to the folder where s6 is running its supervision and signal it so that it can properly start supervising them. 
-3. **stage 3**: This is the shutdown stage. It will:
-    1. Send a TERM signal to all supervised services.
-    2. Run any finalization scripts contained in `/etc/cont-finish.d` - this is done while services may still be shutting down.
-    3. Wait on all services to finish (up to `S6_SERVICES_GRACETIME` milliseconds (default `3000`)).
-    4. Send all processes a `TERM` signal.
-    5. Sleep `S6_KILL_GRACETIME` milliseconds (default `3000`)
-    6. Send all processes a `KILL` signal.
+1. **stage 1**: Its purpose is to set up the image to execute the supervision tree which
+will handle all the auxiliary services, and to launch stage 2. Stage 1 is where all the
+black magic happens, all the container setup details that we handle so that you don't
+have to care about them.
+2. **stage 2**: This is where most of the end-user provided files are meant to be executed:
+    1. Execute legacy oneshot user scripts contained in `/etc/cont-init.d`.
+    2. Run user s6-rc services declared in `/etc/s6-overlay/s6-rc.d`, following dependencies
+    3. Copy legacy longrun user services (`/etc/services.d`) to a temporary directory and have s6 start (and supervise) them.
+3. **stage 3**: This is the shutdown stage. When the container is supposed to exit, it will:
+    1. Send a TERM signal to all legacy longrun services and, if required, wait for them to exit.
+    2. Bring down user s6-rc services in an orderly fashion.
+    3. Run any finalization scripts contained in `/etc/cont-finish.d`.
+    4. Send all remaining processes a `TERM` signal. There should not be any remaining processes anyway.
+    5. Sleep for a small grace time, to allow stray processes to exit cleanly.
+    6. Send all processes a `KILL` signal. Then the container exits.
 
 ## Installation
 
-There's two ways to install the s6-overlay in your docker image:
+s6-overlay comes as a set of tarballs that you can extract onto your image.
+The tarballs you need are a function of the image you use; most people will
+need the first two, and the other ones are extras you can use at your
+convenience.
 
-1. With the self-extracting installer.
-2. Extracting a tar file.
+Note that this documentation may not be quite up-to-date and you may need
+to replace `3.0.0.0` with the latest version of s6-overlay. :-)
 
-The self-extracting installer is a small wrapper around the tar file,
-but it auto-detects if your distro has replaced `/bin` with a symlink
-to `/usr/bin` and does the right thing. Just give it the folder you
-want to extract into (usually `/`).
+1. `s6-overlay-noarch-3.0.0.0.tar.xz`: this tarball contains the scripts
+implementing the overlay. We call it "noarch" because it is architecture-
+independent: it only contains scripts and other text files. Everyone who
+wants to run s6-overlay needs to extract this tarball.
+2. `s6-overlay-x86_64-3.0.0.0.tar.xz`: replace `x86_64` with your
+system's architecture. This tarball contains all the necessary binaries
+from the s6 ecosystem, all linked statically and out of the way of
+your image's binaries. Unless you know for sure that your image already
+comes with all the packages providing the binaries used in the overlay,
+you need to extract this tarball.
+3. `s6-overlay-symlinks-noarch-3.0.0.0.tar.xz`: this tarball contains
+symlinks to the s6-overlay scripts so they are accessible via `/usr/bin`.
+It is normally not needed, all the scripts are accessible via the PATH
+environment variable, but if you have old user scripts containing
+shebangs such as `#!/usr/bin/with-contenv`, installing these symlinks
+will make them work.
+4. `s6-overlay-symlinks-arch-3.0.0.0.tar.xz`: this tarball contains
+symlinks to the binaries from the s6 ecosystem provided by the second
+tarball, to make them accessible via `/usr/bin`. It is normally not
+needed, but if you have old user scripts containing shebangs such as
+`#!/usr/bin/execlineb`, installing these symlinks will make them work.
+5. `syslogd-overlay-noarch-3.0.0.0.tar.xz`: this tarball contains
+definition for a `syslogd` service. If you are running daemons that
+cannot log to stderr to take advantage of the s6 logging infrastructure,
+but hardcode the use of the old `syslog()` mechanism, you can extract
+this tarball, and your container will run a lightweight emulation of a
+`syslogd` daemon, so your syslog logs will be caught and stored to disk.
 
+To install those tarballs, add lines to your Dockerfile that correspond
+to the functionality you want to install. For instance, most people would
+use the following:
 ```
-RUN /tmp/s6-overlay-amd64-installer /
-```
-
-If you want to use the tarball, how you extract depends on your distro.
-If you try one method and receive an error message like
-`/bin/execlineb: bad interpreter: No such file or directory`, try
-the other method (or use the installer).
-
-For Alpine, Debian, and distros that have `/bin` as a directory:
-
-```
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C /
-```
-
-For CentOS 7, Ubuntu 20.04, and distros that have `/bin` as a symlink
-to `/usr/bin`:
-
-```
-RUN tar xzf /tmp/s6-overlay-amd64.tar.gz -C / --exclude="./bin" && \
-    tar xzf /tmp/s6-overlay-amd64.tar.gz -C /usr ./bin
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
 ```
 
 ## Usage
 
-The project is distributed as a standard .tar.gz file, which you extract at the root of your image. Afterwards, set your `ENTRYPOINT` to `/init`
+The project is distributed as a set of standard .tar.xz files, which you extract at the root of your image.
+Afterwards, set your `ENTRYPOINT` to `/init`.
 
-Right now, we recommend using Docker's `ADD` directive instead of running `wget` or `curl` in a `RUN` directive - Docker is able to handle the https URL when you use `ADD`, whereas your base image might not be able to use https, or might not even have `wget` or `curl` installed at all.
+Right now, we recommend using Docker's `ADD` directive instead of running `wget` or `curl`
+in a `RUN` directive - Docker is able to handle the https URL when you use `ADD`, whereas
+your base image might not be able to use https, or might not even have `wget` or `curl`
+installed at all.
 
 From there, you have a couple of options:
 
-* Run your service/program as your image's `CMD`
-* Write a service script
+* If you want the container to exit when your program exits: run the program as your image's `CMD`.
+* If you want the container to run until told to exit, and your program to be supervised by s6:
+write a service script
 
 ### Using `CMD`
 
-Using `CMD` is a really convenient way to take advantage of the s6-overlay. Your `CMD` can be given at build-time in the Dockerfile, or at runtime on the command line, either way is fine - it will be run under the s6 supervisor, and when it fails or exits, the container will exit. You can even run interactive programs under the s6 supervisor!
+Using `CMD` is a convenient way to take advantage of the overlay. Your `CMD` can be given at
+build time in the Dockerfile, or at run time on the command line, either way is fine. It will
+be run as a normal process in the environment set up by s6; when it fails or exits, the
+container will shut down cleanly and exit. You can run interactive programs in this manner:
+only the CMD will receive your interactive command, the support processes will be unimpacted.
 
 For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay/releases/download/v1.21.8.0/s6-overlay-amd64.tar.gz /tmp/
-RUN gunzip -c /tmp/s6-overlay-amd64.tar.gz | tar -xf - -C /
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
 ENTRYPOINT ["/init"]
 ```
 
 ```
 docker-host $ docker build -t s6demo .
 docker-host $ docker run -ti s6demo /bin/sh
-[fix-attrs.d] applying owners & permissions fixes...
-[fix-attrs.d] 00-runscripts: applying... 
-[fix-attrs.d] 00-runscripts: exited 0.
-[fix-attrs.d] done.
-[cont-init.d] executing container initialization scripts...
-[cont-init.d] done.
-[services.d] starting services
-[services.d] done.
+/package/admin/s6-overlay/libexec/preinit: notice: /var/run is not a symlink to /run, fixing it
+s6-rc: info: service s6rc-oneshot-runner: starting
+s6-rc: info: service s6rc-oneshot-runner successfully started
+s6-rc: info: service fix-attrs: starting
+s6-rc: info: service fix-attrs successfully started
+s6-rc: info: service legacy-cont-init: starting
+s6-rc: info: service legacy-cont-init successfully started
+s6-rc: info: service legacy-services: starting
+s6-rc: info: service legacy-services successfully started
 / # ps
-PID   USER     COMMAND
-    1 root     s6-svscan -t0 /var/run/s6/services
-   21 root     foreground  if   /etc/s6/init/init-stage2-redirfd   foreground    if     s6-echo     [fix-attrs.d] applying owners & permissions fixes.
-   22 root     s6-supervise s6-fdholderd
-   23 root     s6-supervise s6-svscan-log
-   24 nobody   s6-log -bp -- t /var/log/s6-uncaught-logs
-   28 root     foreground  s6-setsid  -gq  --  with-contenv  /bin/sh  import -u ? if  s6-echo  --  /bin/sh exited ${?}  foreground  s6-svscanctl  -t
-   73 root     /bin/sh
-   76 root     ps
+PID   USER     TIME  COMMAND
+    1 root      0:00 /package/admin/s6/command/s6-svscan -d4 -- /run/service
+   17 root      0:00 {rc.init} /bin/sh -e /run/s6/basedir/scripts/rc.init top /bin/sh
+   18 root      0:00 s6-supervise s6-linux-init-shutdownd
+   20 root      0:00 /package/admin/s6-linux-init/command/s6-linux-init-shutdownd -c /run/s6/basedir -g 3000 -C -B
+   24 root      0:00 s6-supervise s6rc-fdholder
+   25 root      0:00 s6-supervise s6rc-oneshot-runner
+   31 root      0:00 /package/admin/s6/command/s6-ipcserverd -1 -- /package/admin/s6/command/s6-ipcserver-access -v0 -E -l0 -i data/rules -- /packa
+   58 root      0:00 /bin/sh
+   66 root      0:00 ps
 / # exit
-/bin/sh exited 0
+s6-rc: info: service legacy-services: stopping
+s6-rc: info: service legacy-services successfully stopped
+s6-rc: info: service legacy-cont-init: stopping
+s6-rc: info: service legacy-cont-init successfully stopped
+s6-rc: info: service fix-attrs: stopping
+s6-rc: info: service fix-attrs successfully stopped
+s6-rc: info: service s6rc-oneshot-runner: stopping
+s6-rc: info: service s6rc-oneshot-runner successfully stopped
 docker-host $
 ```
 
+### Writing a service script
+
+The other way to use a container with s6-overlay is to make your
+services supervised. You can supervise any number of services;
+usually they're just support services for the main daemon you run as
+a CMD, but if that's what you want, nothing prevents you from having
+an empty CMD and running your main daemon as a supervised service as
+well. In that case, the daemon will be restarted by s6 whenever it
+exits; the container will only stop when you tell it to do so, either
+via a `docker stop` command, or from inside the container with the
+`/run/s6/basedir/bin/halt` command.
+
+There are two ways of making a supervised service. The old way, which
+is still supported, is to make a "pure s6" service directory. Create a
+directory with the name of your service in `/etc/services.d` and put an executable `run`
+file into it; this is the file in which you'll put your long-lived process execution.
+For details of supervision of service directories, and how you can
+configure how s6 handles your daemon, you can take a look at the
+[servicedir](https://skarnet.org/software/s6/servicedir.html) documentation.
+A simple example would look like this:
+
+`/etc/services.d/myapp/run`:
+```
+#!/command/execlineb -P
+nginx -g "daemon off;"
+```
+
+The new way is to make an [s6-rc](https://skarnet.org/software/s6-rc/)
+*source definition directory* in the `/etc/s6-overlay/s6-rc.d` directory,
+and add the name of that directory to the `user` bundle, i.e. create an
+empty file with the same name in the `/etc/s6-overlay/s6-rc.d/user/contents.d`
+directory. The format of a *source definition directory* is described in
+[this page](https://skarnet.org/software/s6-rc/s6-rc-compile.html). Note that
+you can define *longruns*, i.e. daemons that will get supervised by s6 just
+like with the `/etc/services.d` method, but also *oneshots*, i.e. programs that
+will run once and exit. Your main service is probably a *longrun*, not a
+*oneshot*: you probably need a daemon to stick around.
+
+The advantage of this new format is that it allows you to define dependencies
+between services: if *B* depends on *A*, then *A* will start first, then *B* will
+start when *A* is ready, and when the container is told to exit, *B* will stop
+first, then *A*. If you have a complex architecture where various processes
+depends on one another, or simply where you have to mix *oneshots* and *longruns*
+in a precise order, this may be for you.
+
+The example above could be rewritten this way:
+
+`/etc/s6-overlay/s6-rc.d/myapp/type`:
+```
+longrun
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp/run`:
+```
+#!/command/execlineb -P
+nginx -g "daemon off;"
+```
+
+`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp`: empty file
+
+We encourage you to switch to the new format, but if you don't need its
+benefits, you can stick with regular service directories in `/etc/services.d`,
+it will work just as well.
+
+
 ### Fixing ownership & permissions
 
-Sometimes it's interesting to fix ownership & permissions before proceeding because, for example, you have mounted/mapped a host folder inside your container. Our overlay provides a way to tackle this issue using files in `/etc/fix-attrs.d`. This is the pattern format followed by fix-attrs files:
+This section describes a functionality from the versions of s6-overlay
+that are **anterior to** 3.0.0.0. fix-attrs is still supported in 3.0.0.0,
+but is **deprecated**, for several reasons: one of them is that it's
+generally not good policy to change ownership dynamically when it can be
+done statically. Another reason is that it doesn't work with USER containers.
+Instead of fix-attrs, we now recommend you to take care of ownership and
+permissions on host mounts *offline, before running the container*. This
+should be done in your Dockerfile, when you have all the needed information.
+
+That said, here is what we wrote for previous versions and that is still
+applicable today (but please stop depending on it):
+
+Sometimes it's interesting to fix ownership & permissions before proceeding because,
+for example, you have mounted/mapped a host folder inside your container. Our overlay
+provides a way to tackle this issue using files in `/etc/fix-attrs.d`.
+This is the pattern format followed by fix-attrs files:
 
 ```
 path recurse account fmode dmode
@@ -261,11 +389,15 @@ Here you have some working examples:
 
 ### Executing initialization And/Or finalization tasks
 
-After fixing attributes (through `/etc/fix-attrs.d/`) and just before starting user provided services up (through `/etc/services.d`) our overlay will execute all the scripts found in `/etc/cont-init.d`, for example:
+Here is the old way of doing it:
+
+After fixing attributes (through `/etc/fix-attrs.d/`) and before starting
+user provided services (through s6-rc or `/etc/services.d`) our overlay will
+execute all the scripts found in `/etc/cont-init.d`, for example:
 
 [`/etc/cont-init.d/02-confd-onetime`](https://github.com/just-containers/nginx-loadbalancer/blob/master/rootfs/etc/cont-init.d/02-confd-onetime):
 ```
-#!/usr/bin/execlineb -P
+#!/command/execlineb -P
 
 with-contenv
 s6-envuidgid nginx
@@ -279,45 +411,87 @@ multisubstitute
 confd --onetime --prefix="${CONFD_PREFIX}" --tmpl-uid="${UID}" --tmpl-gid="${GID}" --tmpl-src="/etc/nginx/nginx.conf.tmpl" --tmpl-dest="/etc/nginx/nginx.conf" --tmpl-check-cmd="${CONFD_CHECK_CMD}" etcd
 ```
 
-### Writing a service script
+This way is still supported. However, there is now a more generic and
+efficient way to do it: writing your oneshot initialization and finalization
+tasks as s6-rc services, by adding service definition directories in
+`/etc/s6-overlay/s6-rc.d` and making them part of the `user` bundle. All
+the information on s6-rc can be found [here](https://skarnet.org/software/s6-rc/)
 
-Creating a supervised service cannot be easier, just create a service directory with the name of your service into `/etc/services.d` and put a `run` file into it, this is the file in which you'll put your long-lived process execution. You're done! If you want to know more about s6 supervision of servicedirs take a look to [`servicedir`](http://skarnet.org/software/s6/servicedir.html) documentation. A simple example would look like this:
+When the container is started, the operations are performed in this order:
 
-`/etc/services.d/myapp/run`:
-```
-#!/usr/bin/execlineb -P
-nginx -g "daemon off;"
-```
+- (deprecated) Attribute fixing is performed according to files in `/etc/fix-attrs.d`.
+- (legacy) One-shot initialization scripts in `/etc/cont-init.d` are run sequentially.
+- Services in the `user` bundle are started by s6-rc, in an order defined by
+dependencies. Services can be oneshots (initialization
+tasks) or longruns (daemons that will run throughout the container's lifetime).
+- (legacy) Longrun services in `/etc/services.d` are started.
+
+When the container is stopped, either because the admin sent a stop command or
+because the CMD exited, the operations are performed in the reverse order:
+
+- (legacy) Longrun services in `/etc/services.d` are stopped.
+- All s6-rc services are stopped, in an order defined by dependencies. For
+oneshots, that means that the `down` script in the source definition directory
+is executed; that's how s6-rc can perform finalization tasks.
+- (legacy) One shot finalization scripts in `/etc/cont-finish.d` are run sequentially.
 
 ### Writing an optional finish script
 
-By default, services created in `/etc/services.d` will automatically restart. If a service should bring the container down, you'll need to write a `finish` script that does that. Here's an example finish script:
+By default, services created in `/etc/services.d` will automatically restart.
+If a service should bring the container down, you should probably run it as
+a CMD instead; but if you'd rather run it as a supervised service, then you'll
+need to write a `finish` script, which will be run when the service is down; to
+make the container stop, the `/run/s6/basedir/bin/halt` command must be invoked.
+Here's an example finish script:
 
 `/etc/services.d/myapp/finish`:
 ```
-#!/usr/bin/execlineb -S0
+#!/command/execlineb -S0
 
-s6-svscanctl -t /var/run/s6/services
+foreground { redirfd -w 1 /run/s6-linux-init-container-results/exitcode echo 0 }
+/run/s6/basedir/bin/halt
 ```
 
-It's possible to do more advanced operations - for example, here's a script from @smebberson that only brings down the service when it crashes:
+The first line of the script writes `0` to the `/run/s6-linux-init-container-results/exitcode` file.
+The second line stops the container. When you stop the container via the `/run/s6/basedir/bin/halt`
+command run from inside the container, `/run/s6-linux-init-container-results/exitcode` is read and
+its contents are used as the exit code for the `docker run` command that launched the container.
+If the file doesn't exist, or if the container is stopped with `docker stop` or another reason,
+that exit code defaults to 0.
+
+It is possible to do more advanced operations in a finish script. For example, here's a script
+from that only brings down the service when it exits nonzero:
 
 `/etc/services.d/myapp/finish`:
 ```
-#!/usr/bin/execlineb -S1
-if { s6-test ${1} -ne 0 }
-if { s6-test ${1} -ne 256 }
-
-s6-svscanctl -t /var/run/s6/services
+#!/command/execlineb -S1
+if { s6-test ${1} -ne 0 -a ${1} -ne 256 }
+/run/s6/basedir/bin/halt
 ```
+
+Note that in general, finish scripts should only be used for local cleanups
+after a daemon dies. If a service is so important that the container needs
+to stop when it dies, we really recommend to run it as the CMD.
 
 ### Logging
 
-Our overlay provides a way to handle logging easily since `s6` already provides logging mechanisms out-of-the-box via [`s6-log`](http://skarnet.org/software/s6/s6-log.html)!. We also provide a helper utility called `logutil-service` to make logging a matter of calling one binary. This helper does the following things:
+Every service can have its dedicated logger. A logger is a s6 service that
+automatically reads from the *stdout* of your service, and logs the data
+to an automatically rotated file in the place you want. Note that daemons
+usually log to stderr, not stdout, so you should probably start your service's
+run script with `exec 2>&1` in shell, or with `fdmove -c 2 1` in execline, in
+order to catch *stderr*.
+
+s6-overlay provides a utility called `logutil-service` which is a wrapper over
+the [`s6-log`](https://skarnet.org/software/s6/s6-log.html) program.
+This helper does the following:
 - read how s6-log should proceed reading the logging script contained in `S6_LOGGING_SCRIPT`
-- drop privileges to the `nobody` user (defaulting to `32768:32768` if it doesn't exist)
+- drop privileges to the `nobody` user (defaulting to `65534:65534` if it doesn't exist)
 - clean all the environments variables
-- initiate logging by executing s6-log :-)
+- execute into s6-log.
+
+s6-log will then run forever, reading data from your service and writing it to
+the directory you specified to `logutil-service`.
 
 Please note:
 - Since the privileges are dropped automatically, there is no need to switch users with `s6-setuidgid`
@@ -325,17 +499,21 @@ Please note:
   - exists, and is writable by the `nobody` user
   - does not exist, but the parent folder is writable by the `nobody` user.
 
-You can create log folders in `cont-init.d` scripts, or create them in your run script. Here, we'll create
-them with `cont-init.d` scripts.
+You can create log folders in `cont-init.d` scripts, or as s6-rc oneshots.
+Here is an example of a logged service `myapp` implemented the old way:
 
-`/etc/cont-init.d/myapp-logfolder`:
+`/etc/cont-init.d/myapp-log-prepare`:
 ```
-#!/bin/sh
+#!/bin/sh -e
 mkdir -p /var/log/myapp
 chown nobody:nogroup /var/log/myapp
+chmod 02755 /var/log/myapp
 ```
 
-This example will send all the log lines present in stdin (following the rules described in `S6_LOGGING_SCRIPT`) to `/var/log/myapp`: 
+`/etc/services.d/myapp/run`:
+#!/bin/sh
+exec 2>&1
+exec mydaemon-in-the-foreground-and-logging-to-stderr
 
 `/etc/services.d/myapp/log/run`:
 ```
@@ -343,58 +521,134 @@ This example will send all the log lines present in stdin (following the rules d
 exec logutil-service /var/log/myapp
 ```
 
-If, for instance, you want to use a fifo instead of stdin as an input, write your log services as follows:
+And here is the same service, myapp, implemented in s6-rc.
 
-`/etc/services.d/myapp/log/run`:
+`/etc/s6-overlay/s6-rc.d/myapp-log-prepare/type`:
+```
+oneshot
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log-prepare/up`:
+```
+if { mkdir -p /var/log/myapp }
+if { chown nobody:nogroup /var/log/myapp }
+chmod 02755 /var/log/myapp
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp/type`:
+```
+longrun
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp/run`:
 ```
 #!/bin/sh
-exec logutil-service -f /var/run/myfifo /var/log/myapp
+exec 2>&1
+exec mydaemon-in-the-foreground-and-logging-to-stderr
 ```
+
+`/etc/s6-overlay/s6-rc.d/myapp/producer-for`:
+```
+myapp-log
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log/type`:
+```
+oneshot
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log/run`:
+```
+#!/bin/sh
+exec logutil-service /var/log/myapp
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log/consumer-for`:
+```
+myapp
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log/dependencies`:
+```
+myapp-log-prepare
+```
+
+`/etc/s6-overlay/s6-rc.d/myapp-log/pipeline-name`:
+```
+myapp-pipeline
+```
+
+`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp-pipeline`: empty file
+
+That's a lot of files! A summary of what it all means is:
+- myapp-log-prepare is a oneshot, preparing the logging directory.
+It is a dependency of myapp-log, so it will be started *before* myapp-log.
+- myapp is a producer for myapp-log and myapp-log is a consumer for myapp,
+so what myapp writes to its stdout will go to myapp-log's stdin. Both
+are longruns, i.e. daemons that will be supervised by s6.
+- The `myapp | myapp-log` pipeline is given a name, `myapp-pipeline`, and
+this name is declared as a part of the `user` bundle, so it will be started
+when the container starts.
+
+It really accomplishes the same things as the `/etc/cont-init.d` plus
+`/etc/services.d` method, but it's a lot cleaner underneath, and can handle
+much more complex dependency graphs, so whenever you get the opportunity,
+we recommend you familiarize yourself with the [s6-rc](https://skarnet.org/software/s6-rc/)
+way of declaring your services and your loggers.
+
 
 ### Dropping privileges
 
-When it comes to executing a service, no matter it's a service or a logging service, a very good practice is to drop privileges before executing it. `s6` already includes utilities to do exactly these kind of things:
+When it comes to executing a service, no matter whether it's a service or a logger,
+a good practice is to drop privileges before executing it.
+`s6` already includes utilities to do exactly these kind of things:
 
 In `execline`:
 
 ```
-#!/usr/bin/execlineb -P
+#!/command/execlineb -P
 s6-setuidgid daemon
 myservice
 ```
 
 In `sh`:
 
-```
+```sh
 #!/bin/sh
 exec s6-setuidgid daemon myservice
 ```
 
-If you want to know more about these utilities, please take a look to: [`s6-setuidgid`](http://skarnet.org/software/s6/s6-setuidgid.html), [`s6-envuidgid`](http://skarnet.org/software/s6/s6-envuidgid.html) and [`s6-applyuidgid`](http://skarnet.org/software/s6/s6-applyuidgid.html).
+If you want to know more about these utilities, please take a look at:
+[`s6-setuidgid`](http://skarnet.org/software/s6/s6-setuidgid.html),
+[`s6-envuidgid`](http://skarnet.org/software/s6/s6-envuidgid.html), and
+[`s6-applyuidgid`](http://skarnet.org/software/s6/s6-applyuidgid.html).
 
 ### Container environment
 
-If you want your custom script to have container environments available just make use of `with-contenv` helper, which will push all of those into your execution environment, for example:
+If you want your custom script to have container environments available:
+you can use the `with-contenv` helper, which will push all of those into your
+execution environment, for example:
 
 `/etc/cont-init.d/01-contenv-example`:
 ```
 #!/usr/bin/with-contenv sh
-echo $MYENV
+env
 ```
 
-This script will output whatever the `MYENV` enviroment variable contains.
+This script will output the contents of your container environment.
 
 ### Read-Only Root Filesystem
 
-Recent versions of Docker allow running containers with a read-only root filesystem. During init stage 2, the overlay modifies permissions for user-provided files in `cont-init.d`, etc. If the root filesystem is read-only, you can set `S6_READ_ONLY_ROOT=1` to inform stage 2 that it should first copy user-provided files to its work area in `/var/run/s6` before attempting to change permissions. 
+Recent versions of Docker allow running containers with a read-only root filesystem.
+If your container is in such a case, you should set `S6_READ_ONLY_ROOT=1` to inform
+s6-overlay that it should not attempt to write to certain areas - instead, it will
+perform copies into a tmpfs mounted on `/run`.
 
-This of course assumes that at least `/var` is backed by a writeable filesystem with execute privileges. This could be done with a `tmpfs` filesystem as follows:
+Note that s6-overlay assumes that:
+- `/run` exists and is writable. If it is not, it will attempt to mount a tmpfs there.
+- `/var/run` is a symbolic link to `/run`, for compatibility with previous versions. If it is not, it will make it so.
 
-```
-docker run -e S6_READ_ONLY_ROOT=1 --read-only --tmpfs /var:rw,exec [image name]
-```
-
-**NOTE**: When using `S6_READ_ONLY_ROOT=1` you should _avoid using symbolic links_ in `fix-attrs.d`, `cont-init.d`, `cont-finish.d`, and `services.d`. Due to limitations of `s6`, symbolic links will be followed when these directories are copied to `/var/run/s6`, resulting in unexpected duplication.
+In general your default docker settings should already provide a suitable tmpfs in `/run`.
 
 ### Customizing `s6` behaviour
 
@@ -405,6 +659,9 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Anything run as a `CMD` is still output to stdout/stderr.
   * **`2`**: Uses an internal `catch-all` logger and persists everything on it, including the output of `CMD`. Absolutely nothing is written to stdout/stderr.
+* `S6_CATCHALL_USER` (default = root): if set, and if `S6_LOGGING` is 1 or 2,
+then the catch-all logger is run as this user, which must be defined in your
+image's `/etc/passwd`. Every bit of privilege separation helps a little with security.
 * `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
   * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
   * **`1`**: Continue but warn with an annoying error message.
@@ -422,38 +679,49 @@ It is possible somehow to tweak `s6` behaviour by providing an already predefine
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 * `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
 
-## Known issues and workarounds
-
 ### syslog
 
-Some software is particularly picky about syslog - it refuses to start
-if syslog isn't available, or refuses to log anywhere besides syslog, etc.
+If software running in your container requires syslog, extract the
+`syslogd-overlay-noarch-3.0.0.0.tar.xz` tarball:
+that will give you a small syslogd emulation. Logs will be found
+under various subdirectories of `/var/log/syslogd`, for instance
+messages will be found in the `/var/log/syslogd/messages/` directory,
+the latest logs being available in the `/var/log/syslogd/messages/current` file.
+Logging directories are used rather than files so that logs can be
+automatically rotated without race conditions (that is a feature of
+[s6-log](https://skarnet.org/software/s6/s6-log.html)).
 
-We have an add-on with a pre-configured instance of
-[socklog](http://smarden.org/socklog/) that saves syslog messages to
-`/var/log/socklog`. It's called the
-[`socklog-overlay`](https://github.com/just-containers/socklog-overlay).
-
-Installation is similar to installing the `s6-overlay` - just download
-and extract a tarball. Logs are automatically rotated, so you never
-have to worry about syslog messages filling up your disk.
+It is recommended to add `syslog` and `sysllog` users to your image, for
+privilege separation; the syslogd emulation processes will run as these users
+if they exist. Otherwise they will default to `32760:32760` and `32761:32761`,
+numeric uids/gids that may already exist on your system.
 
 ## Performance
 
-And what about numbers? `s6-overlay` takes more or less **`904K`** compressed and **`3.4M`** uncompressed, that's very cheap! Although we already provide packaged base images, it is up to you which base image to use. And when it comes to how much time does it take to get supervision tree up and running, it's less than **`100ms`** #3!
+- The noarch and symlinks tarballs are all tiny. The biggest tarball is the
+one that contains the binaries; it's around 660 kB.
+- Uncompressed on a tmpfs, the overlay scripts use about 120 kB, and the
+binaries for x86_64 use about 6.5 MB.
+- We haven't yet measured the time it takes for the container to be up and running
+once you run `docker run`, but you will notice it's fast. Faster than previous
+versions of s6-overlay, with fewer delays. And if you convert your `/etc/cont-init.d`
+scripts to the s6-rc format, they will be able to run in parallel, so you will
+gain even more performance. If you have benchmarks, please send them to us!
+
 
 ## Verifying Downloads
 
-The `s6-overlay` releases are signed using `gpg`, you can import our public key:
+The s6-overlay releases are not yet signed; we will get to it really soon.
+You can import our gpg public key:
 
-```bash
+```sh
 $ curl https://keybase.io/justcontainers/key.asc | gpg --import
 ```
 
-Then verify the downloaded files:
+When we've signed the releases, you can then verify the downloaded files:
 
-```bash
-$ gpg --verify s6-overlay-amd64.tar.gz.sig s6-overlay-amd64.tar.gz
+```sh
+$ gpg --verify s6-overlay-x86_64-3.0.0.0.tar.xz.sig s6-overlay-x86_64-3.0.0.0.tar.xz
 gpg: Signature made Sun 22 Nov 2015 09:11:29 AM CST using RSA key ID BD7BF0DC
 gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 ```
@@ -462,66 +730,44 @@ gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
 
 ### `USER` directive
 
-As of version `2.1.0.0`, `s6-overlay` has preliminary support for running as a user other than `root` with
-some limitations:
+As of version 3.0.0.0, s6-overlay has limited support for running as a user other than `root`:
 
-* `S6_LOGGING` only supports mode 0 (default mode, all logs sent to stdout/stderr).
-* Tools like `fix-attrs`, `logutil-newfifo`, and `logutil-service` are unlikely to work (they rely
-  on being able to change UID).
-* You may want to use a [`Read-Only Root Filesystem`](#read-only-root-filesystem), since that
-  ensures `s6-overlay` copies files into the `/var/run/s6` directory rather than use symlinks.
+* Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
+  on being able to change UIDs).
+* The syslogd emulation will not work.
+
+Generally speaking, if you're running a simple container with a main application and
+one or two support services, you may benefit from the `USER` directive if that is
+your preferred way of running containers. However, if you're running more than a few
+services, or daemons that expect a real system with complete Unix infrastructure,
+then USER is probably not a good idea and you would benefit more from using
+privilege separation between services in your container.
+
 
 ## Releases
 
-Over on the releases tab, we have 6 release variants.
+Over on the releases tab, we have a number of tarballs:
 
-* `s6-overlay-nobin.tar.gz`
-* `s6-overlay-amd64.tar.gz`
-* `s6-overlay-x86.tar.gz`
-* `s6-overlay-armhf.tar.gz`
-* `s6-overlay-arm.tar.gz`
-* `s6-overlay-aarch64.tar.gz`
-
-The "nobin" variant is strictly the scripts of the s6-overlay, with absolutely
-no binaries.
-
-The other releases are named after their intended platform:
-
-* `s6-overlay-amd64.tar.gz` - includes binaries for 64-bit Intel/AMD platforms
-* `s6-overlay-x86.tar.gz` - includes binaries for 32-bit Intel/AMD platforms
-* `s6-overlay-armhf.tar.gz` - includes binaries for 32-bit ARM (hard-float) platforms, ie, Raspberry Pi
-* `s6-overlay-arm.tar.gz` - includes binaries for 32-bit ARM platforms
-* `s6-overlay-aarch64.tar.gz` - includes binaries for 64-bit ARM platforms.
-
-All binaries are statically compiled and should work on any Linux distro.
+* `s6-overlay-noarch-${version}.tar.xz`: the s6-overlay scripts.
+* `s6-overlay-${arch}-${version}.tar.xz`: the binaries for platform *${arch}*.
+They are statically compiled and will work with any Linux distribution.
+* `s6-overlay-symlinks-noarch-${version}.tar.xz`: `/usr/bin` symlinks to the s6-overlay scripts. Totally optional.
+* `s6-overlay-symlinks-arch-${version}.tar.xz`: `/usr/bin` symlinks to the skaware binaries. Totally optional.
+* `syslogd-overlay-noarch-${version}.tar.xz`: the syslogd emulation. Totally optional.
+* `s6-overlay-${version}.tar.xz`: the s6-overlay source. Download it if you want to build s6-overlay yourself.
 
 ## Contributing
 
 Anyway you want! Open issues, open PRs, we welcome all contributors!
 
-## Want to build the overlay on your system?
+## Building the overlay yourself
 
-First create the output folder with its corresponding required permissions:
-```
-mkdir dist
-chmod o+rw dist
-```
-
-Then build from official skaware releases:
-```
-docker build .                                    | \
-tail -n 1 | awk '{ print $3; }'                   | \
-xargs docker run --rm -v `pwd`/dist:/builder/dist
-```
-
-Or use your own release folder:
-```
-docker build .                                                          | \
-tail -n 1 | awk '{ print $3; }'                                         | \
-xargs docker run --rm                                                     \
-  -e SKAWARE_SOURCE=file:///skaware  -v `pwd`/../skaware/dist:/skaware:ro \
-  -v `pwd`/dist:/builder/dist
-```
+- Download the [s6-overlay source].
+- Check the [conf/defaults.mk](https://github.com/just-containers/s6-overlay/blob/master/conf/defaults.mk)
+file for variables you may want to change. Do not modify the file itself.
+- Call `make` followed by your variable assignments. Example: `make ARCH=riscv64-linux-musl`
+to build the overlay for RISCV64.
+- The tarballs will be in the `output` subdirectory, unless you changed the `OUTPUT` variable.
 
 ## Upgrade Notes
 
