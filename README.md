@@ -12,7 +12,7 @@ it will be updated over time.)
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
   - [Writing a service script](#writing-a-service-script)
-  - [Fixing ownership & permissions](#fixing-ownership-permissions)
+  - [Fixing ownership and permissions](#fixing-ownership-and-permissions)
   - [Executing initialization and/or finalization tasks](#executing-initialization-and-or-finalization-tasks)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
   - [Logging](#logging)
@@ -336,7 +336,7 @@ benefits, you can stick with regular service directories in `/etc/services.d`,
 it will work just as well.
 
 
-### Fixing ownership & permissions
+### Fixing ownership and permissions
 
 This section describes a functionality from the versions of s6-overlay
 that are **anterior to** 3.0.0.0. fix-attrs is still supported in 3.0.0.0,
