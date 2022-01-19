@@ -3,4 +3,5 @@ arm-linux-musleabi	genericv7a
 arm-linux-musleabihf	pi1
 i486-linux-musl		i486
 i686-linux-musl		i686
+riscv64-linux-musl	rocket
 x86_64-linux-musl	pc
