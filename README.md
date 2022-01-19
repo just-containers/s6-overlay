@@ -94,7 +94,8 @@ of process supervision and automatically rotated logs.
 
 ## Features
 
-* A simple init process which allows the end-user to execute tasks like initialization (`cont-init.d`), finalization (`cont-finish.d`) and its own services with dependencies between them
+* A simple init process which allows the end-user to execute tasks like initialization (`cont-init.d`),
+finalization (`cont-finish.d`) and their own services with dependencies between them
 * The s6-overlay provides proper `PID 1` functionality
   * You'll never have zombie processes hanging around in your container, they will be properly cleaned up.
 * Multiple processes in a single container
@@ -144,7 +145,7 @@ should work, you can read this article: [How to run s6-svscan as process 1](http
 
 1. **stage 1**: Its purpose is to set up the image to execute the supervision tree which
 will handle all the auxiliary services, and to launch stage 2. Stage 1 is where all the
-black magic happens, all the container setup details that we handle so that you don't
+black magic happens, all the container setup details that we handle for you so that you don't
 have to care about them.
 2. **stage 2**: This is where most of the end-user provided files are meant to be executed:
     1. Execute legacy oneshot user scripts contained in `/etc/cont-init.d`.
@@ -190,7 +191,7 @@ tarball, to make them accessible via `/usr/bin`. It is normally not
 needed, but if you have old user scripts containing shebangs such as
 `#!/usr/bin/execlineb`, installing these symlinks will make them work.
 5. `syslogd-overlay-noarch-3.0.0.0.tar.xz`: this tarball contains
-definition for a `syslogd` service. If you are running daemons that
+definitions for a `syslogd` service. If you are running daemons that
 cannot log to stderr to take advantage of the s6 logging infrastructure,
 but hardcode the use of the old `syslog()` mechanism, you can extract
 this tarball, and your container will run a lightweight emulation of a
@@ -220,7 +221,7 @@ From there, you have a couple of options:
 
 * If you want the container to exit when your program exits: run the program as your image's `CMD`.
 * If you want the container to run until told to exit, and your program to be supervised by s6:
-write a service script
+write a service script for your program.
 
 ### Using `CMD`
 
@@ -420,7 +421,7 @@ This way is still supported. However, there is now a more generic and
 efficient way to do it: writing your oneshot initialization and finalization
 tasks as s6-rc services, by adding service definition directories in
 `/etc/s6-overlay/s6-rc.d` and making them part of the `user` bundle. All
-the information on s6-rc can be found [here](https://skarnet.org/software/s6-rc/)
+the information on s6-rc can be found [here](https://skarnet.org/software/s6-rc/).
 
 When the container is started, the operations are performed in this order:
 
@@ -476,7 +477,7 @@ if { s6-test ${1} -ne 0 -a ${1} -ne 256 }
 
 Note that in general, finish scripts should only be used for local cleanups
 after a daemon dies. If a service is so important that the container needs
-to stop when it dies, we really recommend to run it as the CMD.
+to stop when it dies, we really recommend runnning it as the CMD.
 
 ### Logging
 
@@ -516,9 +517,11 @@ chmod 02755 /var/log/myapp
 ```
 
 `/etc/services.d/myapp/run`:
+```sh
 #!/bin/sh
 exec 2>&1
 exec mydaemon-in-the-foreground-and-logging-to-stderr
+```
 
 `/etc/services.d/myapp/log/run`:
 ```
