@@ -720,7 +720,7 @@ The s6-overlay releases are not yet signed; we will get to it really soon.
 You can import our gpg public key:
 
 ```sh
-$ curl https://keybase.io/justcontainers/key.asc | gpg --import
+$ gpg --keyserver hkps://keyserver.ubuntu.com --recv 337EE704693C17EF
 ```
 
 When we've signed the releases, you can then verify the downloaded files:
