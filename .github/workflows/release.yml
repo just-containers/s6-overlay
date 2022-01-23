@@ -16,10 +16,29 @@ jobs:
         run: |
           echo '::set-output name=s6_arch::'$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")')
 
+      - run: |
+          . conf/versions
+          printf "Binary releases include the following skaware packages:\n\n" > release-notes.md
+          printf "| Software | Version |\n" >> release-notes.md
+          printf "| -------- |:-------:|\n" >> release-notes.md
+          printf "| BearSSL | %s \n" "${BEARSSL_VERSION}" >> release-notes.md
+          printf "| skalibs | %s \n" "${SKALIBS_VERSION}" >> release-notes.md
+          printf "| execline | %s \n" "${EXECLINE_VERSION}" >> release-notes.md
+          printf "| s6 | %s \n" "${S6_VERSION}" >> release-notes.md
+          printf "| s6-rc | %s \n" "${S6_RC_VERSION}" >> release-notes.md
+          printf "| s6-linux-init | %s \n" "${S6_LINUX_INIT_VERSION}" >> release-notes.md
+          printf "| s6-portable-utils | %s \n" "${S6_PORTABLE_UTILS_VERSION}" >> release-notes.md
+          printf "| s6-linux-utils | %s \n" "${S6_LINUX_UTILS_VERSION}" >> release-notes.md
+          printf "| s6-dns | %s \n" "${S6_DNS_VERSION}" >> release-notes.md
+          printf "| s6-networking | %s \n" "${S6_NETWORKING_VERSION}" >> release-notes.md
+          printf "| s6-overlay-helpers | %s \n" "${S6_OVERLAY_HELPERS_VERSION}" >> release-notes.md
+          printf "\n" >> release-notes.md
+
       - uses: ncipollo/release-action@v1
         with:
           omitBodyDuringUpdate: true
           allowUpdates: true
+          bodyFile: release-notes.md
 
   release:
     needs: [ setup ]
