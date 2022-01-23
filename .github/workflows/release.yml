@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - '*'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.s6_arch }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: matrix
+        run: |
+          echo '::set-output name=s6_arch::'$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")')
+
+      - uses: ncipollo/release-action@v1
+        with:
+          omitBodyDuringUpdate: true
+          allowUpdates: true
+
+  release:
+    needs: [ setup ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        s6_arch: ${{fromJson(needs.setup.outputs.matrix)}}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # normalize version (remove 'git/refs/', remove leading 'v')
+      - run: |
+          VERSION="${GITHUB_REF##*/}"
+          VERSION="${VERSION#v}"
+          echo "S6_VERSION=${VERSION}" >> $GITHUB_ENV
+
+      # create short arch name
+      - run: |
+          SARCH=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
+          if [ "${{matrix.s6_arch}}" = "arm-linux-musleabihf" ] ; then
+            SARCH="armhf"
+          fi
+          echo "S6_ARCH=${SARCH}" >> $GITHUB_ENV
+
+      - run: |
+          make ARCH="${{ matrix.s6_arch }}" VERSION="${{ env.S6_VERSION }}"
+
+      # by default, arm-linux-musleabi and arm-linux-musleabihf produce tarballs named "arm",
+      # move arm-linux-musleabihf to "armhf" to distinguish
+      - run: |
+          cd output ; for f in s6-overlay-arm* ; do mv "$f" "s6-overlay-armhf${f#s6-overlay-arm}" ; done
+        if: ${{ matrix.s6_arch == 'arm-linux-musleabihf' }}
+
+      - run: |
+          cd output ; for f in *.tar* ; do sha256sum "$f" > "$f".sha256 ; done
+
+      # output arch-specific binary
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "output/s6-overlay-${{ env.S6_ARCH }}*"
+          omitBodyDuringUpdate: true
+          allowUpdates: true
+
+      - run: |
+          rm -v output/s6-overlay-${{ env.S6_ARCH }}*
+
+      # upload symlinks/non-arch on x86_64 only
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "output/*.tar.*"
+          omitBodyDuringUpdate: true
+          allowUpdates: true
+        if: ${{ matrix.s6_arch == 'x86_64-linux-musl' }}

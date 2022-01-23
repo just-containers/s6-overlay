@@ -39,14 +39,16 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
+ARG S6_OVERLAY_VERSION=3.0.0.0-1
+
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 CMD ["/usr/sbin/nginx"]
 
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz
 ENTRYPOINT ["/init"]
 ```
 
@@ -716,19 +718,15 @@ gain even more performance. If you have benchmarks, please send them to us!
 
 ## Verifying Downloads
 
-The s6-overlay releases are not yet signed; we will get to it really soon.
-You can import our gpg public key:
+The s6-overlay releases have a checksum files you can use to verify
+the download using SHA256:
 
 ```sh
-$ curl https://keybase.io/justcontainers/key.asc | gpg --import
-```
-
-When we've signed the releases, you can then verify the downloaded files:
-
-```sh
-$ gpg --verify s6-overlay-x86_64-3.0.0.0.tar.xz.sig s6-overlay-x86_64-3.0.0.0.tar.xz
-gpg: Signature made Sun 22 Nov 2015 09:11:29 AM CST using RSA key ID BD7BF0DC
-gpg: Good signature from "Just Containers <just-containers@jrjrtech.com>"
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz.sha256 /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz.sha256 /tmp
+RUN cd /tmp && sha256sum -c *.sha256
 ```
 
 ## Notes
