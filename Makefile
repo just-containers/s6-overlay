@@ -6,7 +6,7 @@ ifeq ($(strip $(OUTPUT)),)
 OUTPUT := output
 endif
 OUTPUT := $(abspath $(OUTPUT))
-HW := $(firstword $(subst -, ,$(ARCH)))
+HW := $(if $(findstring $(ARCH),arm-linux-musleabihf),armhf,$(firstword $(subst -, ,$(ARCH))))
 
 include conf/versions
 include mk/toolchain.mk
