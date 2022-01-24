@@ -636,7 +636,7 @@ execution environment, for example:
 
 `/etc/cont-init.d/01-contenv-example`:
 ```sh
-#!/usr/bin/with-contenv sh
+#!/command/with-contenv sh
 env
 ```
 
