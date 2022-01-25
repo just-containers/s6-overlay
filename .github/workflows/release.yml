@@ -58,20 +58,14 @@ jobs:
 
       # create short arch name
       - run: |
-          SARCH=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
+          HW=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
           if [ "${{matrix.s6_arch}}" = "arm-linux-musleabihf" ] ; then
-            SARCH="armhf"
+            HW="armhf"
           fi
-          echo "S6_ARCH=${SARCH}" >> $GITHUB_ENV
+          echo "S6_HW=${HW}" >> $GITHUB_ENV
 
       - run: |
           make ARCH="${{ matrix.s6_arch }}" VERSION="${{ env.S6_VERSION }}"
-
-      # by default, arm-linux-musleabi and arm-linux-musleabihf produce tarballs named "arm",
-      # move arm-linux-musleabihf to "armhf" to distinguish
-      - run: |
-          cd output ; for f in s6-overlay-arm* ; do mv "$f" "s6-overlay-armhf${f#s6-overlay-arm}" ; done
-        if: ${{ matrix.s6_arch == 'arm-linux-musleabihf' }}
 
       - run: |
           cd output ; for f in *.tar* ; do sha256sum "$f" > "$f".sha256 ; done
@@ -79,12 +73,12 @@ jobs:
       # output arch-specific binary
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "output/s6-overlay-${{ env.S6_ARCH }}*"
+          artifacts: "output/s6-overlay-${{ env.S6_HW }}*"
           omitBodyDuringUpdate: true
           allowUpdates: true
 
       - run: |
-          rm -v output/s6-overlay-${{ env.S6_ARCH }}*
+          rm -v output/s6-overlay-${{ env.S6_HW }}*
 
       # upload symlinks/non-arch on x86_64 only
       - uses: ncipollo/release-action@v1
