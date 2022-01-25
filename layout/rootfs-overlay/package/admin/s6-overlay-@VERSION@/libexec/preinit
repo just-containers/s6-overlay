@@ -38,9 +38,10 @@ if test -L /var/run && test "`s6-linkname -f /var/run`" = /run ; then : ; else
   s6-ln -s /run /var/run
 fi
 
-# /run/s6 is recreated every time.
-s6-rmrf /run/s6
-s6-mkdir -m 0755 /run/s6
+# Clean up in case /run hasn't been wiped or USER has changed
+s6-rmrf /run/s6 /run/service /run/uncaught-logs /run/s6-rc*
+s6-mkdir -m 0755 /run/s6 /run/service
 if test "0$UID" -ne 0 ; then
   s6-chown -U -- /run/s6
+  s6-chown -U -- /run/service
 fi
