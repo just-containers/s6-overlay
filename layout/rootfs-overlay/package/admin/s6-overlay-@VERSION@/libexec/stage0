@@ -66,9 +66,12 @@ fi
 
 s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $stampopt $dumpopt $logopt $loguseropt $graceopt $syncopt -- "$basedir"
 
-if test -z "$dumpopt" ; then
+if test -n "$dumpopt" ; then
+  s6-rmrf /run/s6/container_environment/PATH
+else
   s6-rename "$basedir/env" "$basedir/env.orig"
   s6-dumpenv "$basedir/env"
+  s6-rmrf "$basedir/env/PATH"
   for file in `s6-ls "$basedir/env.orig"` ; do
     s6-hiercopy "$basedir/env.orig/$file" "$basedir/env/$file"
   done
