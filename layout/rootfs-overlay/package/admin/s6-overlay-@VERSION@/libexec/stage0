@@ -77,4 +77,6 @@ else
   done
 fi
 
+pwd > /run/s6/workdir
+
 exec "$basedir/bin/init" "$@"

@@ -30,6 +30,7 @@ if test "$r" -ne 0 && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b
 fi
 
 if test "$#" -ne 0 ; then
+  cd `s6-cat < /run/s6/workdir`
   set +e
   arg0=`printcontenv S6_CMD_ARG0`
   $arg0 "$@"
