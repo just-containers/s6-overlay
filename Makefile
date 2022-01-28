@@ -61,6 +61,7 @@ TMPDIR := $(OUTPUT)/rootfs-overlay-noarch.tmp
 
 $(OUTPUT)/rootfs-overlay-noarch/init: layout/rootfs-overlay/init
 	exec rm -rf $(TMPDIR)
+	exec mkdir -p $(OUTPUT)
 	exec cp -a layout/rootfs-overlay $(TMPDIR)
 	find $(TMPDIR) -type f -name .empty -print | xargs rm -f --
 	find $(TMPDIR) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
@@ -95,6 +96,7 @@ TMPDIR := $(OUTPUT)/syslogd-overlay-noarch.tmp
 
 $(OUTPUT)/syslogd-overlay-noarch/etc/s6-overlay/s6-rc.d/syslogd/run: layout/syslogd-overlay/etc/s6-overlay/s6-rc.d/syslogd/run
 	exec rm -rf $(TMPDIR)
+	exec mkdir -p $(OUTPUT)
 	exec cp -a layout/syslogd-overlay $(TMPDIR)
 	find $(TMPDIR) -type f -name .empty -print | xargs rm -f --
 	find $(TMPDIR) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
