@@ -57,17 +57,17 @@ $(OUTPUT)/s6-overlay-symlinks-arch-$(VERSION).tar.xz: symlinks-overlay-arch
 rootfs-overlay-noarch: $(OUTPUT)/rootfs-overlay-noarch/init
 rootfs-overlay-noarch-tarball: $(OUTPUT)/s6-overlay-noarch-$(VERSION).tar.xz
 
-TMPDIR := $(OUTPUT)/rootfs-overlay-noarch.tmp
+TMPDIR1 := $(OUTPUT)/rootfs-overlay-noarch.tmp
 
 $(OUTPUT)/rootfs-overlay-noarch/init: layout/rootfs-overlay/init
-	exec rm -rf $(TMPDIR)
+	exec rm -rf $(TMPDIR1)
 	exec mkdir -p $(OUTPUT)
-	exec cp -a layout/rootfs-overlay $(TMPDIR)
-	find $(TMPDIR) -type f -name .empty -print | xargs rm -f --
-	find $(TMPDIR) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
-	find $(TMPDIR) -type f -size +0c -print | xargs sed -i -e 's|@SHEBANGDIR@|$(SHEBANGDIR)|g; s/@VERSION@/$(VERSION)/g;' --
-	exec ln -s s6-overlay-$(VERSION) $(TMPDIR)/package/admin/s6-overlay
-	exec mv -f $(TMPDIR) $(OUTPUT)/rootfs-overlay-noarch
+	exec cp -a layout/rootfs-overlay $(TMPDIR1)
+	find $(TMPDIR1) -type f -name .empty -print | xargs rm -f --
+	find $(TMPDIR1) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
+	find $(TMPDIR1) -type f -size +0c -print | xargs sed -i -e 's|@SHEBANGDIR@|$(SHEBANGDIR)|g; s/@VERSION@/$(VERSION)/g;' --
+	exec ln -s s6-overlay-$(VERSION) $(TMPDIR1)/package/admin/s6-overlay
+	exec mv -f $(TMPDIR1) $(OUTPUT)/rootfs-overlay-noarch
 
 $(OUTPUT)/s6-overlay-noarch-$(VERSION).tar.xz: rootfs-overlay-noarch
 	exec rm -f $@.tmp
@@ -92,16 +92,16 @@ $(OUTPUT)/s6-overlay-symlinks-noarch-$(VERSION).tar.xz: symlinks-overlay-noarch
 syslogd-overlay-noarch: $(OUTPUT)/syslogd-overlay-noarch/etc/s6-overlay/s6-rc.d/syslogd/run
 syslogd-overlay-noarch-tarball: $(OUTPUT)/syslogd-overlay-noarch-$(VERSION).tar.xz
 
-TMPDIR := $(OUTPUT)/syslogd-overlay-noarch.tmp
+TMPDIR2 := $(OUTPUT)/syslogd-overlay-noarch.tmp
 
 $(OUTPUT)/syslogd-overlay-noarch/etc/s6-overlay/s6-rc.d/syslogd/run: layout/syslogd-overlay/etc/s6-overlay/s6-rc.d/syslogd/run
-	exec rm -rf $(TMPDIR)
+	exec rm -rf $(TMPDIR2)
 	exec mkdir -p $(OUTPUT)
-	exec cp -a layout/syslogd-overlay $(TMPDIR)
-	find $(TMPDIR) -type f -name .empty -print | xargs rm -f --
-	find $(TMPDIR) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
-	find $(TMPDIR) -type f -size +0c -print | xargs sed -i -e 's|@SHEBANGDIR@|$(SHEBANGDIR)|g; s/@VERSION@/$(VERSION)/g;' --
-	exec mv -f $(TMPDIR) $(OUTPUT)/syslogd-overlay-noarch
+	exec cp -a layout/syslogd-overlay $(TMPDIR2)
+	find $(TMPDIR2) -type f -name .empty -print | xargs rm -f --
+	find $(TMPDIR2) -name '*@VERSION@*' -print | while read name ; do mv -f "$$name" `echo "$$name" | sed -e 's/@VERSION@/$(VERSION)/'` ; done
+	find $(TMPDIR2) -type f -size +0c -print | xargs sed -i -e 's|@SHEBANGDIR@|$(SHEBANGDIR)|g; s/@VERSION@/$(VERSION)/g;' --
+	exec mv -f $(TMPDIR2) $(OUTPUT)/syslogd-overlay-noarch
 
 $(OUTPUT)/syslogd-overlay-noarch-$(VERSION).tar.xz: syslogd-overlay-noarch
 	exec rm -f $@.tmp
