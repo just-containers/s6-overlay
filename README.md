@@ -9,6 +9,7 @@
 - [Usage](#usage)
   - [Using `CMD`](#using-cmd)
   - [Writing a service script](#writing-a-service-script)
+  - [Setting the exit code of the container to the exit code of your main service](#setting-the-exit-code-of-the-container-to-the-exit-code-of-your-main-service)
   - [Fixing ownership and permissions](#fixing-ownership-and-permissions)
   - [Executing initialization and finalization tasks](#executing-initialization-and-finalization-tasks)
   - [Writing an optional finish script](#writing-an-optional-finish-script)
@@ -340,6 +341,58 @@ We encourage you to switch to the new format, but if you don't need its
 benefits, you can stick with regular service directories in `/etc/services.d`,
 it will work just as well.
 
+### Setting the exit code of the container to the exit code of your main service
+
+If you run your main service as a CMD, you have nothing to do: when your CMD
+exits, or when you run `docker stop`, the container will naturally exit with the
+same exit code as your service. (Be aware, however, that in the `docker stop`
+case, your service will get a SIGTERM, in which case the exit code will entirely
+depend on how your service handles it - it could trap it and exit 0, trap it and
+exit something else, or not trap it and let the shell exit its own code for it -
+normally 130.)
+
+If you run your main service as a supervised service, however, things are
+different, and you need to tell the container what code to exit with when you
+send it a `docker stop` command. To do that, you need to write a `finish` script:
+
+- If your service is a legacy service in `/etc/services.d`, you need an
+executable `/etc/services.d/myapp/finish` script.
+- If your service is an s6-rc one, you need a
+`/etc/s6-overlay/s6-rc.d/myapp/finish` file containing your script (the
+file may or may not be executable).
+
+This `finish` script will be run when your service exits, and will take
+two arguments:
+
+- The first argument will be the exit code of your service, or 256 if
+your service was killed by an uncaught signal.
+- The second argument is only meaningful if your service was killed by
+an uncaught signal, and contains the number of said signal.
+
+In the `finish` script, you need to write the container exit code you
+want to the `/run/s6-linux-init-container-results/exitcode` file - and
+that's it.
+
+For instance, the `finish` script for the `myapp` service above could
+be something like this:
+```sh
+#!/bin/sh
+
+if test "$1" -eq 256 ; then
+  e = $((128 + $2))
+else
+  e = "$1"
+fi
+
+echo "$e" > /run/s6-linux-init-container-results/exitcode
+```
+When you send a `docker stop` command to your container, the `myapp`
+service will be killed and this script will be run; it will write
+either `myapp`'s exit code (if `myapp` catches the TERM signal) or
+130 (if `myapp` does not catch the TERM signal) to the special
+`/run/s6-linux-init-container-results/exitcode` file, which will
+be read by s6-overlay at the end of the container shutdown procedure,
+and your container will exit with that value.
 
 ### Fixing ownership and permissions
 
