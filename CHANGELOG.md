@@ -6,6 +6,13 @@ Please view the git log to see all the minor changes made to the code. This docu
 
 ## Major changes
 
+### Version 3.1.0.0
+
+* `/etc/s6-overlay/config/global_path` isn't provided or taken into
+account anymore. Instead, the initial value of PATH for all the services
+is read from the `S6_GLOBAL_PATH` environment variable, that you can set
+in the Dockerfile.
+
 ### Version 3.0.0.0
 
 * Completely revamp the build system and the installation system.

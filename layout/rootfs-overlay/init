@@ -20,7 +20,9 @@ addpath () {
   PATH="${x}:$PATH"
 }
 
-if ! read PATH < /etc/s6-overlay/config/global_path ; then
+if test -n "$S6_GLOBAL_PATH" ; then
+  PATH=$S6_GLOBAL_PATH
+else
   PATH=/bin
 fi
 

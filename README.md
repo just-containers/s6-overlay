@@ -39,7 +39,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.0.0.0-1
+ARG S6_OVERLAY_VERSION=3.1.0.0-1
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -166,30 +166,30 @@ need the first two, and the other ones are extras you can use at your
 convenience.
 
 Note that this documentation may not be quite up-to-date and you may need
-to replace `3.0.0.0` with the latest version of s6-overlay. :-)
+to replace `3.1.0.0` with the latest version of s6-overlay. :-)
 
-1. `s6-overlay-noarch-3.0.0.0.tar.xz`: this tarball contains the scripts
+1. `s6-overlay-noarch-3.1.0.0.tar.xz`: this tarball contains the scripts
 implementing the overlay. We call it "noarch" because it is architecture-
 independent: it only contains scripts and other text files. Everyone who
 wants to run s6-overlay needs to extract this tarball.
-2. `s6-overlay-x86_64-3.0.0.0.tar.xz`: replace `x86_64` with your
+2. `s6-overlay-x86_64-3.1.0.0.tar.xz`: replace `x86_64` with your
 system's architecture. This tarball contains all the necessary binaries
 from the s6 ecosystem, all linked statically and out of the way of
 your image's binaries. Unless you know for sure that your image already
 comes with all the packages providing the binaries used in the overlay,
 you need to extract this tarball.
-3. `s6-overlay-symlinks-noarch-3.0.0.0.tar.xz`: this tarball contains
+3. `s6-overlay-symlinks-noarch-3.1.0.0.tar.xz`: this tarball contains
 symlinks to the s6-overlay scripts so they are accessible via `/usr/bin`.
 It is normally not needed, all the scripts are accessible via the PATH
 environment variable, but if you have old user scripts containing
 shebangs such as `#!/usr/bin/with-contenv`, installing these symlinks
 will make them work.
-4. `s6-overlay-symlinks-arch-3.0.0.0.tar.xz`: this tarball contains
+4. `s6-overlay-symlinks-arch-3.1.0.0.tar.xz`: this tarball contains
 symlinks to the binaries from the s6 ecosystem provided by the second
 tarball, to make them accessible via `/usr/bin`. It is normally not
 needed, but if you have old user scripts containing shebangs such as
 `#!/usr/bin/execlineb`, installing these symlinks will make them work.
-5. `syslogd-overlay-noarch-3.0.0.0.tar.xz`: this tarball contains
+5. `syslogd-overlay-noarch-3.1.0.0.tar.xz`: this tarball contains
 definitions for a `syslogd` service. If you are running daemons that
 cannot log to stderr to take advantage of the s6 logging infrastructure,
 but hardcode the use of the old `syslog()` mechanism, you can extract
@@ -200,10 +200,10 @@ To install those tarballs, add lines to your Dockerfile that correspond
 to the functionality you want to install. For instance, most people would
 use the following:
 ```
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch-3.1.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.1.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64-3.1.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.1.0.0.tar.xz
 ```
 
 ## Usage
@@ -234,10 +234,10 @@ For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-noarch-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.0.0.0.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.0.0.0/s6-overlay-x86_64-3.0.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.0.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch-3.1.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.1.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64-3.1.0.0.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.1.0.0.tar.xz
 ENTRYPOINT ["/init"]
 ```
 
@@ -344,7 +344,7 @@ it will work just as well.
 ### Fixing ownership and permissions
 
 This section describes a functionality from the versions of s6-overlay
-that are **anterior to** 3.0.0.0. fix-attrs is still supported in 3.0.0.0,
+that are **anterior to** 3.1.0.0. fix-attrs is still supported in 3.1.0.0,
 but is **deprecated**, for several reasons: one of them is that it's
 generally not good policy to change ownership dynamically when it can be
 done statically. Another reason is that it doesn't work with USER containers.
@@ -661,7 +661,13 @@ In general your default docker settings should already provide a suitable tmpfs 
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
 
-* `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into noop.
+* `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into a nop.
+* `S6_GLOBAL_PATH` (default = `/command:/usr/bin:/bin`):
+this is the default PATH that all the services in the container,
+including the CMD, will have. Set this variable if you have a lot
+of services that depend on binaries stored in another directory, e.g.
+`/usr/sbin`. Note that `/command`, `/usr/bin` and `/bin` will always
+be added to that path if they're not already in the one you provide.
 * `S6_LOGGING` (default = 0): 
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Anything run as a `CMD` is still output to stdout/stderr.
@@ -693,7 +699,7 @@ enough so that your scripts have time to finish without s6-overlay interrupting 
 ### syslog
 
 If software running in your container requires syslog, extract the
-`syslogd-overlay-noarch-3.0.0.0.tar.xz` tarball:
+`syslogd-overlay-noarch-3.1.0.0.tar.xz` tarball:
 that will give you a small syslogd emulation. Logs will be found
 under various subdirectories of `/var/log/syslogd`, for instance
 messages will be found in the `/var/log/syslogd/messages/` directory,
@@ -737,7 +743,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.0.0.0, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.1.0.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
