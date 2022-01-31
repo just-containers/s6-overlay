@@ -18,7 +18,7 @@ jobs:
 
       - run: |
           . conf/versions
-          printf "Binary releases include the following skaware packages:\n\n" > release-notes.md
+          printf "Binary releases include the following packages:\n\n" > release-notes.md
           printf "| Software | Version |\n" >> release-notes.md
           printf "| -------- |:-------:|\n" >> release-notes.md
           printf "| BearSSL | %s \n" "${BEARSSL_VERSION}" >> release-notes.md
