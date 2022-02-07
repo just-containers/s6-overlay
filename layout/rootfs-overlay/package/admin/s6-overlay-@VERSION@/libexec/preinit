@@ -8,6 +8,18 @@
 
 prog=/package/admin/s6-overlay/libexec/preinit
 
+checknoexec () {
+  IFS=,
+  set -- $1
+  IFS=
+  while test "$#" -gt 0 ; do
+    if test "$1" = noexec ; then
+      return 0
+    fi
+    shift
+  done
+  return 1
+}
 
 # Ensure /run is writable
 if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
@@ -17,9 +29,29 @@ if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
     exit 100
   fi
   if : > '/run/test of writability' 2>/dev/null ; then
-    echo "$prog: info: writable /run. Remounting exec just in case." 1>&2
+    echo "$prog: info: writable /run. Checking for executability." 1>&2
     s6-rmrf '/run/test of writability'
-    s6-mount -o remount,rw,exec tmpfs /run || :
+    if ! s6-mount -o remount,rw,exec tmpfs /run 2>/dev/null ; then
+      notfound=true
+      while read these filesystem type options please ; do
+        if test $filesystem = /run ; then
+          notfound=false
+          if checknoexec "$options" ; then
+            echo "$prog: warning: your container manager pre-mounts run with \
+the incorrect noexec option, which s6-overlay cannot work with; expect /init \
+to crash soon. To fix the issue, either pre-mount /run with the exec option, \
+or as a workaround give this container the CAP_SYS_ADMIN capability so \
+s6-overlay can fix it at run time."
+          fi
+          break
+        fi
+      done < /proc/mounts
+      if $notfound ; then
+        echo "$prog: warning: unable to find /run in /proc/mounts, check that \
+your container manager pre-mounts /proc, and that /run is a tmpfs. The container \
+is likely to crash soon, if /run is (incorrectly) mounted noexec."
+      fi
+    fi
   else
     echo "$prog: info: creating a tmpfs on /run" 1>&2
     s6-mount -wt tmpfs -o exec,mode=0755 tmpfs /run
