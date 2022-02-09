@@ -1,6 +1,7 @@
 aarch64-linux-musl	pi4
 arm-linux-musleabi	genericv7a
 arm-linux-musleabihf	pi1
+i386-linux-musl     i386
 i486-linux-musl		i486
 i686-linux-musl		i686
 riscv64-linux-musl	rocket
