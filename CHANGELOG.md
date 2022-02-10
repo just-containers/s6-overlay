@@ -29,8 +29,8 @@ in the Dockerfile.
 still supported; under the hood, they're run as s6-rc services.
     * A `user` bundle is provided for users to put all their services in.
     * All script needs to have execution permission in beforehand. Previously this was not required.
-    * The `PATH` environment variable available for all S6-executed scripts, including `CMD`, is now `/command:/usr/bin:/bin`. Previously it used the container's `PATH`.
-    * `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` is now taken into account even when `CMD` is unset.
+    * The `PATH` environment variable available for all S6-executed scripts, including `CMD`, is now taken from the contents of `/etc/s6-overlay/config/global_path` (which defaults to `/command:/usr/bin:/bin`). Previously it used to inherit the container's `PATH`.
+    * `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` is now taken into account even when `CMD` is unset. Previously it was only applicable when `CMD` was set.
 * Move binaries out of the way.
   * All skaware is installed under `/package` and accessible via `/command`.
   * All binaries are accessed via PATH resolution, making it transparent.
