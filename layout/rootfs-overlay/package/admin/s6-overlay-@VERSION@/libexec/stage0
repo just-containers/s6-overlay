@@ -68,7 +68,11 @@ s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-ove
 
 if test -n "$dumpopt" ; then
   s6-rmrf /run/s6/container_environment/PATH
-  s6-chmod 0755 /run/s6/container_environment
+  if test -d /run/s6/container_environment ; then
+    s6-chmod 0755 /run/s6/container_environment
+  else
+    s6-mkdir -m 0755 /run/s6/container_environment
+  fi
 else
   s6-rename "$basedir/env" "$basedir/env.orig"
   s6-dumpenv "$basedir/env"
