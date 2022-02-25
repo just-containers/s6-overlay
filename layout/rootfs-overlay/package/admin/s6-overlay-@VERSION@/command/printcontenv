@@ -6,9 +6,9 @@ if test "$#" -eq 0 ; then
 fi
 
 if test "0$S6_KEEP_ENV" -ne 0 ; then
-  eval var=\$$1
+  eval var=\"\$$1\"
   if test -z "$var" ; then
-    return 1
+    exit 1
   else
     exec s6-echo -- "$var"
   fi
