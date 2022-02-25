@@ -2,6 +2,10 @@
 
 top="$1" ; shift
 
+if test -d /run/s6/container_environment ; then
+  s6-chmod 0755 /run/s6/container_environment
+fi
+
 if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
   etc="/etc/cont-profile.d/$profile"
 else
