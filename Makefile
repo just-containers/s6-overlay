@@ -26,7 +26,7 @@ all: rootfs-overlay-arch-tarball symlinks-overlay-arch-tarball rootfs-overlay-no
 
 .PHONY: rootfs-overlay-arch rootfs-overlay-arch-tarball
 rootfs-overlay-arch: $(OUTPUT)/rootfs-overlay-$(ARCH)/package/admin/execline/command/execlineb
-rootfs-overlay-arch-tarball: $(OUTPUT)/s6-overlay-$(HW)-$(VERSION).tar.xz
+rootfs-overlay-arch-tarball: $(OUTPUT)/s6-overlay-$(HW).tar.xz
 
 $(OUTPUT)/rootfs-overlay-$(ARCH)/package/admin/execline/command/execlineb: skaware-install
 	exec rm -rf $(OUTPUT)/rootfs-overlay-$(ARCH)
@@ -34,28 +34,28 @@ $(OUTPUT)/rootfs-overlay-$(ARCH)/package/admin/execline/command/execlineb: skawa
 	exec cp -a $(OUTPUT)/staging-$(ARCH)/package $(OUTPUT)/staging-$(ARCH)/command $(OUTPUT)/rootfs-overlay-$(ARCH)/
 	exec rm -rf $(OUTPUT)/rootfs-overlay-$(ARCH)/package/*/*/include $(OUTPUT)/rootfs-overlay-$(ARCH)/package/*/*/library
 
-$(OUTPUT)/s6-overlay-$(HW)-$(VERSION).tar.xz: rootfs-overlay-arch
+$(OUTPUT)/s6-overlay-$(HW).tar.xz: rootfs-overlay-arch
 	exec rm -f $@.tmp
 	cd $(OUTPUT)/rootfs-overlay-$(ARCH) && tar -Jcvf $@.tmp --owner=0 --group=0 --numeric-owner .
 	exec mv -f $@.tmp $@
 
 .PHONY: symlinks-overlay-arch symlinks-overlay-arch-tarball
 symlinks-overlay-arch: $(OUTPUT)/symlinks-overlay-arch/usr/bin/execlineb
-symlinks-overlay-arch-tarball: $(OUTPUT)/s6-overlay-symlinks-arch-$(VERSION).tar.xz
+symlinks-overlay-arch-tarball: $(OUTPUT)/s6-overlay-symlinks-arch.tar.xz
 
 $(OUTPUT)/symlinks-overlay-arch/usr/bin/execlineb: rootfs-overlay-arch
 	exec rm -rf $(OUTPUT)/symlinks-overlay-arch
 	exec mkdir -p $(OUTPUT)/symlinks-overlay-arch/usr/bin
 	for i in `ls -1 $(OUTPUT)/rootfs-overlay-$(ARCH)/command` ; do ln -s "../../command/$$i" $(OUTPUT)/symlinks-overlay-arch/usr/bin/ ; done
 
-$(OUTPUT)/s6-overlay-symlinks-arch-$(VERSION).tar.xz: symlinks-overlay-arch
+$(OUTPUT)/s6-overlay-symlinks-arch.tar.xz: symlinks-overlay-arch
 	exec rm -f $@.tmp
 	cd $(OUTPUT)/symlinks-overlay-arch && tar -Jcvf $@.tmp --owner=0 --group=0 --numeric-owner .
 	exec mv -f $@.tmp $@
 
 .PHONY: rootfs-overlay-noarch rootfs-overlay-noarch-tarball
 rootfs-overlay-noarch: $(OUTPUT)/rootfs-overlay-noarch/init
-rootfs-overlay-noarch-tarball: $(OUTPUT)/s6-overlay-noarch-$(VERSION).tar.xz
+rootfs-overlay-noarch-tarball: $(OUTPUT)/s6-overlay-noarch.tar.xz
 
 TMPDIR1 := $(OUTPUT)/rootfs-overlay-noarch.tmp
 
@@ -69,28 +69,28 @@ $(OUTPUT)/rootfs-overlay-noarch/init: layout/rootfs-overlay/init
 	exec ln -s s6-overlay-$(VERSION) $(TMPDIR1)/package/admin/s6-overlay
 	exec mv -f $(TMPDIR1) $(OUTPUT)/rootfs-overlay-noarch
 
-$(OUTPUT)/s6-overlay-noarch-$(VERSION).tar.xz: rootfs-overlay-noarch
+$(OUTPUT)/s6-overlay-noarch.tar.xz: rootfs-overlay-noarch
 	exec rm -f $@.tmp
 	cd $(OUTPUT)/rootfs-overlay-noarch && tar -Jcvf $@.tmp --owner=0 --group=0 --numeric-owner .
 	exec mv -f $@.tmp $@
 
 .PHONY: symlinks-overlay-noarch symlinks-overlay-noarch-tarball
 symlinks-overlay-noarch: $(OUTPUT)/symlinks-overlay-noarch/usr/bin/printcontenv
-symlinks-overlay-noarch-tarball: $(OUTPUT)/s6-overlay-symlinks-noarch-$(VERSION).tar.xz
+symlinks-overlay-noarch-tarball: $(OUTPUT)/s6-overlay-symlinks-noarch.tar.xz
 
 $(OUTPUT)/symlinks-overlay-noarch/usr/bin/printcontenv: rootfs-overlay-noarch
 	exec rm -rf $(OUTPUT)/symlinks-overlay-noarch
 	exec mkdir -p $(OUTPUT)/symlinks-overlay-noarch/usr/bin
 	for i in `ls -1 $(OUTPUT)/rootfs-overlay-noarch/command` ; do ln -s "../../command/$$i" $(OUTPUT)/symlinks-overlay-noarch/usr/bin/ ; done
 
-$(OUTPUT)/s6-overlay-symlinks-noarch-$(VERSION).tar.xz: symlinks-overlay-noarch
+$(OUTPUT)/s6-overlay-symlinks-noarch.tar.xz: symlinks-overlay-noarch
 	exec rm -f $@.tmp
 	cd $(OUTPUT)/symlinks-overlay-noarch && tar -Jcvf $@.tmp --owner=0 --group=0 --numeric-owner .
 	exec mv -f $@.tmp $@
 
 .PHONY: syslogd-overlay-noarch syslogd-overlay-noarch-tarball
 syslogd-overlay-noarch: $(OUTPUT)/syslogd-overlay-noarch/etc/s6-overlay/s6-rc.d/syslogd/run
-syslogd-overlay-noarch-tarball: $(OUTPUT)/syslogd-overlay-noarch-$(VERSION).tar.xz
+syslogd-overlay-noarch-tarball: $(OUTPUT)/syslogd-overlay-noarch.tar.xz
 
 TMPDIR2 := $(OUTPUT)/syslogd-overlay-noarch.tmp
 
@@ -103,7 +103,7 @@ $(OUTPUT)/syslogd-overlay-noarch/etc/s6-overlay/s6-rc.d/syslogd/run: layout/sysl
 	find $(TMPDIR2) -type f -size +0c -print | xargs sed -i -e 's|@SHEBANGDIR@|$(SHEBANGDIR)|g; s/@VERSION@/$(VERSION)/g;' --
 	exec mv -f $(TMPDIR2) $(OUTPUT)/syslogd-overlay-noarch
 
-$(OUTPUT)/syslogd-overlay-noarch-$(VERSION).tar.xz: syslogd-overlay-noarch
+$(OUTPUT)/syslogd-overlay-noarch.tar.xz: syslogd-overlay-noarch
 	exec rm -f $@.tmp
 	cd $(OUTPUT)/syslogd-overlay-noarch && tar -Jcvf $@.tmp --owner=0 --group=0 --numeric-owner .
 	exec mv -f $@.tmp $@

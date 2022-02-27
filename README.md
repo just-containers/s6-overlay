@@ -46,10 +46,10 @@ RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 CMD ["/usr/sbin/nginx"]
 
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ENTRYPOINT ["/init"]
 ```
 
@@ -103,7 +103,7 @@ finalization (`cont-finish.d`) and their own services with dependencies between 
 * Usable with all base images - Ubuntu, CentOS, Fedora, Alpine, Busybox...
 * Distributed as a small number of .tar.xz files depending on what exact functionality you need - to keep your image's number of layers small.
 * A whole set of utilities included in `s6` and `s6-portable-utils`. They include handy and composable utilities which make our lives much, much easier.
-* Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](http://skarnet.org/software/s6/s6-log.html) under the hood.
+* Log rotating out-of-the-box through `logutil-service` which uses [`s6-log`](https://skarnet.org/software/s6/s6-log.html) under the hood.
 * Some support for Docker's `USER` directive, to run your whole process tree as a specific user. Not compatible with all features, details in the [notes](#notes) section.
 
 ## The Docker Way?
@@ -166,31 +166,28 @@ The tarballs you need are a function of the image you use; most people will
 need the first two, and the other ones are extras you can use at your
 convenience.
 
-Note that this documentation may not be quite up-to-date and you may need
-to replace `3.1.0.0` with the latest version of s6-overlay. :-)
-
-1. `s6-overlay-noarch-3.1.0.0.tar.xz`: this tarball contains the scripts
+1. `s6-overlay-noarch.tar.xz`: this tarball contains the scripts
 implementing the overlay. We call it "noarch" because it is architecture-
 independent: it only contains scripts and other text files. Everyone who
 wants to run s6-overlay needs to extract this tarball.
-2. `s6-overlay-x86_64-3.1.0.0.tar.xz`: replace `x86_64` with your
+2. `s6-overlay-x86_64.tar.xz`: replace `x86_64` with your
 system's architecture. This tarball contains all the necessary binaries
 from the s6 ecosystem, all linked statically and out of the way of
 your image's binaries. Unless you know for sure that your image already
 comes with all the packages providing the binaries used in the overlay,
 you need to extract this tarball.
-3. `s6-overlay-symlinks-noarch-3.1.0.0.tar.xz`: this tarball contains
+3. `s6-overlay-symlinks-noarch.tar.xz`: this tarball contains
 symlinks to the s6-overlay scripts so they are accessible via `/usr/bin`.
 It is normally not needed, all the scripts are accessible via the PATH
 environment variable, but if you have old user scripts containing
 shebangs such as `#!/usr/bin/with-contenv`, installing these symlinks
 will make them work.
-4. `s6-overlay-symlinks-arch-3.1.0.0.tar.xz`: this tarball contains
+4. `s6-overlay-symlinks-arch.tar.xz`: this tarball contains
 symlinks to the binaries from the s6 ecosystem provided by the second
 tarball, to make them accessible via `/usr/bin`. It is normally not
 needed, but if you have old user scripts containing shebangs such as
 `#!/usr/bin/execlineb`, installing these symlinks will make them work.
-5. `syslogd-overlay-noarch-3.1.0.0.tar.xz`: this tarball contains
+5. `syslogd-overlay-noarch.tar.xz`: this tarball contains
 definitions for a `syslogd` service. If you are running daemons that
 cannot log to stderr to take advantage of the s6 logging infrastructure,
 but hardcode the use of the old `syslog()` mechanism, you can extract
@@ -201,15 +198,20 @@ To install those tarballs, add lines to your Dockerfile that correspond
 to the functionality you want to install. For instance, most people would
 use the following:
 ```
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch-3.1.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.1.0.0.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64-3.1.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.1.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ```
 
 ## Usage
 
 The project is distributed as a set of standard .tar.xz files, which you extract at the root of your image.
+(You need the xz-utils package for `tar` to understand `.tar.xz` files; it is available
+in every distribution, but not always in the default container images, so you may need
+to `apt install xz-utils` or `apk add xz-utils`, or equivalent, before you can
+expand the archives.)
+
 Afterwards, set your `ENTRYPOINT` to `/init`.
 
 Right now, we recommend using Docker's `ADD` directive instead of running `wget` or `curl`
@@ -235,10 +237,10 @@ For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch-3.1.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch-3.1.0.0.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64-3.1.0.0.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64-3.1.0.0.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-noarch.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.0.0/s6-overlay-x86_64.tar.xz /tmp
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ENTRYPOINT ["/init"]
 ```
 
@@ -397,7 +399,7 @@ and your container will exit with that value.
 ### Fixing ownership and permissions
 
 This section describes a functionality from the versions of s6-overlay
-that are **anterior to** 3.1.0.0. fix-attrs is still supported in 3.1.0.0,
+that are **anterior to** v3. fix-attrs is still supported in v3,
 but is **deprecated**, for several reasons: one of them is that it's
 generally not good policy to change ownership dynamically when it can be
 done statically. Another reason is that it doesn't work with USER containers.
@@ -752,7 +754,7 @@ enough so that your scripts have time to finish without s6-overlay interrupting 
 ### syslog
 
 If software running in your container requires syslog, extract the
-`syslogd-overlay-noarch-3.1.0.0.tar.xz` tarball:
+`syslogd-overlay-noarch.tar.xz` tarball:
 that will give you a small syslogd emulation. Logs will be found
 under various subdirectories of `/var/log/syslogd`, for instance
 messages will be found in the `/var/log/syslogd/messages/` directory,
@@ -785,10 +787,10 @@ The s6-overlay releases have a checksum files you can use to verify
 the download using SHA256:
 
 ```sh
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz /tmp
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch-${S6_OVERLAY_VERSION}.tar.xz.sha256 /tmp
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz /tmp
-ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64-${S6_OVERLAY_VERSION}.tar.xz.sha256 /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz.sha256 /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz.sha256 /tmp
 RUN cd /tmp && sha256sum -c *.sha256
 ```
 
@@ -814,20 +816,20 @@ privilege separation between services in your container.
 
 Over on the releases tab, we have a number of tarballs:
 
-* `s6-overlay-noarch-${version}.tar.xz`: the s6-overlay scripts.
-* `s6-overlay-${arch}-${version}.tar.xz`: the binaries for platform *${arch}*.
+* `s6-overlay-noarch.tar.xz`: the s6-overlay scripts.
+* `s6-overlay-${arch}.tar.xz`: the binaries for platform *${arch}*.
 They are statically compiled and will work with any Linux distribution.
-* `s6-overlay-symlinks-noarch-${version}.tar.xz`: `/usr/bin` symlinks to the s6-overlay scripts. Totally optional.
-* `s6-overlay-symlinks-arch-${version}.tar.xz`: `/usr/bin` symlinks to the skaware binaries. Totally optional.
-* `syslogd-overlay-noarch-${version}.tar.xz`: the syslogd emulation. Totally optional.
+* `s6-overlay-symlinks-noarch.tar.xz`: `/usr/bin` symlinks to the s6-overlay scripts. Totally optional.
+* `s6-overlay-symlinks-arch.tar.xz`: `/usr/bin` symlinks to the skaware binaries. Totally optional.
+* `syslogd-overlay-noarch.tar.xz`: the syslogd emulation. Totally optional.
 * `s6-overlay-${version}.tar.xz`: the s6-overlay source. Download it if you want to build s6-overlay yourself.
 
-We have binaries for at least x86_64, aarch64, arm32, i486, i686, and riscv64.
+We have binaries for at least x86_64, aarch64, arm32, i486, i686, riscv64, and s390x.
 The full list of supported arches can be found in [conf/toolchains](https://github.com/just-containers/s6-overlay/blob/master/conf/toolchains).
 
 ## Contributing
 
-Anyway you want! Open issues, open PRs, we welcome all contributors!
+Any way you want! Open issues, open PRs, we welcome all contributors!
 
 ## Building the overlay yourself
 
