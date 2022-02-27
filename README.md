@@ -716,13 +716,13 @@ In general your default docker settings should already provide a suitable tmpfs 
 
 It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
 
-* `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into a nop.
-* `S6_GLOBAL_PATH` (default = `/command:/usr/bin:/bin`):
+* `PATH` (default = `/command:/usr/bin:/bin`):
 this is the default PATH that all the services in the container,
 including the CMD, will have. Set this variable if you have a lot
 of services that depend on binaries stored in another directory, e.g.
 `/usr/sbin`. Note that `/command`, `/usr/bin` and `/bin` will always
 be added to that path if they're not already in the one you provide.
+* `S6_KEEP_ENV` (default = 0): if set, then environment is not reset and whole supervision tree sees original set of env vars. It switches `with-contenv` into a nop.
 * `S6_LOGGING` (default = 0): 
   * **`0`**: Outputs everything to stdout/stderr.
   * **`1`**: Uses an internal `catch-all` logger and persists everything on it, it is located in `/var/log/s6-uncaught-logs`. Anything run as a `CMD` is still output to stdout/stderr.

@@ -20,9 +20,7 @@ addpath () {
   PATH="${x}:$PATH"
 }
 
-if test -n "$S6_GLOBAL_PATH" ; then
-  PATH=$S6_GLOBAL_PATH
-else
+if test -z "$PATH" ; then
   PATH=/bin
 fi
 
