@@ -1,6 +1,7 @@
 **Table of Contents**
 
 - [Quickstart](#quickstart)
+- [Compatibility with v2](#compatibility-with-v2)
 - [Goals](#goals)
 - [Features](#features)
 - [The Docker Way?](#the-docker-way)
@@ -83,7 +84,18 @@ Accept-Ranges: bytes
 
 ```
 
+## Compatibility with v2
+
+If you're migrating from a previous version of s6-overlay (*v2*) to the
+new version (*v3*), you may need to make some changes to your services
+or the way you use s6-overlay in order for everything to work smoothly.
+This document tries to be accurate on how v3 works, but we have a
+[separate page](https://github.com/just-containers/s6-overlay/blob/master/MOVING-TO-V3.md)
+listing the main differences, and things you're likely to notice. Please
+read it if you're in this situation!
+
 ## Goals
+
 The project has the following goals:
 
 * Be usable on top of *any* Docker image
