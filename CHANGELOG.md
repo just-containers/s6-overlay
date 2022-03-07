@@ -12,6 +12,13 @@ Please view the git log to see all the minor changes made to the code. This docu
 account anymore. Instead, the initial value of PATH for all the services
 is inherited from the `PATH` environment variable, that you can set
 in the Dockerfile.
+* Generated tarballs don't encode the version numbers anymore.
+(The download URLs provided by GitHub still encode the version numbers,
+so there is no possible confusion on what tarball you're downloading.)
+* justc-envdir does not exist anymore: use s6-envdir with the new -L
+option if you need environment variables with unlimited length.
+* `docker stop` now normally exits 0 (or any predefined exit code
+in `/run/s6-linux-init-container-results/exitcode`) instead of 111.
 
 ### Version 3.0.0.0
 
