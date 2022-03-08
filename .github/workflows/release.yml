@@ -11,79 +11,95 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.s6_arch }}
     steps:
-      - uses: actions/checkout@v2
-      - id: matrix
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up build matrix
+        id: matrix
         run: |
           echo '::set-output name=s6_arch::'$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")')
 
+      - name: Create release notes
       - run: |
           . conf/versions
-          printf "Binary releases include the following packages:\n\n" > release-notes.md
-          printf "| Software | Version |\n" >> release-notes.md
-          printf "| -------- |:-------:|\n" >> release-notes.md
-          printf "| BearSSL | %s \n" "${BEARSSL_VERSION}" >> release-notes.md
-          printf "| skalibs | %s \n" "${SKALIBS_VERSION}" >> release-notes.md
-          printf "| execline | %s \n" "${EXECLINE_VERSION}" >> release-notes.md
-          printf "| s6 | %s \n" "${S6_VERSION}" >> release-notes.md
-          printf "| s6-rc | %s \n" "${S6_RC_VERSION}" >> release-notes.md
-          printf "| s6-linux-init | %s \n" "${S6_LINUX_INIT_VERSION}" >> release-notes.md
-          printf "| s6-portable-utils | %s \n" "${S6_PORTABLE_UTILS_VERSION}" >> release-notes.md
-          printf "| s6-linux-utils | %s \n" "${S6_LINUX_UTILS_VERSION}" >> release-notes.md
-          printf "| s6-dns | %s \n" "${S6_DNS_VERSION}" >> release-notes.md
-          printf "| s6-networking | %s \n" "${S6_NETWORKING_VERSION}" >> release-notes.md
-          printf "| s6-overlay-helpers | %s \n" "${S6_OVERLAY_HELPERS_VERSION}" >> release-notes.md
-          printf "\n" >> release-notes.md
+          cat << EOF > release-notes.md
+          Binary releases include the following packages:
+          
+          | Software | Version |
+          | -------- |:-------:|
+          | BearSSL | ${BEARSSL_VERSION} |
+          | skalibs | ${SKALIBS_VERSION} |
+          | execline | ${EXECLINE_VERSION} |
+          | s6 | ${S6_VERSION} |
+          | s6-rc | ${S6_RC_VERSION} |
+          | s6-linux-init | ${S6_LINUX_INIT_VERSION} |
+          | s6-portable-utils | ${S6_PORTABLE_UTILS_VERSION} |
+          | s6-linux-utils | ${S6_LINUX_UTILS_VERSION} |
+          | s6-dns | ${S6_DNS_VERSION} |
+          | s6-networking | ${S6_NETWORKING_VERSION} |
+          | s6-overlay-helpers | ${S6_OVERLAY_HELPERS_VERSION} |
+          
+          EOF
 
-      - uses: ncipollo/release-action@v1
+      - name: Create new release
+        uses: ncipollo/release-action@v1
         with:
           omitBodyDuringUpdate: true
           allowUpdates: true
           bodyFile: release-notes.md
 
   release:
-    needs: [ setup ]
+    needs:
+      - setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        s6_arch: ${{fromJson(needs.setup.outputs.matrix)}}
+        s6_arch: ${{ fromJson(needs.setup.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # normalize version (remove 'git/refs/', remove leading 'v')
-      - run: |
+      # remove 'git/refs/', remove leading 'v'
+      - name: Normalize version
+        run: |
           VERSION="${GITHUB_REF##*/}"
-          VERSION="${VERSION#v}"
-          echo "S6_VERSION=${VERSION}" >> $GITHUB_ENV
+          echo "S6_VERSION=${VERSION#v}" >> "${GITHUB_ENV}"
 
-      # create short arch name
-      - run: |
+      - name: Create short arch name
+        run: |
           HW=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
-          if [ "${{matrix.s6_arch}}" = "arm-linux-musleabihf" ] ; then
+          if [ "${{matrix.s6_arch}}" == "arm-linux-musleabihf" ]; then
             HW="armhf"
           fi
-          echo "S6_HW=${HW}" >> $GITHUB_ENV
+          echo "S6_HW=${HW}" >> "${GITHUB_ENV}"
 
-      - run: |
+      - name: Build
+        run: |
           make ARCH="${{ matrix.s6_arch }}" VERSION="${{ env.S6_VERSION }}"
 
-      - run: |
-          cd output ; for f in *.tar* ; do sha256sum "$f" > "$f".sha256 ; done
+      - name: Create hashes
+        run: |
+          cd output
+          for f in *.tar*; do
+            sha256sum "$f" > "${f}.sha256"
+          done
 
-      # output arch-specific binary
-      - uses: ncipollo/release-action@v1
+      - name: Output arch-specific binary
+        uses: ncipollo/release-action@v1
         with:
           artifacts: "output/s6-overlay-${{ env.S6_HW }}*"
           omitBodyDuringUpdate: true
           allowUpdates: true
 
-      - run: |
+      - name: Cleanup
+        run: |
           rm -v output/s6-overlay-${{ env.S6_HW }}*
 
-      # upload symlinks/non-arch on x86_64 only
-      - uses: ncipollo/release-action@v1
+      - name: Upload symlinks/non-arch on x86_64 only
+        if: ${{ matrix.s6_arch == 'x86_64-linux-musl' }}
+        uses: ncipollo/release-action@v1
         with:
           artifacts: "output/*.tar.*"
           omitBodyDuringUpdate: true
           allowUpdates: true
-        if: ${{ matrix.s6_arch == 'x86_64-linux-musl' }}
