@@ -69,7 +69,7 @@ jobs:
       - name: Create short arch name
         run: |
           HW=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
-          if [ "${{matrix.s6_arch}}" == "arm-linux-musleabihf" ]; then
+          if [ "${{matrix.s6_arch}}" = "arm-linux-musleabihf" ]; then
             HW="armhf"
           fi
           echo "S6_HW=${HW}" >> "${GITHUB_ENV}"
