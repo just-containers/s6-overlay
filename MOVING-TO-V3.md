@@ -31,14 +31,14 @@ absolute path. You should always trust PATH to do the right thing.
   * Shebangs, which require absolute paths, are an exception, and need manual editing.
 For instance, `#!/usr/bin/with-contenv` should be changed to `#!/command/with-contenv`.
     + To give you time to perform that change incrementally, s6-overlay provides
-optional tarballs that provide `/usr/bin/foobar` symlinks to `/command/foobar`.
-- All the user scripts need to be executable: they are now *run*, not *interpreted
-by a shell*.
+optional tarballs that install `/usr/bin/foobar` symlinks to `/command/foobar`.
+- All the user scripts need to be executable: they are now *executed* instead of
+*interpreted by a shell*.
 - The supervision tree now resides in `/run/service`, and you should not attempt to stop it
 when you want to exit the container; more generally you should not attempt to send
 control commands to the supervision tree. In particular, you should not try to run
 the `s6-svscanctl -t /var/run/s6/services` command - it will not work anyway because
-the supervision tree isn't there anymore. If you need to exit a container from the
+the supervision tree has changed locations. If you need to exit a container from the
 inside, without your CMD dying (or without having declared a CMD), run the
 `/run/s6/basedir/bin/halt` command instead.
   * Services that were previously addressed via `/var/run/s6/services/foobar` are now

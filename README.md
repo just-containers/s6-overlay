@@ -41,7 +41,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.1.0.0-1
+ARG S6_OVERLAY_VERSION=3.1.0.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
