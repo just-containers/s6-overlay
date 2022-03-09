@@ -88,6 +88,9 @@ needs an `up` file, but don't write your script in it. Instead, put your
 script in another executable file, in a place of your choice (for instance
 `/etc/s6-overlay/scripts/foobar`, and just put `/etc/s6-overlay/scripts/foobar`
 in your `up` file.
+- Services are run from their own, temporary, current working directory, instead
+of `WORKDIR`; scripts should now use absolute paths instead of paths relative
+to `WORKDIR`. The CMD, if any, is still run in `WORKDIR`.
 
 ## Other changes
 
