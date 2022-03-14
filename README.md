@@ -628,7 +628,7 @@ myapp-log
 
 `/etc/s6-overlay/s6-rc.d/myapp-log/type`:
 ```
-oneshot
+longrun
 ```
 
 `/etc/s6-overlay/s6-rc.d/myapp-log/run`:
