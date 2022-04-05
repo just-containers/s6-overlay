@@ -609,6 +609,52 @@ if { chown nobody:nogroup /var/log/myapp }
 chmod 02755 /var/log/myapp
 ```
 
+<details><summary>(Click here for an explanation of the weird syntax
+or if you don't understand why your `up` file isn't working.)</summary>
+<p>
+
+(Beginning of the detailed section.)
+
+So, the `up` and `down` files are special: they're not shell scripts, but
+single command lines interpreted by [execlineb](https://skarnet.org/software/execline/execlineb.html).
+You should not have to worry about execline; you should only remember that
+an `up` file contains a single command line. So if you need a script with
+several instructions, here's how to do it:
+
+- Write your script in the language of your choice, in a location of your choice
+- Make it executable
+- Call that script in the `up` file.
+
+Here is how you would normally proceed to write the `up` file for
+`myapp-log-prepare`:
+
+`/etc/s6-overlay/s6-rc.d/myapp-log-prepare/up`:
+```
+/etc/s6-overlay/scripts/myapp-log-prepare
+```
+
+`/etc/s6-overlay-scripts/myapp-log-prepare`: (needs to be executable)
+```sh
+#!/bin/sh -e
+mkdir -p /var/log/myapp
+chown nobody:nogroup /var/log/myapp
+chmod 02755 /var/log/myapp
+```
+
+The location of the actual script is arbitrary, it just needs to match
+what you're writing in the `up` file.
+
+But here, it just so happens that the script is simple enough that it can
+fit entirely in the `up` file without making it too complex or too
+difficult to understand. So, we chose to include it as an example to
+show that there's more that you can do with `up` files, if you are
+so inclined. You can read the full documentation for the execline
+language [here](https://skarnet.org/software/execline/).
+
+(End of the detailed section, click the link above again to collapse.)
+</p>
+</details>
+
 `/etc/s6-overlay/s6-rc.d/myapp/type`:
 ```
 longrun
@@ -668,7 +714,11 @@ It really accomplishes the same things as the `/etc/cont-init.d` plus
 `/etc/services.d` method, but it's a lot cleaner underneath, and can handle
 much more complex dependency graphs, so whenever you get the opportunity,
 we recommend you familiarize yourself with the [s6-rc](https://skarnet.org/software/s6-rc/)
-way of declaring your services and your loggers.
+way of declaring your services and your loggers. The full syntax of a
+service definition directory, including declaring whether your service
+is a longrun or a oneshot, declaring pipelines, adding service-specific
+timeouts if you need them, etc., can be found
+[here](https://skarnet.org/software/s6-rc/s6-rc-compile.html#source).
 
 
 ### Dropping privileges
