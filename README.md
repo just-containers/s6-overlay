@@ -633,7 +633,7 @@ Here is how you would normally proceed to write the `up` file for
 /etc/s6-overlay/scripts/myapp-log-prepare
 ```
 
-`/etc/s6-overlay-scripts/myapp-log-prepare`: (needs to be executable)
+`/etc/s6-overlay/scripts/myapp-log-prepare`: (needs to be executable)
 ```sh
 #!/bin/sh -e
 mkdir -p /var/log/myapp
