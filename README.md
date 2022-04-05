@@ -651,7 +651,7 @@ show that there's more that you can do with `up` files, if you are
 so inclined. You can read the full documentation for the execline
 language [here](https://skarnet.org/software/execline/).
 
-(End of the detailed section, click the link above again to collapse.)
+(End of the detailed section, click the triangle above again to collapse.)
 </p>
 </details>
 
