@@ -64,7 +64,7 @@ if test "0$UID" -ne 0 ; then
 fi
 
 # Ensure /var/run is a symlink to /run
-if test -L /var/run && test "`s6-linkname -f /var/run`" = /run ; then : ; else
+if test -L /var/run && test "`s6-linkname /var/run`" = /run ; then : ; else
   echo "$prog: notice: /var/run is not a symlink to /run, fixing it" 1>&2
   s6-rmrf /var/run
   s6-ln -s /run /var/run
