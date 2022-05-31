@@ -11,7 +11,7 @@ applyrec () {
   if test -d "$1" ; then
     s6-chmod "$6" "$1"
     if test "$2" = true ; then
-      for subfile in `s6-ls $lsopt "$1"` ; do
+      for subfile in "`s6-ls $lsopt \"$1\"`" ; do
         applyrec "$1/$subfile" "$2" "$3" "$4" "$5" "$6"
       done
     fi
