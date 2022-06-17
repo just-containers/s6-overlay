@@ -1,9 +1,9 @@
 # This file normally shouldn't be changed; the values can be
 # overridden by invoking make with arguments.
-# e.g.: make SHEBANGDIR=/usr/bin VERSION=3.0.0.1
+# e.g.: make SHEBANGDIR=/usr/bin VERSION=3.1.1.0
 
 # The version of the software being built.
-VERSION := 3.1.0.1
+VERSION := 3.1.1.0
 
 # Where stuff is going to be built. Change for out-of-tree builds.
 OUTPUT := output
@@ -21,7 +21,7 @@ TOOLCHAIN_PATH :=
 
 # When fetching one from the web, what version we want.
 # Only a few versions are available, don't change blindly.
-TOOLCHAIN_VERSION := 11.2.0
+TOOLCHAIN_VERSION := 12.1.0
 
 # For fetching toolchains: the download command.
 # Change to curl -O if you don't have wget.
