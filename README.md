@@ -393,9 +393,9 @@ be something like this:
 #!/bin/sh
 
 if test "$1" -eq 256 ; then
-  e = $((128 + $2))
+  e=$((128 + $2))
 else
-  e = "$1"
+  e="$1"
 fi
 
 echo "$e" > /run/s6-linux-init-container-results/exitcode
