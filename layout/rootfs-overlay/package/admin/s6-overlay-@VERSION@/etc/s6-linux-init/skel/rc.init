@@ -26,7 +26,7 @@ if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
   if test "$r" -gt 0 && test "$v" -gt 0 ; then
     echo "$prog: warning: hook $hook exited $r" 1>&2
   fi
-if
+fi
 
 if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
   etc="/etc/cont-profile.d/$profile"
