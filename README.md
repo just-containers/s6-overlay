@@ -497,15 +497,28 @@ When the container is started, the operations are performed in this order:
 dependencies. Services can be oneshots (initialization
 tasks) or longruns (daemons that will run throughout the container's lifetime).
 - (legacy) Longrun services in `/etc/services.d` are started.
+- Services in the `user2` bundle with the correct dependency are started.
+(Most people don't need to use this; if you are not sure, stick to the `user` bundle.)
 
 When the container is stopped, either because the admin sent a stop command or
 because the CMD exited, the operations are performed in the reverse order:
 
+- Services in the `user2` bundle with the correct dependency are stopped.
 - (legacy) Longrun services in `/etc/services.d` are stopped.
 - All s6-rc services are stopped, in an order defined by dependencies. For
 oneshots, that means that the `down` script in the source definition directory
 is executed; that's how s6-rc can perform finalization tasks.
 - (legacy) One shot finalization scripts in `/etc/cont-finish.d` are run sequentially.
+
+The point of the `user2` bundle is to allow user services declared in it to
+start *after* the `/etc/services.d` ones; but in order to do so, every service
+in `user2` needs to declare a dependency to `legacy-services`. In other words,
+for a service `foobar` to start late, you need to:
+- Define it in `/etc/s6-overlay/s6-rc.d/foobar` like any other s6-rc service.
+- Add an `/etc/s6-overlay/s6-rc.d/foobar/dependencies.d/legacy-services` file
+- Add an `/etc/s6-overlay/s6-rc.d/user2/contents.d/foobar` file.
+
+That will ensure that `foobar` will start _after_ everything in `/etc/services.d`.
 
 ### Writing an optional finish script
 
@@ -812,6 +825,21 @@ if you have scripts in `/etc/cont-init.d` that take a long time to run, you shou
 enough so that your scripts have time to finish without s6-overlay interrupting them and diagnosing an error.
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 * `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
+* `S6_STAGE2_HOOK` (default = none): If this variable exists, its contents
+will be interpreted as a shell excerpt that will be run in the early stage 2,
+before services are started. This can be used, for instance, to dynamically
+patch the service database at run-time right before it is compiled and run.
+The wrong value can prevent your container from running or endanger your
+security, so only use this if you know exactly what you are doing. When in
+doubt, leave this variable undefined.
+* `S6_VERBOSITY` (default = 2): controls the verbosity of s6-rc, and potentially
+other tools, at container start and stop time. The default, 2, is normally verbose:
+it will list the service start and stop operations. You can make the container quieter
+by decreasing this number: 1 will only print warnings and errors, and 0 will only
+print errors. You can also make the container _more_ verbose, i.e. print tracing and
+debug information, by increasing this number up to 5, but the output will quickly
+become _very_ noisy, and most people shouldn't need this.
+
 
 ### syslog
 

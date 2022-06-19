@@ -1,3 +1,7 @@
-#!@SHEBANGDIR@/execlineb -P
+#!/bin/sh
 
-s6-rc -v2 -bda change
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]*$' ; then : ; else
+  v=2
+fi
+
+exec s6-rc -v$v -bda change

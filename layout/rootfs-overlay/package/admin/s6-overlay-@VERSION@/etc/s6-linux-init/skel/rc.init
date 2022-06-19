@@ -1,10 +1,32 @@
 #!/bin/sh -e
 
+prog=/run/s6/basedir/scripts/rc.init
 top="$1" ; shift
 
 if test -d /run/s6/container_environment ; then
   s6-chmod 0755 /run/s6/container_environment
 fi
+
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]*$' ; then
+  if test "$v" -gt 0 ; then
+    cv=$((v - 1))
+  else
+    cv=0
+  fi
+else
+  v=2
+  cv=1
+fi
+
+if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
+  set +e
+  $hook
+  r=$?
+  set -e
+  if test "$r" -gt 0 && test "$v" -gt 0 ; then
+    echo "$prog: warning: hook $hook exited $r" 1>&2
+  fi
+if
 
 if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
   etc="/etc/cont-profile.d/$profile"
@@ -12,7 +34,7 @@ else
   etc=/etc
 fi
 
-s6-rc-compile -v1 /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
+s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
 s6-rc-init -c /run/s6/db /run/service
 
 if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && test "$timeout" -ge 0 ; then : ; else
@@ -20,14 +42,14 @@ if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && test "$timeout" -g
 fi
 
 set +e
-s6-rc -v2 -u -t "$timeout" -- change "$top"
+s6-rc -v$v -u -t "$timeout" -- change "$top"
 r=$?
 set -e
 
 if test "$r" -ne 0 && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
-  echo '/run/s6/basedir/scripts/rc.init: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs/current if you have in-container logging) for more information.' 1>&2
+  echo "$prog: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs/current if you have in-container logging) for more information." 1>&2
   if test "$b" -ge 2 ; then
-    echo '/run/s6/basedir/scripts/rc.init: fatal: stopping the container.' 1>&2
+    echo "prog: fatal: stopping the container." 1>&2
     echo "$r" > /run/s6-linux-init-container-results/exitcode
     exec /run/s6/basedir/bin/halt
   fi
