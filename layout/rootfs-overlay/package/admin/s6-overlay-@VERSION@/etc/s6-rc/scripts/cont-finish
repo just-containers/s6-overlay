@@ -6,7 +6,7 @@ else
   etc=/etc
 fi
 
-if ! kimeout=`printcontenv S6_KILL_FINISH_MAXTIME` ; then
+if kimeout=`printcontenv S6_KILL_FINISH_MAXTIME` && s6-test "$kimeout" =~ '^[[:digit:]]+$' ; then : ; else
   kimeout=0
 fi
 

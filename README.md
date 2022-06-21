@@ -809,15 +809,29 @@ image's `/etc/passwd`. Every bit of privilege separation helps a little with sec
   * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
   * **`1`**: Continue but warn with an annoying error message.
   * **`2`**: Stop by sending a termination signal to the supervision tree.
-* `S6_KILL_FINISH_MAXTIME` (default = 5000): The maximum time (in milliseconds) a script in `/etc/cont-finish.d` could take before sending a `KILL` signal to it. Take into account that this parameter will be used per each script execution, it's not a max time for the whole set of scripts.
-* `S6_SERVICES_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait services before sending a `TERM` signal.
-* `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait to reap zombies before sending a `KILL` signal.
+* `S6_KILL_FINISH_MAXTIME` (default = 5000): How long (in milliseconds) the system should
+wait, at shutdown time, for a script in `/etc/cont-finish.d` to finish naturally. After this
+duration, the script will be sent a SIGKILL. Bear in mind that scripts in `/etc/cont.finish.d`
+are run sequentially, and the shutdown sequence will potentially wait for `S6_KILL_FINISH_MAXTIME`
+milliseconds for *each* script.
+* `S6_SERVICES_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait,
+at shutdown time, for services declared in `/etc/services.d` to die before proceeding
+with the rest of the shutdown.
+* `S6_KILL_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait, at the end of
+the shutdown procedure when all the processes have received a TERM signal, for them to die
+before sending a `KILL` signal to make *sure* they're dead.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
 * `S6_CMD_ARG0` (default = not set): Value of this env var will be prepended to any `CMD` args passed by docker. Use it if you are migrting an existing image to a s6-overlay and want to make it a drop-in replacement, then setting this variable to a value of previously used ENTRYPOINT will improve compatibility with the way image is used.
 * `S6_FIX_ATTRS_HIDDEN` (default = 0): Controls how `fix-attrs.d` scripts process files and directories.
   * **`0`**: Hidden files and directories are excluded.
   * **`1`**: All files and directories are processed.
-* `S6_CMD_WAIT_FOR_SERVICES` (default = 0): In order to proceed executing CMD overlay will wait until services are up. Be aware that up doesn't mean ready. Depending if `notification-fd` was found inside the servicedir overlay will use `s6-svwait -U` or `s6-svwait -u` as the waiting statement.
+* `S6_CMD_WAIT_FOR_SERVICES` (default = 0): By default when the container starts,
+services in `/etc/services.d` will be started and execution will proceed to
+starting the `user2` bundle and the CMD, if any of these is defined. If
+`S6_CMD_WAIT_FOR_SERVICES` is nonzero, however, the container starting sequence
+will wait until the services in `/etc/services.d` are *ready* before proceeding
+with the rest of the sequence. Note that this is only significant if the services in `/etc/services.d`
+[notify their readiness](https://skarnet.org/software/s6/notifywhenup.html) to s6.
 * `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 5000): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
 Note that this value also includes the time setting up legacy container initialization (`/etc/cont-init.d`) and services (`/etc/services.d`),
 and that it is taken into account even if you are not running a CMD. In other words: no matter whether you're running a CMD or not,

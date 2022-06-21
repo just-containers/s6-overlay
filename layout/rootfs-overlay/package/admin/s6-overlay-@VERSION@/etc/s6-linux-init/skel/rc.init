@@ -7,15 +7,13 @@ if test -d /run/s6/container_environment ; then
   s6-chmod 0755 /run/s6/container_environment
 fi
 
-if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]*$' ; then
-  if test "$v" -gt 0 ; then
-    cv=$((v - 1))
-  else
-    cv=0
-  fi
-else
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
   v=2
-  cv=1
+  cv=$((v - 1))
+fi
+
+if test "$cv" -lt 0 ; then
+  cv=0
 fi
 
 if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
@@ -23,7 +21,7 @@ if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
   $hook
   r=$?
   set -e
-  if test "$r" -gt 0 && test "$v" -gt 0 ; then
+  if s6-test "$r" -gt 0 -a "$v" -gt 0 ; then
     echo "$prog: warning: hook $hook exited $r" 1>&2
   fi
 fi
@@ -37,7 +35,7 @@ fi
 s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
 s6-rc-init -c /run/s6/db /run/service
 
-if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && test "$timeout" -ge 0 ; then : ; else
+if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && s6-test "$timeout" =~ '^[[:digit:]]+$' ; then : ; else
   timeout=5000
 fi
 
@@ -46,7 +44,7 @@ s6-rc -v$v -u -t "$timeout" -- change "$top"
 r=$?
 set -e
 
-if test "$r" -ne 0 && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
+if b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && s6-test "$r" -gt 0 -a "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
   echo "$prog: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs/current if you have in-container logging) for more information." 1>&2
   if test "$b" -ge 2 ; then
     echo "prog: fatal: stopping the container." 1>&2
@@ -55,7 +53,7 @@ if test "$r" -ne 0 && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b
   fi
 fi
 
-if test "$#" -ne 0 ; then
+if test "$#" -gt 0 ; then
   cd `s6-cat < /run/s6/workdir`
   set +e
   arg0=`printcontenv S6_CMD_ARG0`

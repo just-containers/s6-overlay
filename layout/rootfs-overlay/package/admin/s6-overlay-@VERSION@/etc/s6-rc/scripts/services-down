@@ -15,7 +15,7 @@ done
 if test -n "$list" ; then
   s6-rmrf $links
   s6-svscanctl -an /run/service
-  if ! grace=`printcontenv S6_SERVICES_GRACETIME` ; then
+  if grace=`printcontenv S6_SERVICES_GRACETIME` && s6-test "$grace" =~ '^[[:digit:]]+$' ; then : ; else
     grace=3000
   fi
   s6-svwait -D -t "$grace" -- $list

@@ -34,8 +34,8 @@ done
 
 s6-svscanctl -a /run/service
 
-if test 0`printcontenv S6_CMD_WAIT_FOR_SERVICES` -ne 0 ; then
-  if ! maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` ; then
+if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:digit:]]+$' -a "$dowait" -gt 0 ; then
+  if maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && s6-test "$maxtime" =~ '^[[:digit:]]+$' ; then : ; else
     maxtime=0
   fi
 
@@ -49,7 +49,7 @@ if test 0`printcontenv S6_CMD_WAIT_FOR_SERVICES` -ne 0 ; then
   if test -n "$notifyes" && ! s6-svwait -U -t "$maxtime" -- $notifyes ; then
     r=true
   fi
-  if $r && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
+  if $r && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && s6-test "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
     echo 'services-up: warning: some legacy longruns failed to start' 1>&2
     if test "$b" -ge 2 ; then
       exit 1
