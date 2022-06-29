@@ -3,7 +3,7 @@
 # e.g.: make SHEBANGDIR=/usr/bin VERSION=3.1.1.0
 
 # The version of the software being built.
-VERSION := 3.1.1.1
+VERSION := 3.1.1.2
 
 # Where stuff is going to be built. Change for out-of-tree builds.
 OUTPUT := output
