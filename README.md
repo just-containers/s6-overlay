@@ -814,6 +814,14 @@ wait, at shutdown time, for a script in `/etc/cont-finish.d` to finish naturally
 duration, the script will be sent a SIGKILL. Bear in mind that scripts in `/etc/cont.finish.d`
 are run sequentially, and the shutdown sequence will potentially wait for `S6_KILL_FINISH_MAXTIME`
 milliseconds for *each* script.
+* `S6_SERVICES_READYTIME` (default = 5): With services declared in `/etc/services.d`, there is
+an unavoidable race condition between the moment when services are started and the moment when
+they can be tested for readiness. To avoid that race, we sleep a little time, by default 5
+milliseconds, before testing for readiness. If your machine is slow or very busy, you may
+get errors looking like `s6-svwait: fatal: unable to s6_svstatus_read: No such file or directory`.
+In that case, you should increase the sleeping time, by declaring it (in milliseconds) in the
+`S6_SERVICES_READYTIME` variable. Note that it only concerns `/etc/services.d`; s6-rc is immune
+to the race condition.
 * `S6_SERVICES_GRACETIME` (default = 3000): How long (in milliseconds) `s6` should wait,
 at shutdown time, for services declared in `/etc/services.d` to die before proceeding
 with the rest of the shutdown.

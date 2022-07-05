@@ -39,8 +39,12 @@ if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:d
     maxtime=0
   fi
 
+  if rtime=`printcontenv S6_SERVICES_READYTIME` && s6-test "$rtime" =~ '^[[:digit:]]+$' ; then : ; else
+    rtime=5
+  fi
+
   # Increase if necessary. Unavoidable race condition, use s6-rc instead!
-  s6-sleep -m 5
+  s6-sleep -m "$rtime"
 
   r=false
   if test -n "$notifno" && ! s6-svwait -u -t "$maxtime" -- $notifno ; then
