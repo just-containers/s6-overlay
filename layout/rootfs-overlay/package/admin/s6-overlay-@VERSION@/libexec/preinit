@@ -41,7 +41,7 @@ if test "0$S6_READ_ONLY_ROOT" -ne 0 ; then
 the incorrect noexec option, which s6-overlay cannot work with; expect /init \
 to crash soon. To fix the issue, either pre-mount /run with the exec option, \
 or as a workaround give this container the CAP_SYS_ADMIN capability so \
-s6-overlay can fix it at run time."
+s6-overlay can fix it at run time." 1>&2
           fi
           break
         fi
@@ -49,7 +49,7 @@ s6-overlay can fix it at run time."
       if $notfound ; then
         echo "$prog: warning: unable to find /run in /proc/mounts, check that \
 your container manager pre-mounts /proc, and that /run is a tmpfs. The container \
-is likely to crash soon, if /run is (incorrectly) mounted noexec."
+is likely to crash soon, if /run is (incorrectly) mounted noexec." 1>&2
       fi
     fi
   else
