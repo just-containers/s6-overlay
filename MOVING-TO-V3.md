@@ -42,7 +42,11 @@ the supervision tree has changed locations. If you need to exit a container from
 inside, without your CMD dying (or without having declared a CMD), run the
 `/run/s6/basedir/bin/halt` command instead.
   * Services that were previously addressed via `/var/run/s6/services/foobar` are now
-addressed via `/run/service/foobar`. 
+addressed via `/run/service/foobar`.
+- The CMD, if any, always used to run under the container environment. This is not
+the case anymore: just like supervised services, the CMD is now run with a minimal
+environment by default, and you need to prepend it with `with-contenv` if you want
+to provide it with the full container environment.
 
 ## Service management-related changes
 
