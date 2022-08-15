@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if pid=`cat /run/s6/cmdpid 2>/dev/null` ; then
+  kill -s "${0##*/SIG}" -- "$pid"
+else
+  exec "${0}.s6-linux-init"
+fi

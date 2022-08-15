@@ -861,7 +861,17 @@ by decreasing this number: 1 will only print warnings and errors, and 0 will onl
 print errors. You can also make the container _more_ verbose, i.e. print tracing and
 debug information, by increasing this number up to 5, but the output will quickly
 become _very_ noisy, and most people shouldn't need this.
-
+* `S6_CMD_RECEIVE_SIGNALS` (default = 0): decides whether signals sent to the
+container should be sent to the container's pid 1 or to the CMD. By default, when
+you perform for instance a `docker stop`, a TERM signal will be sent to the
+container's pid 1, which will trigger the full container shutdown sequence - but
+if a CMD is present, it will be among the last processes to be killed, only when
+everything else is down and the container is about to exit. If this variable is
+1 or more, signals are diverted from pid 1 to the CMD, which means that `docker stop`
+will send a SIGTERM to the CMD instead, and the container will only trigger its shutdown
+procedure when the CMD is dead. Note that only SIGTERM, SIGQUIT, SIGINT, SIGUSR1,
+SIGUSR2, SIGPWR and SIGWINCH are diverted; other signals either are ignored or
+cannot be diverted and are necessarily handled by pid 1.
 
 ### syslog
 

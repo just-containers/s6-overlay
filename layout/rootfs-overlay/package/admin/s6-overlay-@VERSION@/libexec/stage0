@@ -74,6 +74,14 @@ if test -z "$dumpopt" ; then
   done
 fi
 
+if test "0$S6_CMD_RECEIVE_SIGNALS" -ne 0 ; then
+  ctldir="$basedir/run-image/service/.s6-svscan"
+  for sig in TERM QUIT INT USR1 USR2 PWR WINCH ; do
+    s6-rename "$ctldir/SIG$sig" "$ctldir/SIG$sig".s6-linux-init
+    s6-hiercopy /package/admin/s6-overlay/etc/s6-linux-init/skel/CMDSIG "$ctldir/SIG$sig"
+  done
+fi
+
 pwd > /run/s6/workdir
 
 exec "$basedir/bin/init" "$@"

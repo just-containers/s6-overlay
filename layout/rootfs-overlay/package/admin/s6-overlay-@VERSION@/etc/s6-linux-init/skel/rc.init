@@ -57,8 +57,12 @@ if test "$#" -gt 0 ; then
   cd `s6-cat < /run/s6/workdir`
   set +e
   arg0=`printcontenv S6_CMD_ARG0`
-  $arg0 "$@"
+  $arg0 "$@" &
+  cmdpid="$!"
+  echo "$cmdpid" > /run/s6/cmdpid
+  wait "$cmdpid"
   echo "$?" > /run/s6-linux-init-container-results/exitcode
   set -e
+  rm -f /run/s6/cmdpid
   exec /run/s6/basedir/bin/halt
 fi
