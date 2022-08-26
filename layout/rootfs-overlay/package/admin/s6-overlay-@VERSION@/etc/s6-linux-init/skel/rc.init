@@ -9,9 +9,8 @@ fi
 
 if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
   v=2
-  cv=$((v - 1))
 fi
-
+cv=$((v - 1))
 if test "$cv" -lt 0 ; then
   cv=0
 fi
