@@ -2,7 +2,7 @@
 
 s6-envuidgid -D 32761:32761: -- sysllog
 s6-applyuidgid -U --
-backtick -D "n20 s1000000 T" line { printcontenv S6_LOGGING_SCRIPT }
+backtick -D "n20 s1000000" line { printcontenv S6_LOGGING_SCRIPT }
 multisubstitute
 {
   importas -usC T line
