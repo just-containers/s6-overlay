@@ -56,12 +56,18 @@ if test "$#" -gt 0 ; then
   cd `s6-cat < /run/s6/workdir`
   set +e
   arg0=`printcontenv S6_CMD_ARG0`
-  $arg0 "$@" &
-  cmdpid="$!"
-  echo "$cmdpid" > /run/s6/cmdpid
-  wait "$cmdpid"
-  echo "$?" > /run/s6-linux-init-container-results/exitcode
+  if b=`printcontenv S6_CMD_RECEIVE_SIGNALS` && s6-test "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
+    $arg0 "$@" &
+    cmdpid="$!"
+    echo "$cmdpid" > /run/s6/cmdpid
+    wait "$cmdpid"
+    r="$?"
+    rm -f /run/s6/cmdpid
+  else
+    $arg0 "$@"
+    r="$?"
+  fi
   set -e
-  rm -f /run/s6/cmdpid
+  echo "$r" > /run/s6-linux-init-container-results/exitcode
   exec /run/s6/basedir/bin/halt
 fi

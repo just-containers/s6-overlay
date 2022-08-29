@@ -871,7 +871,10 @@ everything else is down and the container is about to exit. If this variable is
 will send a SIGTERM to the CMD instead, and the container will only trigger its shutdown
 procedure when the CMD is dead. Note that only SIGTERM, SIGQUIT, SIGINT, SIGUSR1,
 SIGUSR2, SIGPWR and SIGWINCH are diverted; other signals either are ignored or
-cannot be diverted and are necessarily handled by pid 1.
+cannot be diverted and are necessarily handled by pid 1. Please be aware that using
+this option may prevent interactive CMDs from working at all - in other words, if
+you're running an interactive CMD in a terminal, don't set this variable; but that
+should be fine since in this case you already have interactive ways of stopping your CMD.
 
 ### syslog
 
