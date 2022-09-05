@@ -6,6 +6,10 @@ else
   etc=/etc
 fi
 
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+
 dir=/run/s6/legacy-services
 
 s6-rmrf "$dir"
@@ -16,13 +20,19 @@ notifyes=
 for i in `s6-ls "$etc/services.d" 2>/dev/null | s6-sort` ; do
   if test -d "$etc/services.d/$i" ; then
     list="$list $i"
-    s6-echo -n -- "services-up: info: copying legacy longrun $i" 1>&2
+    if test $v -ge 2 ; then
+      s6-echo -n -- "services-up: info: copying legacy longrun $i" 1>&2
+    fi
     if test -r "$dir/$i/notification-fd" ; then
       notifyes="$notifyes $dir/$i"
-      echo 1>&2
+      if test $v -ge 2 ; then
+        echo 1>&2
+      fi
     else
       notifno="$notifno $dir/$i"
-      echo ' (no readiness notification)' 1>&2
+      if test $v -ge 2 ; then
+        echo ' (no readiness notification)' 1>&2
+      fi
     fi
     s6-hiercopy "$etc/services.d/$i" "$dir/$i"
   fi
@@ -54,7 +64,9 @@ if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:d
     r=true
   fi
   if $r && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && s6-test "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
-    echo 'services-up: warning: some legacy longruns failed to start' 1>&2
+    if test $v -ge 1 ; then
+      echo 'services-up: warning: some legacy longruns failed to start' 1>&2
+    fi
     if test "$b" -ge 2 ; then
       exit 1
     fi

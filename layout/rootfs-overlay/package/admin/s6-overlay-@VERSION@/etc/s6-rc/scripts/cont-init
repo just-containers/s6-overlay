@@ -8,20 +8,30 @@ else
   etc=/etc
 fi
 
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+
 for file in `s6-ls "$etc/cont-init.d" 2>/dev/null | s6-sort` ; do
-  echo "cont-init: info: running $etc/cont-init.d/$file" 1>&2
+  if test $v -ge 2 ; then
+    echo "cont-init: info: running $etc/cont-init.d/$file" 1>&2
+  fi
   set +e
   "$etc/cont-init.d/$file"
   b="$?"
   set -e
-  echo "cont-init: info: $etc/cont-init.d/$file exited $b" 1>&2
+  if test $v -ge 2 ; then
+    echo "cont-init: info: $etc/cont-init.d/$file exited $b" 1>&2
+  fi
   if test "$b" -ne 0 ; then
     r=true
   fi
 done
 
 if $r && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
-  echo 'cont-init: warning: some scripts exited nonzero' 1>&2
+  if test $v -ge 1 ; then
+    echo 'cont-init: warning: some scripts exited nonzero' 1>&2
+  fi
   if test "$b" -ge 2 ; then
     exit 1
   fi

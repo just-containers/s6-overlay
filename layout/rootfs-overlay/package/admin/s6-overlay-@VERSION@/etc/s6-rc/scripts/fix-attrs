@@ -9,8 +9,14 @@ else
   etc=/etc
 fi
 
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+
 apply () {
-  echo "fix-attrs: info: applying $1" 1>&2
+  if test $v -ge 2 ; then
+    echo "fix-attrs: info: applying $1" 1>&2
+  fi
   got=true
   if ! /package/admin/s6-overlay-@VERSION@/libexec/fix-attrs < "$1" ; then
     err=true
@@ -21,11 +27,13 @@ for file in `s6-ls "$etc/fix-attrs.d" 2>/dev/null | s6-sort` ; do
   apply "$etc/fix-attrs.d/$file"
 done
 
-if $got ; then
+if $got && test $v -ge 1 ; then
   echo 'fix-attrs: warning: fix-attrs is deprecated, please fix volume permissions in your container manager instead' 1>&2
 fi
 if $err && b=0`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && test "$b" -ne 0 ; then
-  echo 'fix-attrs: warning: some fix files failed to apply' 1>&2
+  if test $v -ge 1 ; then
+    echo 'fix-attrs: warning: some fix files failed to apply' 1>&2
+  fi
   if test "$b" -ge 2 ; then
     exit 1
   fi

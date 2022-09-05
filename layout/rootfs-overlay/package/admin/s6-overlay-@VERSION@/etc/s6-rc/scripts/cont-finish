@@ -6,12 +6,18 @@ else
   etc=/etc
 fi
 
+if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
+  v=2
+fi
+
 if kimeout=`printcontenv S6_KILL_FINISH_MAXTIME` && s6-test "$kimeout" =~ '^[[:digit:]]+$' ; then : ; else
   kimeout=0
 fi
 
 for file in `s6-ls "$etc/cont-finish.d" 2>/dev/null | s6-sort` ; do
-  echo "cont-finish: info: running $etc/cont-finish.d/$file" 1>&2
+  if test $v -ge 2 ; then
+    echo "cont-finish: info: running $etc/cont-finish.d/$file" 1>&2
+  fi
   s6-maximumtime -k "$kimeout" "$etc/cont-finish.d/$file"
 done
 
