@@ -556,7 +556,7 @@ if { s6-test ${1} -ne 0 -a ${1} -ne 256 }
 
 Note that in general, finish scripts should only be used for local cleanups
 after a daemon dies. If a service is so important that the container needs
-to stop when it dies, we really recommend runnning it as the CMD.
+to stop when it dies, we really recommend running it as the CMD.
 
 ### Logging
 
