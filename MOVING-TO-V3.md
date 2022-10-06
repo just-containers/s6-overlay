@@ -92,6 +92,11 @@ needs an `up` file, but don't write your script in it. Instead, put your
 script in another executable file, in a place of your choice (for instance
 `/etc/s6-overlay/scripts/foobar`, and just put `/etc/s6-overlay/scripts/foobar`
 in your `up` file.
+    + To get your service _foo_ properly started at container boot time, you need
+to add it to the `user` bundle: `touch /etc/s6-overlay/s6-rc.d/user/contents.d/foo`.
+Also, to ensure it's started at the proper time, you should make it depend on
+`base`: `mkdir /etc/s6-overlay/s6-rc.d/foo/contents.d && touch
+/etc/s6-overlay/s6-rc.d/foo/contents.d/base`.
 - Services are run from their own, temporary, current working directory, instead
 of `WORKDIR`; scripts should now use absolute paths instead of paths relative
 to `WORKDIR`. The CMD, if any, is still run in `WORKDIR`.
