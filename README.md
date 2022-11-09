@@ -349,7 +349,13 @@ longrun
 nginx -g "daemon off;"
 ```
 
-`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp`: empty file
+`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp`: empty file.
+(This adds `myapp` to the set of services that s6-rc will start at
+container boot.)
+
+`/etc/s6-overlay/s6-rc.d/myapp/dependencies.d/base`: empty file.
+(This tells s6-rc to only start `myapp` when all the base services
+are ready: it prevents race conditions.)
 
 We encourage you to switch to the new format, but if you don't need its
 benefits, you can stick with regular service directories in `/etc/services.d`,
@@ -486,8 +492,11 @@ confd --onetime --prefix="${CONFD_PREFIX}" --tmpl-uid="${UID}" --tmpl-gid="${GID
 This way is still supported. However, there is now a more generic and
 efficient way to do it: writing your oneshot initialization and finalization
 tasks as s6-rc services, by adding service definition directories in
-`/etc/s6-overlay/s6-rc.d` and making them part of the `user` bundle. All
-the information on s6-rc can be found [here](https://skarnet.org/software/s6-rc/).
+`/etc/s6-overlay/s6-rc.d`, making them part of the `user` bundle (so they
+are actually started when the container boots), and making them depend on
+the `base` bundle (so they are only started after `base`).
+
+All the information on s6-rc can be found [here](https://skarnet.org/software/s6-rc/).
 
 When the container is started, the operations are performed in this order:
 
@@ -495,7 +504,10 @@ When the container is started, the operations are performed in this order:
 - (legacy) One-shot initialization scripts in `/etc/cont-init.d` are run sequentially.
 - Services in the `user` bundle are started by s6-rc, in an order defined by
 dependencies. Services can be oneshots (initialization
-tasks) or longruns (daemons that will run throughout the container's lifetime).
+tasks) or longruns (daemons that will run throughout the container's lifetime). If
+the services depend on `base`, they are guaranteed to start at this point and not
+earlier; if they do not, they might have been started earlier, which may cause
+race conditions - so it's recommended to always make them depend on `base`.
 - (legacy) Longrun services in `/etc/services.d` are started.
 - Services in the `user2` bundle with the correct dependency are started.
 (Most people don't need to use this; if you are not sure, stick to the `user` bundle.)
@@ -610,6 +622,8 @@ exec logutil-service /var/log/myapp
 
 And here is the same service, myapp, implemented in s6-rc.
 
+`/etc/s6-overlay/s6-rc.d/myapp-log-prepare/dependencies.d/base`: empty file
+
 `/etc/s6-overlay/s6-rc.d/myapp-log-prepare/type`:
 ```
 oneshot
@@ -668,6 +682,8 @@ language [here](https://skarnet.org/software/execline/).
 </p>
 </details>
 
+`/etc/s6-overlay/s6-rc.d/myapp/dependencies.d/base`: empty file
+
 `/etc/s6-overlay/s6-rc.d/myapp/type`:
 ```
 longrun
@@ -685,6 +701,8 @@ exec mydaemon-in-the-foreground-and-logging-to-stderr
 myapp-log
 ```
 
+`/etc/s6-overlay/s6-rc.d/myapp-log/dependencies.d/myapp-log`: empty file
+
 `/etc/s6-overlay/s6-rc.d/myapp-log/type`:
 ```
 longrun
@@ -699,11 +717,6 @@ exec logutil-service /var/log/myapp
 `/etc/s6-overlay/s6-rc.d/myapp-log/consumer-for`:
 ```
 myapp
-```
-
-`/etc/s6-overlay/s6-rc.d/myapp-log/dependencies`:
-```
-myapp-log-prepare
 ```
 
 `/etc/s6-overlay/s6-rc.d/myapp-log/pipeline-name`:
@@ -722,6 +735,9 @@ are longruns, i.e. daemons that will be supervised by s6.
 - The `myapp | myapp-log` pipeline is given a name, `myapp-pipeline`, and
 this name is declared as a part of the `user` bundle, so it will be started
 when the container starts.
+- `myapp-log-prepare`, `myapp-log` and `myapp` all depend on the `base`
+bundle, which means they will only be started when the system is actually
+ready to start them.
 
 It really accomplishes the same things as the `/etc/cont-init.d` plus
 `/etc/services.d` method, but it's a lot cleaner underneath, and can handle

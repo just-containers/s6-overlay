@@ -91,7 +91,9 @@ directory: it has a `run` script, possibly a `finish` script, etc.
 needs an `up` file, but don't write your script in it. Instead, put your
 script in another executable file, in a place of your choice (for instance
 `/etc/s6-overlay/scripts/foobar`, and just put `/etc/s6-overlay/scripts/foobar`
-in your `up` file.
+in your `up` file. *Be aware that `up` is __not__ a shell script*, and will not
+honor shebangs; for the details, look for `weird syntax` in the
+[README file](README.md).
     + To get your service _foo_ properly started at container boot time, you need
 to add it to the `user` bundle: `touch /etc/s6-overlay/s6-rc.d/user/contents.d/foo`.
 Also, to ensure it's started at the proper time, you should make it depend on
