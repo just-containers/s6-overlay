@@ -684,6 +684,9 @@ language [here](https://skarnet.org/software/execline/).
 
 `/etc/s6-overlay/s6-rc.d/myapp/dependencies.d/base`: empty file
 
+`/etc/s6-overlay/s6-rc.d/myapp-log/dependencies.d/myapp-log-prepare`: empty file
+
+
 `/etc/s6-overlay/s6-rc.d/myapp/type`:
 ```
 longrun
@@ -700,8 +703,6 @@ exec mydaemon-in-the-foreground-and-logging-to-stderr
 ```
 myapp-log
 ```
-
-`/etc/s6-overlay/s6-rc.d/myapp-log/dependencies.d/myapp-log`: empty file
 
 `/etc/s6-overlay/s6-rc.d/myapp-log/type`:
 ```
