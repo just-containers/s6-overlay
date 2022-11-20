@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+trap : INT  # guard against ^C as much as possible
+
 prog=/run/s6/basedir/scripts/rc.init
 top="$1" ; shift
 
