@@ -46,7 +46,7 @@ set -e
 if b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && s6-test "$r" -gt 0 -a "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
   echo "$prog: warning: s6-rc failed to properly bring all the services up! Check your logs (in /run/uncaught-logs/current if you have in-container logging) for more information." 1>&2
   if test "$b" -ge 2 ; then
-    echo "prog: fatal: stopping the container." 1>&2
+    echo "$prog: fatal: stopping the container." 1>&2
     echo "$r" > /run/s6-linux-init-container-results/exitcode
     exec /run/s6/basedir/bin/halt
   fi
