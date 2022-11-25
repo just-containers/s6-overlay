@@ -50,7 +50,7 @@ if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:d
   fi
 
   if rtime=`printcontenv S6_SERVICES_READYTIME` && s6-test "$rtime" =~ '^[[:digit:]]+$' ; then : ; else
-    rtime=5
+    rtime=50
   fi
 
   # Increase if necessary. Unavoidable race condition, use s6-rc instead!
