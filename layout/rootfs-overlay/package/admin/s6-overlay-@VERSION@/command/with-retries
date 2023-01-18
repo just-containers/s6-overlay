@@ -14,11 +14,11 @@ multisubstitute
 emptyenv -oP
 forbacktickx -x 0,1 -d"\n" i { s6-seq 0 ${nretries} }
   importas -u i i
-  if { s6-test ${i} -ne ${nretries} }
+  if { eltest ${i} -ne ${nretries} }
   foreground
   {
     s6-maximumtime -t ${timeout}
     $@
   }
   importas -u ? ?
-  if -x 99 { s6-test ${?} -eq 0 }
+  if -x 99 { eltest ${?} -eq 0 }

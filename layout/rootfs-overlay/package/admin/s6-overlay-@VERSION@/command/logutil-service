@@ -7,8 +7,8 @@ multisubstitute
   elgetpositionals -P0
 }
 emptyenv -oP
-if { s6-test ${#} -ge 1 }
-ifelse { s6-test -n ${fifo} }
+if { eltest ${#} -ge 1 }
+ifelse { eltest -n ${fifo} }
 {
   redirfd -rnb 0 ${fifo}
   /package/admin/s6-overlay-@VERSION@/libexec/logutil-service-main ${1}

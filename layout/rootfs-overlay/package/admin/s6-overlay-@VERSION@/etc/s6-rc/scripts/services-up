@@ -6,7 +6,7 @@ else
   etc=/etc
 fi
 
-if v=`printcontenv S6_VERBOSITY` && s6-test "$v" =~ '^[[:digit:]]+$' ; then : ; else
+if v=`printcontenv S6_VERBOSITY` && eltest "$v" =~ '^[[:digit:]]+$' ; then : ; else
   v=2
 fi
 
@@ -44,12 +44,12 @@ done
 
 s6-svscanctl -a /run/service
 
-if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:digit:]]+$' -a "$dowait" -gt 0 ; then
-  if maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && s6-test "$maxtime" =~ '^[[:digit:]]+$' ; then : ; else
+if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && eltest "$dowait" =~ '^[[:digit:]]+$' -a "$dowait" -gt 0 ; then
+  if maxtime=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$maxtime" =~ '^[[:digit:]]+$' ; then : ; else
     maxtime=0
   fi
 
-  if rtime=`printcontenv S6_SERVICES_READYTIME` && s6-test "$rtime" =~ '^[[:digit:]]+$' ; then : ; else
+  if rtime=`printcontenv S6_SERVICES_READYTIME` && eltest "$rtime" =~ '^[[:digit:]]+$' ; then : ; else
     rtime=50
   fi
 
@@ -63,7 +63,7 @@ if dowait=`printcontenv S6_CMD_WAIT_FOR_SERVICES` && s6-test "$dowait" =~ '^[[:d
   if test -n "$notifyes" && ! s6-svwait -U -t "$maxtime" -- $notifyes ; then
     r=true
   fi
-  if $r && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && s6-test "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
+  if $r && b=`printcontenv S6_BEHAVIOUR_IF_STAGE2_FAILS` && eltest "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
     if test $v -ge 1 ; then
       echo 'services-up: warning: some legacy longruns failed to start' 1>&2
     fi

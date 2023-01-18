@@ -3,7 +3,7 @@
 ifelse
 {
   importas -D 0 S6_KEEP_ENV S6_KEEP_ENV
-  s6-test 0${S6_KEEP_ENV} -eq 0
+  eltest 0${S6_KEEP_ENV} -eq 0
 }
 {
   emptyenv -p
