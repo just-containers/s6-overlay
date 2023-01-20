@@ -11,10 +11,10 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.s6_arch }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: matrix
         run: |
-          echo '::set-output name=s6_arch::'$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")')
+          echo s6_arch=$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")') >> "$GITHUB_OUTPUT"
 
       - run: |
           . conf/versions
@@ -48,7 +48,7 @@ jobs:
         s6_arch: ${{fromJson(needs.setup.outputs.matrix)}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # normalize version (remove 'git/refs/', remove leading 'v')
       - run: |
