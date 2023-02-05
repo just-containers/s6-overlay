@@ -35,7 +35,7 @@ S6_OVERLAY_HELPERS_TOKEN := s6-overlay-suexec
 
 SKAWARE_OPTIONS := --enable-slashpackage --enable-static-libc --disable-shared
 SKALIBS_OPTIONS := --with-default-path=/command:/usr/bin:/bin --with-sysdep-devurandom=yes --with-sysdep-grndinsecure=no
-EXECLINE_OPTIONS := --disable-pedantic-posix
+EXECLINE_OPTIONS := --disable-pedantic-posix --enable-multicall
 S6_OPTIONS :=
 S6_RC_OPTIONS :=
 S6_LINUX_INIT_OPTIONS :=
