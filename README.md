@@ -18,7 +18,7 @@
   - [Dropping privileges](#dropping-privileges)
   - [Read-only Root Filesystem](#read-only-root-filesystem)
   - [Container environment](#container-environment)
-  - [Customizing `s6` behaviour](#customizing-s6-behaviour)
+  - [Customizing s6-overlay's behaviour](#customizing-s6-overlay-behaviour)
   - [syslog](#syslog)
 - [Performance](#performance)
 - [Verifying Downloads](#verifying-downloads)
@@ -28,7 +28,7 @@
 - [Building the overlay yourself](#building-the-overlay-yourself)
 - [Upgrade notes](#upgrade-notes)
 
-# s6 overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
+# s6-overlay [![Build Status](https://api.travis-ci.org/just-containers/s6-overlay.svg?branch=master)](https://travis-ci.org/just-containers/s6-overlay)
 
 s6-overlay is an easy-to-install (just extract a tarball or two!) set of scripts and utilities
 allowing you to use existing Docker images while using [s6](https://skarnet.org/software/s6/overview.html)
@@ -41,7 +41,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.1.3.0
+ARG S6_OVERLAY_VERSION=3.1.4.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -210,9 +210,9 @@ To install those tarballs, add lines to your Dockerfile that correspond
 to the functionality you want to install. For instance, most people would
 use the following:
 ```
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.3.0/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.0/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.3.0/s6-overlay-x86_64.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.0/s6-overlay-x86_64.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ```
 
@@ -249,9 +249,9 @@ For example:
 
 ```
 FROM busybox
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.3.0/s6-overlay-noarch.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.0/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
-ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.3.0/s6-overlay-x86_64.tar.xz /tmp
+ADD https://github.com/just-containers/s6-overlay/releases/download/v3.1.4.0/s6-overlay-x86_64.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ENTRYPOINT ["/init"]
 ```
@@ -804,9 +804,9 @@ Note that s6-overlay assumes that:
 
 In general your default docker settings should already provide a suitable tmpfs in `/run`.
 
-### Customizing `s6` behaviour
+### Customizing s6-overlay behaviour
 
-It is possible somehow to tweak `s6` behaviour by providing an already predefined set of environment variables to the execution context:
+It is possible somehow to tweak s6-overlay's behaviour by providing an already predefined set of environment variables to the execution context:
 
 * `PATH` (default = `/command:/usr/bin:/bin`):
 this is the default PATH that all the services in the container,
@@ -913,9 +913,9 @@ numeric uids/gids that may already exist on your system.
 ## Performance
 
 - The noarch and symlinks tarballs are all tiny. The biggest tarball is the
-one that contains the binaries; it's around 660 kB.
+one that contains the binaries; it's around 650 kB.
 - Uncompressed on a tmpfs, the overlay scripts use about 120 kB, and the
-binaries for x86_64 use about 6.5 MB.
+binaries for x86_64 use about 5.7 MB.
 - We haven't yet measured the time it takes for the container to be up and running
 once you run `docker run`, but you will notice it's fast. Faster than previous
 versions of s6-overlay, with fewer delays. And if you convert your `/etc/cont-init.d`
@@ -940,7 +940,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.1.0.1, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.1.4.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
