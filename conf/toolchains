@@ -3,6 +3,8 @@ arm-linux-musleabi	genericv7a
 arm-linux-musleabihf	pi1
 i486-linux-musl		i486
 i686-linux-musl		i686
+powerpc64-linux-musl	talos
+powerpc64le-linux-musl	talosel
 riscv64-linux-musl	rocket
 s390x-linux-musl	z196
 x86_64-linux-musl	pc
