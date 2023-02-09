@@ -24,6 +24,7 @@
 - [Verifying Downloads](#verifying-downloads)
 - [Notes](#notes)
 - [Releases](#releases)
+  - [Which architecture to use depending on your TARGETARCH](#which-architecture-to-use-depending-on-your-targetarch)
 - [Contributing](#contributing)
 - [Building the overlay yourself](#building-the-overlay-yourself)
 - [Upgrade notes](#upgrade-notes)
@@ -968,6 +969,35 @@ They are statically compiled and will work with any Linux distribution.
 
 We have binaries for at least x86_64, aarch64, arm32, i486, i686, riscv64, and s390x.
 The full list of supported arches can be found in [conf/toolchains](https://github.com/just-containers/s6-overlay/blob/master/conf/toolchains).
+
+### Which architecture to use depending on your TARGETARCH
+
+The `${arch}` part in the `s6-overlay-${arch}.tar.xz` tarball uses
+the naming conventions of gcc, which are not the ones that Docker
+uses. (Everyone does something different in this field depending on
+their needs, and no solution is better than any other, but the Docker
+one is *worse* than others because its naming is inconsistent. The gcc
+convention is better for us because it simplifies our builds greatly and
+makes them more maintainable.)
+
+The following table should help you find the right tarball for you
+if you're using the TARGETARCH value provided by Docker:
+
+| ${TARGETARCH} | ${arch} | Notes                 |
+|:--------------|:--------|:----------------------|
+| amd64         | x86_64  |                       |
+| arm64         | aarch64 |                       |
+| arm/v7        | arm     | armv7 with soft-float |
+| arm/v6        | armhf   | Raspberry Pi 1        |
+| 386           | i686    | i486 for very old hw  |
+| riscv64       | riscv64 |                       |
+| s390x         | s390x   |                       |
+
+If you need another architecture, ask us and we'll try to make a toolchain
+for it. In particular, we know that armv7 is a mess and needs a flurry of
+options depending on your precise target (and this is one of the reasons why
+the Docker naming system isn't good, although arguably the gcc naming system
+isn't much better on that aspect).
 
 ## Contributing
 
