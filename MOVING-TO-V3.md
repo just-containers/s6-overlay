@@ -97,8 +97,8 @@ honor shebangs; for the details, look for `weird syntax` in the
     + To get your service _foo_ properly started at container boot time, you need
 to add it to the `user` bundle: `touch /etc/s6-overlay/s6-rc.d/user/contents.d/foo`.
 Also, to ensure it's started at the proper time, you should make it depend on
-`base`: `mkdir /etc/s6-overlay/s6-rc.d/foo/contents.d && touch
-/etc/s6-overlay/s6-rc.d/foo/contents.d/base`.
+`base`: `mkdir /etc/s6-overlay/s6-rc.d/foo/dependencies.d && touch
+/etc/s6-overlay/s6-rc.d/foo/dependencies.d/base`.
 - Services are run from their own, temporary, current working directory, instead
 of `WORKDIR`; scripts should now use absolute paths instead of paths relative
 to `WORKDIR`. The CMD, if any, is still run in `WORKDIR`.
