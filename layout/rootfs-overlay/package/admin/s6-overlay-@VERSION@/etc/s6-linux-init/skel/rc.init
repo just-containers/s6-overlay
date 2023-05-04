@@ -1,5 +1,9 @@
 #!/bin/sh -e
 
+# This is stage 2, the part of the initialization that is run once
+# the s6 supervision tree has been set up. This is where all the
+# services are brought up, and the CMD, if any, is run.
+
 trap : INT  # guard against ^C as much as possible
 
 prog=/run/s6/basedir/scripts/rc.init
@@ -58,6 +62,9 @@ if test "$#" -gt 0 ; then
   cd `s6-cat < /run/s6/workdir`
   set +e
   arg0=`printcontenv S6_CMD_ARG0`
+  if b=`printcontenv S6_CMD_USE_TERMINAL` && eltest "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 && b=`tty` ; then
+    arg0="redirfd -w 1 $b fdmove -c 2 1 $arg0"
+  fi
   if b=`printcontenv S6_CMD_RECEIVE_SIGNALS` && eltest "$b" =~ '^[[:digit:]]+$' -a "$b" -gt 0 ; then
     $arg0 "$@" &
     cmdpid="$!"

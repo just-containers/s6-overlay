@@ -42,7 +42,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.1.4.1
+ARG S6_OVERLAY_VERSION=3.1.5.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -847,7 +847,12 @@ with the rest of the shutdown.
 the shutdown procedure when all the processes have received a TERM signal, for them to die
 before sending a `KILL` signal to make *sure* they're dead.
 * `S6_LOGGING_SCRIPT` (default = "n20 s1000000 T"): This env decides what to log and how, by default every line will prepend with ISO8601, rotated when the current logging file reaches 1mb and archived, at most, with 20 files.
-* `S6_CMD_ARG0` (default = not set): Value of this env var will be prepended to any `CMD` args passed by docker. Use it if you are migrting an existing image to a s6-overlay and want to make it a drop-in replacement, then setting this variable to a value of previously used ENTRYPOINT will improve compatibility with the way image is used.
+* `S6_CMD_ARG0` (default = not set): Value of this env var will be prepended to any `CMD` args passed by docker. Use it if you are migrating an existing image to s6-overlay and want to make it a drop-in replacement: setting this variable to the value of a previously used ENTRYPOINT will help you transition.
+* `S6_CMD_USE_TERMINAL` (default = 0): Set this value to **1** if you have a CMD that needs a terminal for its output
+(typically when you're running your container with `docker run -it`), and you have set `S6_LOGGING` to a nonzero value.
+This setting will make your CMD actually output to your terminal; the drawback is that its output will not be logged.
+By default (when this variable is **0** or not set), the stdout and stderr of your CMD are logged when `S6_LOGGING` is nonzero,
+which means they go to a pipe even if you're running it in an interactive terminal.
 * `S6_FIX_ATTRS_HIDDEN` (default = 0): Controls how `fix-attrs.d` scripts process files and directories.
   * **`0`**: Hidden files and directories are excluded.
   * **`1`**: All files and directories are processed.
@@ -863,7 +868,7 @@ Note that this value also includes the time setting up legacy container initiali
 and that it is taken into account even if you are not running a CMD. In other words: no matter whether you're running a CMD or not,
 if you have scripts in `/etc/cont-init.d` that take a long time to run, you should set this variable to either 0, or a value high
 enough so that your scripts have time to finish without s6-overlay interrupting them and diagnosing an error.
-* `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/var/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
+* `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 * `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
 * `S6_STAGE2_HOOK` (default = none): If this variable exists, its contents
 will be interpreted as a shell excerpt that will be run in the early stage 2,
@@ -941,7 +946,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.1.4.1, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.1.5.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
