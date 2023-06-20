@@ -29,6 +29,14 @@ addpath /usr/bin
 addpath /command
 export PATH
 
+
+# Wait for the Docker readiness notification, if any
+
+if read _ 2>/dev/null <&3 ; then
+  exec 3<&-
+fi
+
+
 # Now we're good: s6-overlay-suexec is accessible via PATH, as are
 # all our binaries.
 # Run preinit as root, then run stage0 as the container's user (can be

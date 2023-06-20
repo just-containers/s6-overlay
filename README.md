@@ -563,7 +563,7 @@ from that only brings down the service when it exits nonzero:
 `/etc/services.d/myapp/finish`:
 ```
 #!/command/execlineb -S1
-if { s6-test ${1} -ne 0 -a ${1} -ne 256 }
+if { eltest ${1} -ne 0 -a ${1} -ne 256 }
 /run/s6/basedir/bin/halt
 ```
 

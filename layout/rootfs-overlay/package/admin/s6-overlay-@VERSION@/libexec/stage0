@@ -52,7 +52,7 @@ else
   loguseropt=''
 fi
 
-if test "0$S6_KILL_GRACETIME" -ne 0 ; then
+if eltest "$S6_KILL_GRACETIME" =~ '^[[:digit:]]+$' ; then
   graceopt="-q $S6_KILL_GRACETIME"
 else
   graceopt=''
