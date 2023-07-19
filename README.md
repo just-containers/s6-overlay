@@ -217,6 +217,9 @@ ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLA
 RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
 ```
 
+Make sure to preserve file permissions when extracting (i.e. to use the
+`-p` option to `tar`.)
+
 ## Usage
 
 The project is distributed as a set of standard .tar.xz files, which you extract at the root of your image.
