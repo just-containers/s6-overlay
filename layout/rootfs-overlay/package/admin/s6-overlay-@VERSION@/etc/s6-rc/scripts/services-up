@@ -23,6 +23,7 @@ for i in `s6-ls "$etc/services.d" 2>/dev/null | s6-sort` ; do
     if test $v -ge 2 ; then
       s6-echo -n -- "services-up: info: copying legacy longrun $i" 1>&2
     fi
+    s6-hiercopy "$etc/services.d/$i" "$dir/$i"
     if test -r "$dir/$i/notification-fd" ; then
       notifyes="$notifyes $dir/$i"
       if test $v -ge 2 ; then
@@ -34,7 +35,6 @@ for i in `s6-ls "$etc/services.d" 2>/dev/null | s6-sort` ; do
         echo ' (no readiness notification)' 1>&2
       fi
     fi
-    s6-hiercopy "$etc/services.d/$i" "$dir/$i"
   fi
 done
 
