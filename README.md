@@ -826,10 +826,17 @@ be added to that path if they're not already in the one you provide.
 * `S6_CATCHALL_USER` (default = root): if set, and if `S6_LOGGING` is 1 or 2,
 then the catch-all logger is run as this user, which must be defined in your
 image's `/etc/passwd`. Every bit of privilege separation helps a little with security.
-* `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0):
-  * **`0`**: Continue silently even if any script (`fix-attrs` or `cont-init`) has failed.
+* `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0): determines what the container should do
+if one of the service scripts fails. This includes:
+  * if anything fails in `fix-attrs`
+  * if any old-style `/etc/cont-init.d` or new-style [s6-rc](https://skarnet.org/software/s6-rc/) oneshot fails
+  * if any old-style `/etc/services.d` or new-style [s6-rc](https://skarnet.org/software/s6-rc/) longrun is marked
+as expecting readiness notification, and fails to become *ready* in the allotted time (see
+`S6_CMD_WAIT_FOR_SERVICES_MAXTIME` below). The valid values for `S6_BEHAVIOUR_IF_STAGE2_FAILS`
+are the following:
+  * **`0`**: Continue silently even if a script has failed.
   * **`1`**: Continue but warn with an annoying error message.
-  * **`2`**: Stop by sending a termination signal to the supervision tree.
+  * **`2`**: Stop the container.
 * `S6_KILL_FINISH_MAXTIME` (default = 5000): How long (in milliseconds) the system should
 wait, at shutdown time, for a script in `/etc/cont-finish.d` to finish naturally. After this
 duration, the script will be sent a SIGKILL. Bear in mind that scripts in `/etc/cont.finish.d`
