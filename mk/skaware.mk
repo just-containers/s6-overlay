@@ -23,24 +23,24 @@ S6_NETWORKING_CATEGORY := net
 S6_OVERLAY_HELPERS_CATEGORY := admin
 
 SKALIBS_TOKEN := libskarnet.a.xyzzy
-EXECLINE_TOKEN := execlineb
+EXECLINE_TOKEN := execline
 S6_TOKEN := s6-supervise
 S6_RC_TOKEN := s6-rc
 S6_LINUX_INIT_TOKEN := s6-linux-init-maker
-S6_PORTABLE_UTILS_TOKEN := s6-test
-S6_LINUX_UTILS_TOKEN := s6-ps
+S6_PORTABLE_UTILS_TOKEN := s6-portable-utils
+S6_LINUX_UTILS_TOKEN := s6-linux-utils
 S6_DNS_TOKEN := s6-dnsip4
 S6_NETWORKING_TOKEN := s6-tlsd-io
 S6_OVERLAY_HELPERS_TOKEN := s6-overlay-suexec
 
 SKAWARE_OPTIONS := --enable-slashpackage --enable-static-libc --disable-shared
-SKALIBS_OPTIONS := --with-default-path=/command:/usr/bin:/bin --with-sysdep-devurandom=yes --with-sysdep-grndinsecure=no
+SKALIBS_OPTIONS := --with-default-path=/command:/usr/bin:/bin --with-sysdep-devurandom=yes --with-sysdep-grndinsecure=no --with-sysdep-posixspawnearlyreturn=no
 EXECLINE_OPTIONS := --disable-pedantic-posix --enable-multicall
 S6_OPTIONS :=
 S6_RC_OPTIONS :=
 S6_LINUX_INIT_OPTIONS :=
-S6_PORTABLE_UTILS_OPTIONS :=
-S6_LINUX_UTILS_OPTIONS :=
+S6_PORTABLE_UTILS_OPTIONS := --enable-multicall
+S6_LINUX_UTILS_OPTIONS := --enable-multicall
 S6_DNS_OPTIONS :=
 S6_NETWORKING_OPTIONS := --enable-ssl=bearssl --with-ssl-path=$(OUTPUT)/staging-$(ARCH)
 S6_OVERLAY_HELPERS_OPTIONS :=

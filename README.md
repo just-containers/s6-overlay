@@ -42,7 +42,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.1.5.0
+ARG S6_OVERLAY_VERSION=3.1.6.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -956,7 +956,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.1.5.0, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.1.6.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
@@ -968,6 +968,26 @@ your preferred way of running containers. However, if you're running more than a
 services, or daemons that expect a real system with complete Unix infrastructure,
 then USER is probably not a good idea and you would benefit more from using
 privilege separation between services in your container.
+
+### Terminal support
+
+Generally speaking, you *should not* run your containers with `docker run -it`.
+It is bad practice to have console access to your containers. That said, if your
+CMD is interactive and needs a terminal, s6-overlay will try to support it whenever
+possible, but the nature of terminals makes it difficult to ensure that everything
+works perfectly in all cases.
+
+In particular, if you are stacking virtualization environments and other layers
+already have their own kludges for terminals - for instance, if you are running
+s6-overlay under qemu - then it is almost guaranteed that `docker run -it` will
+not work. However, once the container is running, you should always be able to
+access an interactive shell inside it via `docker exec -it containername /bin/sh`.
+
+The same caveats apply to stopping containers with ^C. Normally containers are
+stopped via `docker stop`, or when the CMD exits; ^C is not an officially supported
+method of stopping them. s6-overlay *tries* to exit cleanly on ^C, whether the
+container is running with `-it` or not, but there will be cases where it is
+unfortunately impossible.
 
 
 ## Releases
