@@ -59,7 +59,7 @@ is likely to crash soon, if /run is (incorrectly) mounted noexec." 1>&2
 else
   s6-mkdir -p -m 0755 /run
 fi
-if test "0$UID" -ne 0 ; then
+if test "0$UID" -ne 0 -a "0$S6_SKIP_OWNER_FIX" -eq 0 ; then
   s6-chown -U -- /run
 fi
 
@@ -73,7 +73,7 @@ fi
 # Clean up in case /run hasn't been wiped or USER has changed
 s6-rmrf /run/s6 /run/service /run/uncaught-logs /run/s6-rc*
 s6-mkdir -m 0755 /run/s6 /run/service
-if test "0$UID" -ne 0 ; then
+if test "0$UID" -ne 0 -a "0$S6_SKIP_OWNER_FIX" -eq 0 ; then
   s6-chown -U -- /run/s6
   s6-chown -U -- /run/service
 fi

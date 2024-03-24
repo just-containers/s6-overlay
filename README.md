@@ -879,6 +879,7 @@ and that it is taken into account even if you are not running a CMD. In other wo
 if you have scripts in `/etc/cont-init.d` that take a long time to run, you should set this variable to either 0, or a value high
 enough so that your scripts have time to finish without s6-overlay interrupting them and diagnosing an error.
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
+* `S6_SKIP_OWNER_FIX` (default = 0): Under unprivileged container environment set this env to **1** to inform preinit stage that do not try to run `chown` on `/run` directories, because privilege elevation is not available. Note that you maybe need to run `chmod g+w /run` in your Dockerfile for initial directory creations to work.
 * `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
 * `S6_STAGE2_HOOK` (default = none): If this variable exists, its contents
 will be interpreted as a shell excerpt that will be run in the early stage 2,
@@ -961,6 +962,7 @@ As of version 3.1.6.2, s6-overlay has limited support for running as a user othe
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
 * The syslogd emulation will not work.
+* In unprivileged container environment you must use `S6_SKIP_OWNER_FIX` variable, otherwise the init will be failed.
 
 Generally speaking, if you're running a simple container with a main application and
 one or two support services, you may benefit from the `USER` directive if that is
