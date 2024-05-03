@@ -225,7 +225,7 @@ Make sure to preserve file permissions when extracting (i.e. to use the
 The project is distributed as a set of standard .tar.xz files, which you extract at the root of your image.
 (You need the xz-utils package for `tar` to understand `.tar.xz` files; it is available
 in every distribution, but not always in the default container images, so you may need
-to `apt install xz-utils` or `apk add xz-utils`, or equivalent, before you can
+to `apt install xz-utils` or `apk add xz`, or equivalent, before you can
 expand the archives.)
 
 Afterwards, set your `ENTRYPOINT` to `/init`.
