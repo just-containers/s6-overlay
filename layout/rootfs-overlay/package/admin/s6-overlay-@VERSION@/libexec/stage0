@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 # This script is run as pid 1 after preinit has exited.
-# It doesn't need privileges: it will run with or without USER.
+# It doesn't need privileges: it should run in all configurations.
 # It invokes s6-linux-init-maker with options depending on run-time
 # control variables, then execs into the init script created by
 # s6-linux-init-maker, which is stage 1.

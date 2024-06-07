@@ -6,6 +6,18 @@ Please view the git log to see all the minor changes made to the code. This docu
 
 ## Major changes
 
+### Version 3.2.0.0
+
+* There is no default global timeout for starting services anymore. Previously,
+if the services took more than 5 seconds to be brought up, they would
+fail; the intent was to detect hanged containers (waiting on a dysfunctional
+network connection, for instance) and make them fail early, but it has
+proven to create more problems than it was solving - so the timeout has
+been removed. If you need it, you can, as before, use the `S6_CMD_WAIT_FOR_SERVICES_MAXTIME`
+variable.
+* More unprivileged configurations are supported: you should now be
+able to use s6-overlay in containers created by Kubernetes, for instance.
+
 ### Version 3.1.0.0
 
 * `/etc/s6-overlay/config/global_path` isn't provided or taken into

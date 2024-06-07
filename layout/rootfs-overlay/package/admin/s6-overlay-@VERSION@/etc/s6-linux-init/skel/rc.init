@@ -41,7 +41,7 @@ s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-ove
 s6-rc-init -c /run/s6/db /run/service
 
 if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$timeout" =~ '^[[:digit:]]+$' ; then : ; else
-  timeout=5000
+  timeout=0
 fi
 
 set +e

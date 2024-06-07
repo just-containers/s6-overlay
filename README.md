@@ -42,7 +42,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.1.6.2
+ARG S6_OVERLAY_VERSION=3.2.0.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -873,11 +873,13 @@ starting the `user2` bundle and the CMD, if any of these is defined. If
 will wait until the services in `/etc/services.d` are *ready* before proceeding
 with the rest of the sequence. Note that this is only significant if the services in `/etc/services.d`
 [notify their readiness](https://skarnet.org/software/s6/notifywhenup.html) to s6.
-* `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 5000): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
-Note that this value also includes the time setting up legacy container initialization (`/etc/cont-init.d`) and services (`/etc/services.d`),
-and that it is taken into account even if you are not running a CMD. In other words: no matter whether you're running a CMD or not,
-if you have scripts in `/etc/cont-init.d` that take a long time to run, you should set this variable to either 0, or a value high
-enough so that your scripts have time to finish without s6-overlay interrupting them and diagnosing an error.
+* `S6_CMD_WAIT_FOR_SERVICES_MAXTIME` (default = 0, i.e. infinite): The maximum time (in milliseconds) the services could take to bring up before proceding to CMD executing.
+Set this variable to a positive value if you have services that can potentially block indefinitely and you prefer the container to fail
+if not everything is up after a given time.
+Note that this value also includes the time setting up legacy container initialization (`/etc/cont-init.d`) and services (`/etc/services.d`), so
+take that into account when computing a suitable value. In versions of s6-overlay up to 3.1.6.2, the default was 5000 (five seconds),
+but it caused more unwanted container failures than it solved issues, so now there's no timeout by default: s6-overlay will wait as long as
+is necessary for all the services to be brought up.
 * `S6_READ_ONLY_ROOT` (default = 0): When running in a container whose root filesystem is read-only, set this env to **1** to inform init stage 2 that it should copy user-provided initialization scripts from `/etc` to `/run/s6/etc` before it attempts to change permissions, etc. See [Read-Only Root Filesystem](#read-only-root-filesystem) for more information.
 * `S6_SYNC_DISKS` (default = 0): Set this env to **1** to inform init stage 3 that it should attempt to sync filesystems before stopping the container. Note: this will likely sync all filesystems on the host.
 * `S6_STAGE2_HOOK` (default = none): If this variable exists, its contents
@@ -956,7 +958,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.1.6.2, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.2.0.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).

@@ -2,9 +2,19 @@
 
 # This script is spawned by s6-overlay-suexec, as the
 # first thing in the userland boot process.
-# It is run as root even with a USER directive present.
-# If USER, then UID and GID hold the uid and gid of the user
-# (this is used by s6-chown -U).
+# It is normally run as root, but some configurations want to
+# run completely unprivileged and s6-overlay-suexec is denied
+# suid, in which case preinit will be unprivileged as well.
+
+# The point of preinit is to sanity check the system to make
+# sure s6-linux-init can run in a safe configuration. If we
+# are root, or if the system has been correctly prepared by the
+# container manager for a privilegeless execution, we can fix
+# any issue we encounter. Otherwise, we just report the problem
+# and abort execution.
+
+# The UID, USER, EUID, GID, GROUP and EGID variables are set for
+# us by s6-overlay-suexec, so we can check every possible case.
 
 prog=/package/admin/s6-overlay/libexec/preinit
 
@@ -59,8 +69,30 @@ is likely to crash soon, if /run is (incorrectly) mounted noexec." 1>&2
 else
   s6-mkdir -p -m 0755 /run
 fi
-if test "0$UID" -ne 0 ; then
-  s6-chown -U -- /run
+
+eval `s6-overlay-stat /run`
+
+if test "0$S6_VERBOSITY" -gt 1 ; then
+  echo "$prog: info: container permissions: uid=$UID ($USER), euid=$EUID, gid=$GID ($GROUP), egid=$EGID"
+  echo "$prog: info: /run permissions: uid=$uid ($user), gid=$gid ($group), perms=$perms"
+fi
+
+if test "$UID" -ne "$uid" ; then  # /run does not belong to the container user
+  if test "$EUID" -eq 0 ; then
+    echo "$prog: info: /run belongs to uid $uid instead of $UID - fixing it"
+    s6-chown -U -- /run
+    s6-chmod 0755 /run
+  elif test "$GID" -eq 0 && test "$gid" -eq 0 ; then  # Unprivileged Kubernetes Environment
+    if echo "$perms" | s6-grep -qF gxgwgr && echo "$perms" | s6-grep -qvF ow ; then
+      echo "$prog: info: using /run with gid 0"
+    else
+      echo "$prog: fatal: wrong permissions on /run for a gid 0 setup" 
+      exit 100
+    fi
+  else
+    echo "$prog: fatal: /run belongs to uid $uid instead of $UID and we're lacking the privileges to fix it."
+    exit 100
+  fi
 fi
 
 # Ensure /var/run is a symlink to /run

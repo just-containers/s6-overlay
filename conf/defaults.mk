@@ -3,7 +3,7 @@
 # e.g.: make SHEBANGDIR=/usr/bin VERSION=3.1.6.0
 
 # The version of the software being built.
-VERSION := 3.1.6.2
+VERSION := 3.2.0.0
 
 # Where stuff is going to be built. Change for out-of-tree builds.
 OUTPUT := output
@@ -21,7 +21,7 @@ TOOLCHAIN_PATH :=
 
 # When fetching one from the web, what version we want.
 # Only a few versions are available, don't change blindly.
-TOOLCHAIN_VERSION := 13.2.0
+TOOLCHAIN_VERSION := 14.1.0
 
 # For fetching toolchains: the download command.
 # Change to curl -O if you don't have wget.
