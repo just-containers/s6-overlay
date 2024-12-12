@@ -91,7 +91,7 @@ if test "$UID" -ne "$uid" ; then  # /run does not belong to the container user
     fi
   else
     if test "$gid" -eq "$EGID" ; then x=g ; y=gs ; else x=o ; y= ; fi
-    if test "$uid" -eq 0 && echo "$perms" | s6-grep -q "${x}x${x}w${x}r.*os${y}" \
+    if test "$uid" -eq 0 && echo "$perms" | s6-grep -q "${x}x${x}w${x}r.*os${y}" ; then
       echo "$prog: warning: /run belongs to uid $uid instead of $UID, but we can still work in single-uid mapping."
     else
       echo "$prog: fatal: /run belongs to uid $uid instead of $UID, has insecure permissions, and we're lacking the privileges to fix it."
