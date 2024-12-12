@@ -82,7 +82,7 @@ if test "$UID" -ne "$uid" ; then  # /run does not belong to the container user
     echo "$prog: info: /run belongs to uid $uid instead of $UID - fixing it"
     s6-chown -U -- /run
     s6-chmod 0755 /run
-  elif test "$GID" -eq 0 && test "$gid" -eq 0 ; then  # Unprivileged Kubernetes Environment
+  elif test "$GID" -eq 0 && test "$gid" -eq 0 ; then
     if echo "$perms" | s6-grep -qF gxgwgr && echo "$perms" | s6-grep -qvF ow ; then
       echo "$prog: info: using /run with gid 0"
     else
@@ -90,8 +90,13 @@ if test "$UID" -ne "$uid" ; then  # /run does not belong to the container user
       exit 100
     fi
   else
-    echo "$prog: fatal: /run belongs to uid $uid instead of $UID and we're lacking the privileges to fix it."
-    exit 100
+    if test "$gid" -eq "$EGID" ; then x=g ; y=gs ; else x=o ; y= ; fi
+    if test "$uid" -eq 0 && echo "$perms" | s6-grep -q "${x}x${x}w${x}r.*os${y}" \
+      echo "$prog: warning: /run belongs to uid $uid instead of $UID, but we can still work in single-uid mapping."
+    else
+      echo "$prog: fatal: /run belongs to uid $uid instead of $UID, has insecure permissions, and we're lacking the privileges to fix it."
+      exit 100
+    fi
   fi
 fi
 
