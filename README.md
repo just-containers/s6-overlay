@@ -42,7 +42,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.2.0.2
+ARG S6_OVERLAY_VERSION=3.2.0.3
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -828,6 +828,7 @@ then the catch-all logger is run as this user, which must be defined in your
 image's `/etc/passwd`. Every bit of privilege separation helps a little with security.
 * `S6_BEHAVIOUR_IF_STAGE2_FAILS` (default = 0): determines what the container should do
 if one of the service scripts fails. This includes:
+  * if the early stage2 hook exits nonzero (by default there's no hook)
   * if anything fails in `fix-attrs`
   * if any old-style `/etc/cont-init.d` or new-style [s6-rc](https://skarnet.org/software/s6-rc/) oneshot fails
   * if any old-style `/etc/services.d` or new-style [s6-rc](https://skarnet.org/software/s6-rc/) longrun is marked
@@ -886,9 +887,11 @@ is necessary for all the services to be brought up.
 will be interpreted as a shell excerpt that will be run in the early stage 2,
 before services are started. This can be used, for instance, to dynamically
 patch the service database at run-time right before it is compiled and run.
-The wrong value can prevent your container from running or endanger your
-security, so only use this if you know exactly what you are doing. When in
-doubt, leave this variable undefined.
+If the hook program exits nonzero and `S6_BEHAVIOUR_IF_STAGE2_FAILS` is 2 or more,
+the container will stop instantly. Please note that running the wrong hook program
+may prevent your container from starting properly, or may endanger your security;
+so only use this if you know exactly what you are doing. When in doubt, leave
+this variable undefined.
 * `S6_VERBOSITY` (default = 2): controls the verbosity of s6-rc, and potentially
 other tools, at container start and stop time. The default, 2, is normally verbose:
 it will list the service start and stop operations. You can make the container quieter
