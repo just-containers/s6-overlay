@@ -38,11 +38,9 @@ if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
   if test "$r" -gt 0 ; then
     if test "$b" -ge 2 ; then
       echo "$prog: fatal: hook $hook exited $r" 1>&2
+      haltwith "$r"
     elif test "$v" -ge 1 ; then
       echo "$prog: warning: hook $hook exited $r" 1>&2
-    fi
-    if test "$b" -ge 2 ; then
-      haltwith "$r"
     fi
   elif test "$v" -ge 2 ; then
     echo "$prog: info: hook $hook exited $r" 1>&2

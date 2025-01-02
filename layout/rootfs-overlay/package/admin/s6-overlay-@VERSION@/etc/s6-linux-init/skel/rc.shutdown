@@ -1,7 +1,8 @@
 #!/bin/sh
 
-if v=`printcontenv S6_VERBOSITY` && eltest "$v" =~ '^[[:digit:]]+$' ; then : ; else
-  v=2
+if test -d /run/s6/db ; then
+  if v=`printcontenv S6_VERBOSITY` && eltest "$v" =~ '^[[:digit:]]+$' ; then : ; else
+    v=2
+  fi
+  exec s6-rc -v$v -bda change
 fi
-
-exec s6-rc -v$v -bda change
