@@ -43,7 +43,7 @@ fi
 # root, can be a normal user).
 
 exec s6-overlay-suexec \
-  ' /package/admin/s6-overlay-@VERSION@/libexec/preinit' \
+  '/package/admin/s6-overlay-@VERSION@/libexec/preinit' \
   '' \
-  /package/admin/s6-overlay-@VERSION@/libexec/stage0 \
+  '/package/admin/s6-overlay-@VERSION@/libexec/stage0' \
   "$@"
