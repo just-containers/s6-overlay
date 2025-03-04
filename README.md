@@ -49,9 +49,12 @@ RUN echo "daemon off;" >> /etc/nginx/nginx.conf
 CMD ["/usr/sbin/nginx"]
 
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+RUN <<SHELL
+  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+  tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+  rm /tmp/s6-overlay-*.tar.xz
+SHELL
 ENTRYPOINT ["/init"]
 ```
 
@@ -212,9 +215,12 @@ to the functionality you want to install. For instance, most people would
 use the following:
 ```
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+RUN <<SHELL
+  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+  tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+  rm /tmp/s6-overlay-*.tar.xz
+SHELL
 ```
 
 Make sure to preserve file permissions when extracting (i.e. to use the
@@ -254,9 +260,12 @@ For example:
 ```
 FROM busybox
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+RUN <<SHELL
+  tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+  tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+  rm /tmp/s6-overlay-*.tar.xz
+SHELL
 ENTRYPOINT ["/init"]
 ```
 
