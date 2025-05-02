@@ -1,9 +1,9 @@
 # This file normally shouldn't be changed; the values can be
 # overridden by invoking make with arguments.
-# e.g.: make SHEBANGDIR=/usr/bin VERSION=3.1.6.0
+# e.g.: make SHEBANGDIR=/usr/bin VERSION=3.2.0.3
 
 # The version of the software being built.
-VERSION := 3.2.0.2
+VERSION := 3.2.0.3
 
 # Where stuff is going to be built. Change for out-of-tree builds.
 OUTPUT := output

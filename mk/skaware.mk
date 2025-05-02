@@ -34,7 +34,7 @@ S6_NETWORKING_TOKEN := s6-tlsd-io
 S6_OVERLAY_HELPERS_TOKEN := s6-overlay-suexec
 
 SKAWARE_OPTIONS := --enable-slashpackage --enable-static-libc --disable-shared
-SKALIBS_OPTIONS := --with-default-path=/command:/usr/bin:/bin --with-sysdep-devurandom=yes --with-sysdep-grndinsecure=no --with-sysdep-posixspawnearlyreturn=no
+SKALIBS_OPTIONS := --with-default-path=/command:/usr/bin:/bin --with-sysdep-devurandom=yes --with-sysdep-grndinsecure=no --with-sysdep-posixspawnearlyreturn=no --with-sysdep-procselfexe=/proc/self/exe
 EXECLINE_OPTIONS := --disable-pedantic-posix --enable-multicall
 S6_OPTIONS :=
 S6_RC_OPTIONS :=
