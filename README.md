@@ -913,6 +913,16 @@ cannot be diverted and are necessarily handled by pid 1. Please be aware that us
 this option may prevent interactive CMDs from working at all - in other words, if
 you're running an interactive CMD in a terminal, don't set this variable; but that
 should be fine since in this case you already have interactive ways of stopping your CMD.
+* `S6_YES_I_WANT_A_WORLD_WRITABLE_RUN_BECAUSE_KUBERNETES` (default = 0): yes, it's a
+mouthful, and yes, we're deadly serious. If you set this variable to 1 (or any non-zero
+value), s6-overlay will accept to boot in a situation where `/run` belongs to uid 0 and
+is world-writable (permissions 0777) but the container is run as a non-root user. This
+is the configuration enforced by some Kubernetes environments, and it is completely
+insecure, except that Kubernetes ensures isolation by its own security mechanisms; so,
+if you're in such a situation, set that variable, and s6-overlay will still print a
+(literally) bright red warning, but it will boot. Otherwise, by default, s6-overlay
+refuses to run when it encounters such a insecure setup that it doesn't have the
+necessary privileges to fix.
 
 ### syslog
 
