@@ -923,6 +923,16 @@ if you're in such a situation, set that variable, and s6-overlay will still prin
 (literally) bright red warning, but it will boot. Otherwise, by default, s6-overlay
 refuses to run when it encounters such a insecure setup that it doesn't have the
 necessary privileges to fix.
+* `S6_WAIT_FOR_CLOSING_FD` (default = 0): if this variable is set to 3 or more, then
+this number represents a file descriptor. Your container manager must spawn your container
+with this file descriptor open, and use it as a synchronization mechanism, as in, when
+reading this file descriptor returns EOF, it means that the container manager is ready
+and the container can proceed. Some Docker setups use fd 3 for this; some systemd
+setups use 4. Read your container manager's documentation to check if such synchronization
+is necessary; when the variable is set, s6-overlay will follow that protocol. If the
+variable is unset, or set to 0 (or 1 or 2 but don't do this), s6-overlay will not
+attempt to synchronize with the container manager, it will just boot your container
+as fast as possible.
 
 ### syslog
 
