@@ -27,46 +27,42 @@ analyze_logging_script () {
 basedir=/run/s6/basedir
 
 if test -n "S6_LOGGING_SCRIPT" ; then
-  stampopt="-t `analyze_logging_script`"
+  options="-t `analyze_logging_script`"
 else
-  stampopt='-t 2'
+  options="-t 2"
 fi
 
-if test "0$S6_KEEP_ENV" -ne 0 ; then
-  dumpopt=''
-else
-  dumpopt='-s /run/s6/container_environment'
+if test "0$S6_KEEP_ENV" -eq 0 ; then
+  options="$options -s /run/s6/container_environment"
 fi
 
-if test "0$S6_LOGGING" -eq 2 ; then
-  logopt=''
-elif test "0$S6_LOGGING" -eq 1 ; then
-  logopt='-1'
-else
-  logopt='-B'
+if test "0$S6_LOGGING" -lt 2 ; then
+  if test "0$S6_LOGGING" -eq 1 ; then
+    options="$options -1"
+  else
+    options="$options -B"
+  fi
 fi
 
 if test -n "$S6_CATCHALL_USER" && test "0$CONTAINER_UID" -eq 0 ; then
-  loguseropt="-u $S6_CATCHALL_USER"
-else
-  loguseropt=''
+  options="$options -u $S6_CATCHALL_USER"
 fi
 
 if eltest "$S6_KILL_GRACETIME" =~ '^[[:digit:]]+$' ; then
-  graceopt="-q $S6_KILL_GRACETIME"
-else
-  graceopt=''
+  options="$options -q $S6_KILL_GRACETIME"
 fi
 
 if test "0$S6_SYNC_DISKS" -ne 0 ; then
-  syncopt='-S'
-else
-  syncopt=''
+  options="$options -S"
 fi
 
-s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $stampopt $dumpopt $logopt $loguseropt $graceopt $syncopt -- "$basedir"
+if test "0$S6_WAIT_FOR_CLOSING_FD" -ge 3 ; then
+  options="$options -W $S6_WAIT_FOR_CLOSING_FD"
+fi
 
-if test -z "$dumpopt" ; then
+s6-linux-init-maker -NC -D top -c "$basedir" -p "$PATH" -f /package/admin/s6-overlay-@VERSION@/etc/s6-linux-init/skel $options -- "$basedir"
+
+if test "0$S6_KEEP_ENV" -ne 0 ; then
   s6-rename "$basedir/env" "$basedir/env.orig"
   s6-dumpenv -N "$basedir/env"
   for file in `s6-ls "$basedir/env.orig"` ; do

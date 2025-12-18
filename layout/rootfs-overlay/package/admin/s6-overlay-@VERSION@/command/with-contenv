@@ -7,7 +7,7 @@ ifelse
 }
 {
   emptyenv -p
-  s6-envdir -Lfn -- /run/s6/container_environment
+  s6-envdir -Lf -- /run/s6/container_environment
   exec
   $@
 }
