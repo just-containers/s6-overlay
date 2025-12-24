@@ -42,7 +42,7 @@ Build the following Dockerfile and try it out:
 ```
 # Use your favorite image
 FROM ubuntu
-ARG S6_OVERLAY_VERSION=3.2.1.0
+ARG S6_OVERLAY_VERSION=3.2.2.0
 
 RUN apt-get update && apt-get install -y nginx xz-utils
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf
@@ -981,7 +981,7 @@ RUN cd /tmp && sha256sum -c *.sha256
 
 ### `USER` directive
 
-As of version 3.2.1.0, s6-overlay has limited support for running as a user other than `root`:
+As of version 3.2.2.0, s6-overlay has limited support for running as a user other than `root`:
 
 * Tools like `fix-attrs` and `logutil-service` are unlikely to work (they rely
   on being able to change UIDs).
