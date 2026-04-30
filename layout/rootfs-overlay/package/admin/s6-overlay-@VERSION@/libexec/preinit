@@ -23,13 +23,13 @@ fatal () {
 }
 
 warning () {
-  if test "0$S6_VERBOSITY" -gt 0 ; then
+  if test "2$S6_VERBOSITY" -gt 0 ; then
     echo "$prog: warning: $*" 1>&2
   fi
 }
 
 info () {
-  if test "0$S6_VERBOSITY" -gt 1 ; then
+  if test "2$S6_VERBOSITY" -gt 1 ; then
     echo "$prog: info: $*" 1>&2
   fi
 }
