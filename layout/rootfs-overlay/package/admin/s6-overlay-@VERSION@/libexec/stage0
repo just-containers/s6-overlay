@@ -44,7 +44,7 @@ if test "0$S6_LOGGING" -lt 2 ; then
   fi
 fi
 
-if test -n "$S6_CATCHALL_USER" && test "0$CONTAINER_UID" -eq 0 ; then
+if eltest -n "$S6_CATCHALL_USER" -a "0$CONTAINER_UID" -eq 0 ; then
   options="$options -u $S6_CATCHALL_USER"
 fi
 
