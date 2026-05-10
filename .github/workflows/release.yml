@@ -10,11 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.s6_arch }}
+      arch_alias: ${{ steps.arch_alias.outputs.arch_alias }}
     steps:
       - uses: actions/checkout@v3
       - id: matrix
         run: |
           echo s6_arch=$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")') >> "$GITHUB_OUTPUT"
+
+      - id: arch_alias
+        run: |
+          echo arch_alias=$(cat conf/arch_alias.json) >> "$GITHUB_OUTPUT"
 
       - run: |
           . conf/versions
@@ -64,8 +69,29 @@ jobs:
           fi
           echo "S6_HW=${HW}" >> $GITHUB_ENV
 
+      # define arch alias if needed
+      - run: |
+          S6_HW_ALIAS="${{ fromJson(needs.setup.outputs.arch_alias)[env.S6_HW]}}"
+          S6_HW_ALIAS="${S6_HW_ALIAS//\//}"
+          echo "S6_HW_ALIAS=$S6_HW_ALIAS" >> "$GITHUB_ENV"
+
+          if [ "$S6_HW_ALIAS" ] ; then
+            echo S6_HW_REGEX="($S6_HW|$S6_HW_ALIAS)" >> "$GITHUB_ENV"
+          else
+            echo S6_HW_REGEX="$S6_HW" >> "$GITHUB_ENV"
+          fi
+
       - run: |
           make ARCH="${{ matrix.s6_arch }}" VERSION="${{ env.S6_VERSION }}"
+
+      # copy files to alias names if needed
+      - run: |
+          if [ "$S6_HW_ALIAS" ] && [ "$S6_HW" != "$S6_HW_ALIAS" ] ; then
+            cd output ; 
+            for f in *$S6_HW.tar.* ; do
+              cp -v "$f" "$(echo "$f" | sed "s/$S6_HW/$S6_HW_ALIAS/g")" ;
+            done
+          fi
 
       - run: |
           cd output ; for f in *.tar* ; do sha256sum "$f" > "$f".sha256 ; done
@@ -73,12 +99,12 @@ jobs:
       # output arch-specific binary
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "output/s6-overlay-${{ env.S6_HW }}*"
+          artifacts: "output/s6-overlay-${{ env.S6_HW_REGEX }}*"
           omitBodyDuringUpdate: true
           allowUpdates: true
 
       - run: |
-          rm -v output/s6-overlay-${{ env.S6_HW }}*
+          find output -wholename "s6-overlay-$S6_HW_REGEX*" -delete
 
       # upload symlinks/non-arch on x86_64 only
       - uses: ncipollo/release-action@v1
