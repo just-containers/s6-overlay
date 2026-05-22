@@ -47,13 +47,24 @@ if hook=`printcontenv S6_STAGE2_HOOK` && test -n "$hook" ; then
   fi
 fi
 
-if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
-  etc="/etc/cont-profile.d/$profile"
+if profile=`printcontenv S6_RUNTIME_PROFILE` && test -n "$profile" ; then
+  profiledir="/etc/cont-profile.d/$profile/s6-overlay"
 else
-  etc=/etc
+  profiledir=/etc/s6-overlay
 fi
 
-s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
+if bundledir=`printcontenv S6_RUNTIME_BUNDLEDIR` && test -n "$bundledir" ; then : ; else
+  bundledir="$profiledir/user-bundles.d"
+fi
+
+if test -d "$profiledir/s6-rc.d/user" ; then
+  bundledir=
+  if test "$v" -ge 1 ; then
+    echo "$prog: warning: defining user bundles in $profiledir/s6-rc.d is deprecated, please define them in $profiledir/user-bundles.d instead" 1>&2
+  fi
+fi
+
+s6-rc-compile -v"$cv" -- /run/s6/db "$profiledir/s6-rc.d" $bundledir /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
 s6-rc-init -c /run/s6/db /run/service
 
 if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$timeout" =~ '^[[:digit:]]+$' ; then : ; else

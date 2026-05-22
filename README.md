@@ -153,8 +153,7 @@ See "Writing an optional finish script" under the [Usage](#usage) section for de
 ## Init stages
 
 Our overlay init is a properly customized one to run appropriately in containerized environments.
-This section briefly explains how stages work but if you want to know how a complete init system
-should work, you can read this article: [How to run s6-svscan as process 1](https://skarnet.org/software/s6/s6-svscan-1.html)
+This section briefly explains how stages work.
 
 1. **stage 1**: Its purpose is to set up the image to execute the supervision tree which
 will handle all the auxiliary services, and to launch stage 2. Stage 1 is where all the
@@ -162,8 +161,9 @@ black magic happens, all the container setup details that we handle for you so t
 have to care about them.
 2. **stage 2**: This is where most of the end-user provided files are meant to be executed:
     1. Execute legacy oneshot user scripts contained in `/etc/cont-init.d`.
-    2. Run user s6-rc services declared in `/etc/s6-overlay/s6-rc.d`, following dependencies
+    2. Run user s6-rc services declared in the `/etc/s6-overlay/user-bundles.d/user` bundle, following dependencies. (The services themselves are declared in `/etc/s6-overlay/s6-rc.d`.)
     3. Copy legacy longrun user services (`/etc/services.d`) to a temporary directory and have s6 start (and supervise) them.
+    4. (if any) Run user s6-rc services declared in the `/etc/s6-overlay/user-bundles.d/user2` bundle, following dependencies.
 3. **stage 3**: This is the shutdown stage. When the container is supposed to exit, it will:
     1. Send a TERM signal to all legacy longrun services and, if required, wait for them to exit.
     2. Bring down user s6-rc services in an orderly fashion.
@@ -325,7 +325,7 @@ nginx -g "daemon off;"
 The new way is to make an [s6-rc](https://skarnet.org/software/s6-rc/)
 *source definition directory* in the `/etc/s6-overlay/s6-rc.d` directory,
 and add the name of that directory to the `user` bundle, i.e. create an
-empty file with the same name in the `/etc/s6-overlay/s6-rc.d/user/contents.d`
+empty file with the same name in the `/etc/s6-overlay/user-bundles.d/user/contents.d`
 directory. The format of a *source definition directory* is described in
 [this page](https://skarnet.org/software/s6-rc/s6-rc-compile.html). Note that
 you can define *longruns*, i.e. daemons that will get supervised by s6 just
@@ -353,7 +353,7 @@ longrun
 nginx -g "daemon off;"
 ```
 
-`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp`: empty file.
+`/etc/s6-overlay/user-bundles.d/user/contents.d/myapp`: empty file.
 (This adds `myapp` to the set of services that s6-rc will start at
 container boot.)
 
@@ -514,7 +514,8 @@ earlier; if they do not, they might have been started earlier, which may cause
 race conditions - so it's recommended to always make them depend on `base`.
 - (legacy) Longrun services in `/etc/services.d` are started.
 - Services in the `user2` bundle with the correct dependency are started.
-(Most people don't need to use this; if you are not sure, stick to the `user` bundle.)
+(If you're not using `/etc/services.d`, or if you're not sure, you don't need
+to care about `user2` at all - just stick to `user`.)
 
 When the container is stopped, either because the admin sent a stop command or
 because the CMD exited, the operations are performed in the reverse order:
@@ -532,7 +533,7 @@ in `user2` needs to declare a dependency to `legacy-services`. In other words,
 for a service `foobar` to start late, you need to:
 - Define it in `/etc/s6-overlay/s6-rc.d/foobar` like any other s6-rc service.
 - Add an `/etc/s6-overlay/s6-rc.d/foobar/dependencies.d/legacy-services` file
-- Add an `/etc/s6-overlay/s6-rc.d/user2/contents.d/foobar` file.
+- Add an `/etc/s6-overlay/user-bundles.d/user2/contents.d/foobar` file.
 
 That will ensure that `foobar` will start _after_ everything in `/etc/services.d`.
 
@@ -729,7 +730,7 @@ myapp
 myapp-pipeline
 ```
 
-`/etc/s6-overlay/s6-rc.d/user/contents.d/myapp-pipeline`: empty file
+`/etc/s6-overlay/user-bundles.d/user/contents.d/myapp-pipeline`: empty file
 
 That's a lot of files! A summary of what it all means is:
 - myapp-log-prepare is a oneshot, preparing the logging directory.
@@ -933,6 +934,20 @@ is necessary; when the variable is set, s6-overlay will follow that protocol. If
 variable is unset, or set to 0 (or 1 or 2 but don't do this), s6-overlay will not
 attempt to synchronize with the container manager, it will just boot your container
 as fast as possible.
+* `S6_RUNTIME_BUNDLEDIR` (default=`/etc/s6-overlay/user-bundles.d`): if this variable
+is set, then it must contain a path to a directory containing `user` and `user2`
+subdirectories, themselves being proper bundle definitions similar to
+`/etc/s6-overlay/user-bundles.d/user`. At container initialization time, the definitions
+for the `user` and `user2` bundles will be read from `$S6_RUNTIME_BUNDLEDIR/user` and
+`$S6_RUNTIME_BUNDLEDIR/user2`.
+* `S6_RUNTIME_PROFILE`: if this variable is set, then it must contain the name of
+a subdirectory of `/etc/cont-profile.d`, which contains a full replacement for
+`/etc/s6-overlay`. In other words, if `S6_RUNTIME_PROFILE` is `foobar`, then
+`/etc/cont-profile.d/foobar/s6-overlay` must exist and contain `s6-rc.d` and
+`user-bundles.d` directories, defining a full replacement for *all* the services
+in `/etc/s6-overlay`. This is an older, more powerful, more cumbersome
+customization switch than `S6_RUNTIME_BUNDLEDIR`; it is likely that you don't need
+it and that `S6_RUNTIME_BUNDLEDIR` fits your needs.
 
 ### syslog
 
