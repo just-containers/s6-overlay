@@ -7,16 +7,27 @@ on:
 
 jobs:
   setup:
+    name: Setup
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     outputs:
       matrix: ${{ steps.matrix.outputs.s6_arch }}
+
     steps:
-      - uses: actions/checkout@v3
-      - id: matrix
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Create build matrix
+        id: matrix
         run: |
           echo s6_arch=$(cut -f1 conf/toolchains | sed -z '$ s/\n$//' | jq -R -s -c 'split("\n")') >> "$GITHUB_OUTPUT"
 
-      - run: |
+      - name: Generate release-notes
+        run: |
           . conf/versions
           printf "Binary releases include the following packages:\n\n" > release-notes.md
           printf "| Software | Version |\n" >> release-notes.md
@@ -34,54 +45,68 @@ jobs:
           printf "| s6-overlay-helpers | %s \n" "${S6_OVERLAY_HELPERS_VERSION}" >> release-notes.md
           printf "\n" >> release-notes.md
 
-      - uses: ncipollo/release-action@v1
+      - name: Create release
+        uses: ncipollo/release-action@v1.21.0
         with:
           omitBodyDuringUpdate: true
           allowUpdates: true
           bodyFile: release-notes.md
 
   release:
+    name: Release
     needs: [ setup ]
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     strategy:
       matrix:
         s6_arch: ${{fromJson(needs.setup.outputs.matrix)}}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
-      # normalize version (remove 'git/refs/', remove leading 'v')
-      - run: |
+      - name: Normalize version
+        #(remove 'git/refs/', remove leading 'v')
+        run: |
           VERSION="${GITHUB_REF##*/}"
           VERSION="${VERSION#v}"
           echo "S6_VERSION=${VERSION}" >> $GITHUB_ENV
 
-      # create short arch name
-      - run: |
+      - name: Create arch shortname
+        run: |
           HW=$(echo "${{ matrix.s6_arch }}" | cut -f1 -d'-')
           if [ "${{matrix.s6_arch}}" = "arm-linux-musleabihf" ] ; then
             HW="armhf"
           fi
           echo "S6_HW=${HW}" >> $GITHUB_ENV
 
-      - run: |
+      - name: Build ${{ matrix.s6_arch }} version ${{ env.S6_VERSION }}
+        run: |
           make ARCH="${{ matrix.s6_arch }}" VERSION="${{ env.S6_VERSION }}"
 
-      - run: |
+      - name: Calculate checksums
+        run: |
           cd output ; for f in *.tar* ; do sha256sum "$f" > "$f".sha256 ; done
 
-      # output arch-specific binary
-      - uses: ncipollo/release-action@v1
+      - name: Upload arch-specific binary
+        uses: ncipollo/release-action@v1.21.0
         with:
           artifacts: "output/s6-overlay-${{ env.S6_HW }}*"
           omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
           allowUpdates: true
 
-      - run: |
+      - name: Remove artefacts
+        run: |
           rm -v output/s6-overlay-${{ env.S6_HW }}*
 
       # upload symlinks/non-arch on x86_64 only
-      - uses: ncipollo/release-action@v1
+      - name: Upload symlinks/non-arch
+        uses: ncipollo/release-action@v1.21.0
         with:
           artifacts: "output/*.tar.*"
           omitBodyDuringUpdate: true
