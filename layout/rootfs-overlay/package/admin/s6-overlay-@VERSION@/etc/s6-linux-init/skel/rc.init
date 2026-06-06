@@ -49,11 +49,21 @@ fi
 
 if profile=`printcontenv S6_RUNTIME_PROFILE` ; then
   etc="/etc/cont-profile.d/$profile"
+  rcsrc=/run/s6/rc-source
+  s6-rmrf "$rcsrc"
+  s6-mkdir -p -m 0755 "$rcsrc"
+  for entry in `s6-ls /etc/s6-overlay/s6-rc.d 2>/dev/null` ; do
+    s6-ln -s "/etc/s6-overlay/s6-rc.d/$entry" "$rcsrc/$entry"
+  done
+  for entry in `s6-ls "$etc/s6-overlay/s6-rc.d" 2>/dev/null` ; do
+    s6-ln -nsf "$etc/s6-overlay/s6-rc.d/$entry" "$rcsrc/$entry"
+  done
 else
   etc=/etc
+  rcsrc=/etc/s6-overlay/s6-rc.d
 fi
 
-s6-rc-compile -v"$cv" /run/s6/db "$etc/s6-overlay/s6-rc.d" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
+s6-rc-compile -v"$cv" /run/s6/db "$rcsrc" /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources
 s6-rc-init -c /run/s6/db /run/service
 
 if timeout=`printcontenv S6_CMD_WAIT_FOR_SERVICES_MAXTIME` && eltest "$timeout" =~ '^[[:digit:]]+$' ; then : ; else
