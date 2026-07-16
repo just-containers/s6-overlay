@@ -18,7 +18,7 @@ definitions in `/etc/s6-overlay/s6-rc.d`.
     * This is a lighter mechanism than writing several set of services and switching
 them via the `S6_RUNTIME_PROFILE` variable.
   * Compatibility is ensured to give you time to migrate. If your user bundles are
-still defined in `/etc/s6-overlay/user-bundles.d`, then the container will still
+still defined in `/etc/s6-overlay/s6-rc.d`, then the container will still
 boot, printing a warning message. This compatibility will be removed in the next
 *major* s6-overlay update some time in the future.
     * To perform the migration: in the root of your image, run
