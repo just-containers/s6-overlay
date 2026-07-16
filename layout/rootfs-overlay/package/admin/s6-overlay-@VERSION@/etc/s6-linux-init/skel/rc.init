@@ -62,6 +62,9 @@ if test -d "$profiledir/s6-rc.d/user" ; then
   if test "$v" -ge 1 ; then
     echo "$prog: warning: defining user bundles in $profiledir/s6-rc.d is deprecated, please define them in $profiledir/user-bundles.d instead" 1>&2
   fi
+  echo bundle > "$profiledir/s6-rc.d/user/type"
+  mkdir -p "$profiledir/s6-rc.d/user/contents.d" "$profiledir/s6-rc.d/user2/contents.d"
+  echo bundle > "$profiledir/s6-rc.d/user2/type"
 fi
 
 s6-rc-compile -v"$cv" -- /run/s6/db "$profiledir/s6-rc.d" $bundledir /package/admin/s6-overlay-@VERSION@/etc/s6-rc/sources

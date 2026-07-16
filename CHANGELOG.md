@@ -6,6 +6,24 @@ Please view the git log to see all the minor changes made to the code. This docu
 
 ## Major changes
 
+### Version 3.2.3.2
+
+* The `user` and `user2` bundles are now defined in `/etc/s6-overlay/user-bundles.d`
+rather than `/etc/s6-overlay/s6-rc.d`.
+  * This location is overridable via the `S6_RUNTIME_BUNDLEDIR` variable.
+  * The goal of the change is to enable several starting configurations from a
+single set of services. Just by setting `S6_RUNTIME_BUNDLEDIR`, you can change
+what services are started at container boot time, while keeping all your service
+definitions in `/etc/s6-overlay/s6-rc.d`.
+    * This is a lighter mechanism than writing several set of services and switching
+them via the `S6_RUNTIME_PROFILE` variable.
+  * Compatibility is ensured to give you time to migrate. If your user bundles are
+still defined in `/etc/s6-overlay/user-bundles.d`, then the container will still
+boot, printing a warning message. This compatibility will be removed in the next
+*major* s6-overlay update some time in the future.
+    * To perform the migration: in the root of your image, run
+`mkdir -p etc/s6-overlay/user-bundles.d && mv etc/s6-overlay/s6-rc.d/user etc/s6-overlay/s6-rc.d/user2 etc/s6-overlay/user-bundles.d/`.
+
 ### Version 3.2.0.0
 
 * There is no default global timeout for starting services anymore. Previously,
